@@ -44,7 +44,7 @@ code yourself. Trusting the DB schema as a starting point defeats the purpose of
 
 ## Step 2 — decide: single doc, or split doc?
 
-**Default: one flat `..\nodes\{code}.md` file.** This is right for the large majority of node types —
+**Default: one flat `..\..\Knowledge\Workflow\workflow-nodes-rag\nodes\{code}.md` file.** This is right for the large majority of node types —
 even ones with a dozen-plus fields, as long as those fields are essentially one flat property list
 (optionally grouped into a resource/operation dispatch, per Step 1.4).
 
@@ -55,10 +55,10 @@ a nested config object, an override-vs-merge pair, a set of mutually-exclusive p
 groups, or a family of independently-addable segments — apply the *same* two-tier pattern one level
 deeper:
 
-- `..\nodes\{code}\00-index.md` — a lean index: what the node does overall, credential/ID
+- `..\..\Knowledge\Workflow\workflow-nodes-rag\nodes\{code}\00-index.md` — a lean index: what the node does overall, credential/ID
   requirements, any fields that are genuinely core/always-relevant (not owned by one sub-feature), and
   a short table of sub-features, each with a one-line description and a pointer to its own doc.
-- `..\nodes\{code}\{sub-feature}.md` — one focused doc per genuinely-independent sub-feature, same
+- `..\..\Knowledge\Workflow\workflow-nodes-rag\nodes\{code}\{sub-feature}.md` — one focused doc per genuinely-independent sub-feature, same
   minimum-content bar as a single-doc node type (what the feature does, its applicable properties,
   valid values per property — types/enums/ranges — and the meaning/purpose of each, all from real
   source).
@@ -88,7 +88,7 @@ constant-name trap is exactly the kind of thing an agent authoring a workflow wo
 guessing.
 
 **Single-doc structure** (mirrors `atlas-forms-rag\v2\controls\{type}.md`'s depth/format — read a
-couple of existing `..\nodes\*.md` files as a live example before writing a new one):
+couple of existing `..\..\Knowledge\Workflow\workflow-nodes-rag\nodes\*.md` files as a live example before writing a new one):
 
 ```
 # `{node-type-code}`

@@ -5,7 +5,7 @@ picking up work on the `elasticsearch` node **must read this file first**, befor
 `resource.md`, `test-plan.md`, or `workflow-build\`. Any real finding, defect, or process improvement
 discovered while working on this node **must** be appended here as a new dated entry before the work
 is considered done — this is a standing requirement, not optional, the same pattern already
-established in `..\..\agentic-coding\atlas-form-automation-project\lessons\README.md`. Newest entries
+established in `..\..\..\..\..\..\Knowledge\Form\lessons\README.md`. Newest entries
 first. Keep each entry short and specific — what was assumed going in, what turned out to be true or
 false, and what to do differently next time. Bias toward the surprising and the concrete over the
 obvious; this is not a changelog of what someone was told to fix.

@@ -328,7 +328,7 @@ unverified lookup, but should now be treated as a fallback to cross-check agains
 <summary>Original (superseded) reasoning</summary>
 
 **The precedent, read directly before writing this section, not assumed:** the tiered RAG design
-built for Atlas Forms lives at `Documentation\Employees\atlas-forms\atlas-forms-rag\v2\` (not under
+built for Atlas Forms lives at `Knowledge\Form\atlas-forms-rag\v2\` (not under
 `bizfirst-ai-mcp-servers-spec\` as this task's brief guessed — confirmed by directory search; flagged
 so a future reader doesn't look in the wrong place) — `00-overview.md` (always-loaded: category table,
 decision guide) plus one `controls\{type}.md` file per control type (69 files), ingested via the

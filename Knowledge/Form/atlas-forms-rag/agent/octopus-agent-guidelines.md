@@ -3,7 +3,7 @@
 How an Octopus AI agent should use the Atlas Forms RAG spec (this `v2/` directory) and the 8 Atlas
 Forms MCP tools to generate and edit forms. This is the "how to think and act" layer. For tool
 signatures, DTOs, memory design, and concurrency mechanics, see
-`Documentation\Employees\agentic-coding\bizfirst-ai-mcp-servers-spec\atlas-forms-design.md` — this
+`Knowledge\Form\mcp-servers\atlas-forms-design.md` — this
 doc does not re-litigate any decision made there, only operationalizes it.
 
 **Note on sibling files:** as of this writing the sibling control-type reference files
