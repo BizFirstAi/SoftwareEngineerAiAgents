@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Coverage — Atlas Forms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:#f5f7f7; --paper-raised:#ffffff; --paper-sunken:#eef2f1;
+    --ink:#16212a; --ink-soft:#47606c; --ink-faint:#7c93a0;
+    --line:#d7e1e0; --line-strong:#b9c9c8;
+    --accent:#0f7a82; --accent-ink:#0a5860; --accent-soft:#e2f1f0; --accent-line:#b7dbd9;
+    --amber:#9a6608; --amber-soft:#faf0dc; --amber-line:#e9d1a0;
+    --danger:#a2372a; --danger-soft:#fbe9e6; --danger-line:#eebfb6;
+    --good:#1f7a4d; --good-soft:#e3f3ea; --good-line:#b9ddc7;
+    --font-display:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+    --font-label:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+    --font-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+    --font-mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#0f1519; --paper-raised:#161f24; --paper-sunken:#0c1114;
+      --ink:#e6edf0; --ink-soft:#a6bac3; --ink-faint:#71858e;
+      --line:#263238; --line-strong:#34444c;
+      --accent:#56c2c7; --accent-ink:#8fd9dc; --accent-soft:#102c2d; --accent-line:#1f4547;
+      --amber:#e0ac52; --amber-soft:#2c220f; --amber-line:#4a3a1c;
+      --danger:#e58579; --danger-soft:#301917; --danger-line:#4d2924;
+      --good:#7fd6a5; --good-soft:#12291d; --good-line:#234c34;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#0f1519; --paper-raised:#161f24; --paper-sunken:#0c1114;
+    --ink:#e6edf0; --ink-soft:#a6bac3; --ink-faint:#71858e;
+    --line:#263238; --line-strong:#34444c;
+    --accent:#56c2c7; --accent-ink:#8fd9dc; --accent-soft:#102c2d; --accent-line:#1f4547;
+    --amber:#e0ac52; --amber-soft:#2c220f; --amber-line:#4a3a1c;
+    --danger:#e58579; --danger-soft:#301917; --danger-line:#4d2924;
+    --good:#7fd6a5; --good-soft:#12291d; --good-line:#234c34;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-body); font-size:16px; line-height:1.6; }
+  h1,h2,h3,h4 { font-family:var(--font-display); font-weight:600; color:var(--ink); margin:0; }
+  p { margin:0 0 1em; color:var(--ink-soft); }
+  code { font-family:var(--font-mono); font-size:0.88em; background:var(--paper-sunken); border:1px solid var(--line); border-radius:4px; padding:0.1em 0.4em; color:var(--accent-ink); }
+  pre { font-family:var(--font-mono); font-size:0.82em; background:var(--paper-sunken); border:1px solid var(--line); border-radius:8px; padding:14px 16px; overflow-x:auto; color:var(--ink); }
+  .wrap { max-width:1040px; margin:0 auto; padding:0 24px; }
+  .hero { background: radial-gradient(1100px 420px at 15% -10%, var(--accent-soft), transparent 60%), var(--paper-raised); border-bottom:1px solid var(--line); padding-block:48px 36px; }
+  .eyebrow { font-family:var(--font-label); font-weight:600; letter-spacing:0.09em; text-transform:uppercase; font-size:0.76rem; color:var(--accent-ink); display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .eyebrow::before { content:""; width:22px; height:2px; background:var(--accent); display:inline-block; }
+  .hero h1 { font-size:clamp(1.7rem,3.6vw,2.4rem); letter-spacing:-0.01em; max-width:26ch; }
+  .hero .lede { font-size:1.05rem; color:var(--ink-soft); max-width:70ch; margin-top:14px; }
+  section { padding-block:36px; border-bottom:1px solid var(--line); }
+  section:last-of-type { border-bottom:none; }
+  .kicker { font-family:var(--font-label); font-weight:600; letter-spacing:0.06em; text-transform:uppercase; font-size:0.74rem; color:var(--ink-faint); margin-bottom:8px; }
+  h2 { font-size:1.4rem; margin-bottom:10px; }
+  h3 { font-size:1.1rem; margin-bottom:8px; }
+  .card { background:var(--paper-raised); border:1px solid var(--line); border-radius:12px; padding:20px 22px; margin-bottom:18px; }
+  table { width:100%; border-collapse:collapse; font-size:0.9rem; margin:12px 0; }
+  thead th { text-align:left; font-family:var(--font-label); font-weight:600; font-size:0.72rem; letter-spacing:0.04em; text-transform:uppercase; color:var(--ink-faint); padding:0 10px 8px; border-bottom:1.5px solid var(--line-strong); }
+  tbody td { padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top; color:var(--ink-soft); }
+  tbody td:first-child { color:var(--ink); font-weight:600; font-family:var(--font-mono); font-size:0.85em; }
+  .badge { display:inline-flex; align-items:center; gap:6px; font-family:var(--font-label); font-weight:600; font-size:0.72rem; padding:3px 9px 3px 7px; border-radius:999px; }
+  .badge::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .badge.good { background:var(--good-soft); color:var(--good); border:1px solid var(--good-line); }
+  .badge.amber { background:var(--amber-soft); color:var(--amber); border:1px solid var(--amber-line); }
+  .badge.danger { background:var(--danger-soft); color:var(--danger); border:1px solid var(--danger-line); }
+  .shot { margin:16px 0; }
+  .shot img { display:block; width:100%; max-width:680px; border:1px solid var(--line-strong); border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.08); }
+  .shot figcaption { font-family:var(--font-label); font-size:0.82rem; color:var(--ink-faint); margin-top:8px; }
+  .shot figcaption strong { color:var(--ink-soft); }
+  .note { border-radius:10px; padding:12px 14px; font-size:0.88rem; margin:14px 0; }
+  .note.amber { background:var(--amber-soft); border:1px solid var(--amber-line); color:var(--ink); }
+  .note.danger { background:var(--danger-soft); border:1px solid var(--danger-line); color:var(--ink); }
+  .note.good { background:var(--good-soft); border:1px solid var(--good-line); color:var(--ink); }
+  .toolcall { border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:14px 0; }
+  .toolcall-head { background:var(--paper-sunken); padding:8px 14px; font-family:var(--font-mono); font-size:0.85rem; font-weight:600; color:var(--accent-ink); border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
+  footer { padding-block:30px 50px; }
+  footer .wrap { font-family:var(--font-label); font-size:0.8rem; color:var(--ink-faint); }
+</style>
+</head>
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">BizFirst Atlas Forms &middot; MCP Test 1</div>
+    <h1>Full MCP Server Coverage — Atlas Forms</h1>
+    <p class="lede">A real, end-to-end exercise of every Atlas Forms MCP tool: create a form, mutate it through every write operation, query it back through every read operation, and verify the result independently against the live database — not just the tool’s own success response.</p>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <div class="kicker">Coverage summary</div>
+    <h2>All 15 Atlas Forms MCP tools, one real form, one continuous session</h2>
+    <p>Every call below is a real <code>tools/call</code> JSON-RPC request against the live server (<code>http://localhost:5001/mcp</code>), authenticated with a real scoped API key (<code>mcp:atlas-forms:write</code>). One test form (FormID <strong>10001137</strong>) was created, mutated through every write tool, and independently verified against the real <code>Atlas_Forms</code> database row via SQL — not just trusting each tool's <code>"success": true</code>.</p>
+    <div class="note good">15 / 15 tools exercised &middot; 5 screenshots &middot; 1 database cross-check</div>
+  </div>
+</section>
+<section>
+  <div class="wrap">
+    <div class="kicker">Tool-by-tool</div>
+    <h2>Every call, what was sent, what came back</h2>
+    
+  <div class="card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <h3><code>create_form</code></h3>
+      <span class="badge amber">WRITE</span>
+    </div>
+    <p>Creates a new form with a complete schema in one call.</p>
+    <div class="toolcall">
+      <div class="toolcall-head"><span>tools/call &rarr; create_form</span><span>#1 of 15</span></div>
+      <pre><strong>Sent:</strong>
+{
+  "name": "MCP Coverage Test Form",
+  "formCode": "MCP_COVERAGE_TEST",
+  "title": "MCP Coverage Test Form",
+  "formCategoryID": null,
+  "formTypeID": null,
+  "schema": "{ ...FormSchema, 4 controls: fullName/age/department/subscribeNewsletter... }"
+}</pre>
+      <pre><strong>Received:</strong>
+{
+  "success": true,
+  "data": {
+    "formID": 10001137,
+    "designUrl": "/formstudio/design/10001137"
+  }
+}</pre>
+    </div>
+    <figure class="shot"><img src="screenshots/01-create-form.jpg" alt="create_form result"><figcaption><strong>Screenshot:</strong> The new 4-field form rendered in Form Studio immediately after create_form — Full Name, Age, Department, Subscribe to Newsletter.</figcaption></figure>
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <h3><code>get_form_schema</code></h3>
+      <span class="badge good">READ</span>
+    </div>
+    <p>Reads a form's full current schema and lastModifiedOn — the concurrency token every write tool below requires.</p>
+    <div class="toolcall">
+      <div class="toolcall-head"><span>tools/call &rarr; get_form_schema</span><span>#2 of 15</span></div>
+      <pre><strong>Sent:</strong>
+{
+  "formId": 10001137
+}</pre>
+      <pre><strong>Received:</strong>
+{
+  "success": true,
+  "data": {
+    "formID": 10001137,
+    "version": "1.0",
+    "controls": "[4 controls]",
+    "lastModifiedOn": "2026-09-10T03:40:28.897"
+  }
+}</pre>
+    </div>
+    
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <h3><code>add_form_control</code></h3>
+      <span class="badge amber">WRITE</span>
+    </div>
+    <p>Adds one new control to an existing form, at an optional position within a section.</p>
+    <div class="toolcall">
+      <div class="toolcall-head"><span>tools/call &rarr; add_form_control</span><span>#3 of 15</span></div>
+      <pre><strong>Sent:</strong>
+{
+  "formId": 10001137,
+  "control": {
+    "id": "email",
+    "type": "email",
+    "label": "Email Address",
+    "order": 5,
+    "sectionId": "main",
+    "required": true,
+    "validation": {
+      "required": true
+    }
+  },
+  "expectedLastModifiedOn": "2026-09-10T03:40:28.897",
+  "sectionKey": "main",
+  "position": null
+}</pre>
+      <pre><strong>Received:</strong>
+{
+  "success": true
+}</pre>
+    </div>
+    <figure class="shot"><img src="screenshots/02-add-form-control.jpg" alt="add_form_control result"><figcaption><strong>Screenshot:</strong> The new Email Address field appears at the bottom of the form (a fresh page load was required — the dashboard caches the form list and does not auto-refresh after an MCP-driven write; see the gotcha note below).</figcaption></figure>
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <h3><code>update_form_control</code></h3>
+      <span class="badge amber">WRITE</span>
+    </div>
+    <p>Patches one control's fields with a JSON merge-patch — only the keys present in the patch are changed.</p>
+    <div class="toolcall">
+      <div class="toolcall-head"><span>tools/call &rarr; update_form_control</span><span>#4 of 15</span></div>
+      <pre><strong>Sent:</strong>
+{
+  "formId": 10001137,
+  "controlKey": "age",
+  "patch": {
+    "label": "Age (Years)",
+    "required": true,
+    "validation": {
+      "required": true,
+      "min": 18,
+      "max": 120
+    }
+  },
+  "expectedLastModifiedOn": "2026-09-10T03:42:22.697"
+}</pre>
+      <pre><strong>Received:</strong>
+{
+  "success": true
+}</pre>
+    </div>
+    
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <h3><code>reorder_form_controls</code></h3>
+      <span class="badge amber">WRITE</span>
+    </div>
+    <p>Reorders every control in a section (or the whole form) to a new explicit sequence.</p>
+    <div class="toolcall">
+      <div class="toolcall-head"><span>tools/call &rarr; reorder_form_controls</span><span>#5 of 15</span></div>
+      <pre><strong>Sent:</strong>
+{
+  "formId": 10001137,
+  "orderedControlKeys": [
+    "fullName",
+    "email",
+    "age",
+    "department",
+    "subscribeNewsletter"
+  ],
+  "sectionKey": "main",
+  "expectedLastModifiedOn": "2026-09-10T03:44:39.453"
+}</pre>
+      <pre><strong>Received:</strong>
+{
+  "success": true
+}</pre>
+    </div>
+    <figure class="shot"><img src="screenshots/03-update-and-reorder.jpg" alt="reorder_form_controls result"><figcaption><strong>Screenshot:</strong> One screenshot proves both calls at once: Email now sits right after Full Name (reorder_form_controls), and Age now reads "Age (Years)" (update_form_control’s label patch).</figcaption></figure>
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <h3><code>remove_form_control</code></h3>
+      <span class="badge amber">WRITE</span>
+    </div>
+    <p>Removes one control by ID and cleans up any conditional-logic rule elsewhere in the schema that referenced it.</p>
+    <div class="toolcall">
+      <div class="toolcall-head"><span>tools/call &rarr; remove_form_control</span><span>#6 of 15</span></div>
+      <pre><strong>Sent:</strong>
+{
+  "formId": 10001137,
+  "controlKey": "department",
+  "expectedLastModifiedOn": "2026-09-10T03:45:01.867"
+}</pre>
+      <pre><strong>Received:</strong>
+{
+  "success": true
+}</pre>
+    </div>
+    <figure class="shot"><img src="screenshots/04-remove-control.jpg" alt="remove_form_control result"><figcaption><strong>Screenshot:</strong> Department is gone — only Full Name, Email Address, Age (Years), and Subscribe to Newsletter remain. Verified independently against the real Atlas_Forms.Schema column via SQL (4 controls, matching exactly).</figcaption></figure>
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <h3><code>set_form_enabled</code></h3>
+      <span class="badge amber">WRITE</span>
+    </div>
+    <p>Enables or disables a form (soft toggle, not a delete).</p>
+    <div class="toolcall">
+      <div class="toolcall-head"><span>tools/call &rarr; set_form_enabled</span><span>#7 of 15</span></div>
+      <pre><strong>Sent:</strong>
+{
+  "formId": 10001137,
+  "enabled": false
+}</pre>
+      <pre><strong>Received:</strong>
+{
+  "success": true
+}</pre>
+    </div>
+    <figure class="shot"><img src="screenshots/05-disabled.jpg" alt="set_form_enabled result"><figcaption><strong>Screenshot:</strong> The status badge flips from "Active" to "Inactive" immediately in the list view (this view, unlike the modal, refetches on search and shows the change without a full page reload).</figcaption></figure>
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <h3><code>find_forms</code></h3>
+      <span class="badge good">READ</span>
+    </div>
+    <p>Curated search tool — collapses name/category/code/title/ID lookups into one filter object; branches internally on which field is set.</p>
+    <div class="toolcall">
+      <div class="toolcall-head"><span>tools/call &rarr; find_forms</span><span>#8 of 15</span></div>
+      <pre><strong>Sent:</strong>
+{
+  "filter": {
+    "name": null,
+    "formCategoryID": null,
+    "formCode": "MCP_COVERAGE_TEST",
+    "searchTitle": null,
+    "formID": null,
+    "isEnabled": null,
+    "isSystem": null,
+    "page": 1,
+    "pageSize": 20
+  }
+}</pre>
+      <pre><strong>Received:</strong>
+{
+  "success": true,
+  "data": {
+    "forms": [
+      {
+        "formID": 10001137,
+        "name": "MCP Coverage Test Form",
+        "title": "MCP Coverage Test Form",
+        "formCode": "MCP_COVERAGE_TEST",
+        "enabled": true
+      }
+    ],
+    "pageNumber": 1,
+    "pageSize": 20,
+    "totalRecords": 1
+  }
+}</pre>
+    </div>
+    
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <h3><code>list_form_categories</code></h3>
+      <span class="badge good">READ</span>
+    </div>
+    <p>Lists the fixed catalog of form categories (General, Contact, Survey, Registration, Configuration, Workflow, Node Configuration, Administration).</p>
+    <div class="toolcall">
+      <div class="toolcall-head"><span>tools/call &rarr; list_form_categories</span><span>#9 of 15</span></div>
+      <pre><strong>Sent:</strong>
+{
+  "page": 1,
+  "pageSize": 10
+}</pre>
+      <pre><strong>Received:</strong>
+{
+  "success": true,
+  "data": {
+    "categories": "[8 rows: GENERAL, CONTACT, SURVEY, REGISTRATION, CONFIGURATION, WORKFLOW, NODE_CONFIG, ADMIN]",
+    "pageNumber": 1,
+    "pageSize": 10,
+    "totalRecords": 8
+  }
+}</pre>
+    </div>
+    
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <h3><code>list_form_types</code></h3>
+      <span class="badge good">READ</span>
+    </div>
+    <p>Lists the fixed catalog of form types (Standard, Workflow, Dynamic, Modal, Wizard, Inline, API Call, Node Configuration, Custom).</p>
+    <div class="toolcall">
+      <div class="toolcall-head"><span>tools/call &rarr; list_form_types</span><span>#10 of 15</span></div>
+      <pre><strong>Sent:</strong>
+{
+  "page": 1,
+  "pageSize": 10
+}</pre>
+      <pre><strong>Received:</strong>
+{
+  "success": true,
+  "data": {
+    "types": "[9 rows: STANDARD, WORKFLOW, DYNAMIC, MODAL, WIZARD, INLINE, API-CALL, NODE-FORM-CONFIGURATION, CUSTOM]",
+    "pageNumber": 1,
+    "pageSize": 10,
+    "totalRecords": 9
+  }
+}</pre>
+    </div>
+    
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <h3><code>create_form_group</code></h3>
+      <span class="badge amber">WRITE</span>
+    </div>
+    <p>Creates a new Form Group — a container for organizing related forms (e.g. all the forms behind one app page or one process).</p>
+    <div class="toolcall">
+      <div class="toolcall-head"><span>tools/call &rarr; create_form_group</span><span>#11 of 15</span></div>
+      <pre><strong>Sent:</strong>
+{
+  "name": "MCP Coverage Test Group",
+  "title": "MCP Coverage Test Group",
+  "subtitle": null,
+  "description": "Group created to test the Atlas Forms MCP group tools.",
+  "formGroupCode": "MCP_COVERAGE_TEST_GROUP",
+  "formGroupCategoryID": null,
+  "formGroupTypeID": null,
+  "displayOrder": 0
+}</pre>
+      <pre><strong>Received:</strong>
+{
+  "success": true,
+  "data": {
+    "formGroupID": 6
+  }
+}</pre>
+    </div>
+    
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <h3><code>add_form_to_group</code></h3>
+      <span class="badge amber">WRITE</span>
+    </div>
+    <p>Associates an existing form with an existing group (the many-to-many join a form can belong to more than one group).</p>
+    <div class="toolcall">
+      <div class="toolcall-head"><span>tools/call &rarr; add_form_to_group</span><span>#12 of 15</span></div>
+      <pre><strong>Sent:</strong>
+{
+  "formGroupID": 6,
+  "formID": 10001137,
+  "associationName": null,
+  "sectionName": null,
+  "sequenceName": null,
+  "displayName": null,
+  "displayOrder": 0
+}</pre>
+      <pre><strong>Received:</strong>
+{
+  "success": true,
+  "data": {
+    "formGroupFormID": 11
+  }
+}</pre>
+    </div>
+    
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <h3><code>list_form_groups</code></h3>
+      <span class="badge good">READ</span>
+    </div>
+    <p>Curated search over form groups — by name, category, or type, same one-filter-branches-internally pattern as find_forms.</p>
+    <div class="toolcall">
+      <div class="toolcall-head"><span>tools/call &rarr; list_form_groups</span><span>#13 of 15</span></div>
+      <pre><strong>Sent:</strong>
+{
+  "filter": {
+    "name": "MCP Coverage",
+    "formGroupCategoryID": null,
+    "formGroupTypeID": null,
+    "page": 1,
+    "pageSize": 10
+  }
+}</pre>
+      <pre><strong>Received:</strong>
+{
+  "success": true,
+  "data": {
+    "groups": [
+      {
+        "formGroupID": 6,
+        "name": "MCP Coverage Test Group",
+        "title": "MCP Coverage Test Group",
+        "formGroupCode": "MCP_COVERAGE_TEST_GROUP",
+        "enabled": true
+      }
+    ],
+    "pageNumber": 1,
+    "pageSize": 10,
+    "totalRecords": 1
+  }
+}</pre>
+    </div>
+    
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <h3><code>list_form_group_memberships</code></h3>
+      <span class="badge good">READ</span>
+    </div>
+    <p>Lists a group's member forms (or, given a formID instead, every group that form belongs to) — mutually exclusive filter params.</p>
+    <div class="toolcall">
+      <div class="toolcall-head"><span>tools/call &rarr; list_form_group_memberships</span><span>#14 of 15</span></div>
+      <pre><strong>Sent:</strong>
+{
+  "formGroupID": 6,
+  "formID": null,
+  "page": 1,
+  "pageSize": 10
+}</pre>
+      <pre><strong>Received:</strong>
+{
+  "success": true,
+  "data": {
+    "memberships": [
+      {
+        "formGroupFormID": 11,
+        "formGroupID": 6,
+        "formID": 10001137,
+        "displayOrder": 0
+      }
+    ],
+    "pageNumber": 1,
+    "pageSize": 10,
+    "totalRecords": 1
+  }
+}</pre>
+    </div>
+    
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <h3><code>remove_form_from_group</code></h3>
+      <span class="badge amber">WRITE</span>
+    </div>
+    <p>Removes one form–group association by its own join-row ID (not by form+group pair).</p>
+    <div class="toolcall">
+      <div class="toolcall-head"><span>tools/call &rarr; remove_form_from_group</span><span>#15 of 15</span></div>
+      <pre><strong>Sent:</strong>
+{
+  "formGroupFormID": 11
+}</pre>
+      <pre><strong>Received:</strong>
+{
+  "success": true
+}</pre>
+    </div>
+    
+  </div>
+  </div>
+</section>
+<section>
+  <div class="wrap">
+    <div class="kicker">Findings from this run</div>
+    <h2>Real gotchas, not just a pass/fail list</h2>
+    <div class="note amber"><strong>Dashboard caching gap (frontend, not MCP):</strong> after <code>add_form_control</code>/<code>update_form_control</code>/etc., reopening the same "View" modal on the Form Definitions list still showed the old data — the dashboard loads the form list once and doesn't invalidate it on modal reopen. A full page navigation (not just closing the modal) forces a fresh fetch. Worth knowing before assuming an MCP write "didn't work" when it's actually a stale UI.</div>
+    <div class="note good"><strong>Cross-checked against the database, not just the MCP response:</strong> after <code>remove_form_control</code>, <code>SELECT (SELECT COUNT(*) FROM OPENJSON([Schema],'$.controls')) FROM Atlas_Forms WHERE FormID=10001137</code> returned <code>4</code> — matching exactly. The <code>[Schema]</code> column is legacy <code>ntext</code>, not <code>nvarchar(max)</code> — needs an explicit <code>CAST</code> before any JSON function will touch it.</div>
+  </div>
+</section>
+<footer><div class="wrap">BizFirst AI Platform &middot; Atlas Forms MCP Test Results &middot; 2026-09-10</div></footer>
+</body>
+</html>

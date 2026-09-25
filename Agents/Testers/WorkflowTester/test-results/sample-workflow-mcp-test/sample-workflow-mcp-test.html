@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workflow MCP — Sample Workflow Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f5f7f7; --paper-raised: #ffffff; --paper-sunken: #eef2f1;
+    --ink: #16212a; --ink-soft: #47606c; --ink-faint: #7c93a0;
+    --line: #d7e1e0; --line-strong: #b9c9c8;
+    --accent: #0f7a82; --accent-ink: #0a5860; --accent-soft: #e2f1f0; --accent-line: #b7dbd9;
+    --amber: #9a6608; --amber-soft: #faf0dc; --amber-line: #e9d1a0;
+    --danger: #a2372a; --danger-soft: #fbe9e6; --danger-line: #eebfb6;
+    --good: #1f7a4d; --good-soft: #e3f3ea; --good-line: #b9ddc7;
+    --font-display: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --font-label: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
+    --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0f1519; --paper-raised: #161f24; --paper-sunken: #0c1114;
+      --ink: #e6edf0; --ink-soft: #a6bac3; --ink-faint: #71858e;
+      --line: #263238; --line-strong: #34444c;
+      --accent: #56c2c7; --accent-ink: #8fd9dc; --accent-soft: #102c2d; --accent-line: #1f4547;
+      --amber: #e0ac52; --amber-soft: #2c220f; --amber-line: #4a3a1c;
+      --danger: #e58579; --danger-soft: #301917; --danger-line: #4d2924;
+      --good: #7fd6a5; --good-soft: #12291d; --good-line: #234c34;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0f1519; --paper-raised: #161f24; --paper-sunken: #0c1114;
+    --ink: #e6edf0; --ink-soft: #a6bac3; --ink-faint: #71858e;
+    --line: #263238; --line-strong: #34444c;
+    --accent: #56c2c7; --accent-ink: #8fd9dc; --accent-soft: #102c2d; --accent-line: #1f4547;
+    --amber: #e0ac52; --amber-soft: #2c220f; --amber-line: #4a3a1c;
+    --danger: #e58579; --danger-soft: #301917; --danger-line: #4d2924;
+    --good: #7fd6a5; --good-soft: #12291d; --good-line: #234c34;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 15.5px; line-height: 1.6; }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 600; color: var(--ink); margin: 0; }
+  p { margin: 0 0 1em; color: var(--ink-soft); }
+  code { font-family: var(--font-mono); font-size: 0.88em; background: var(--paper-sunken); border: 1px solid var(--line); border-radius: 4px; padding: 0.1em 0.4em; color: var(--accent-ink); }
+  pre { font-family: var(--font-mono); font-size: 0.82rem; background: var(--paper-sunken); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; color: var(--ink); white-space: pre-wrap; word-break: break-word; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+  .hero { background: radial-gradient(1000px 380px at 15% -10%, var(--accent-soft), transparent 60%), var(--paper-raised); border-bottom: 1px solid var(--line); padding-block: 48px 36px; }
+  .eyebrow { font-family: var(--font-label); font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; font-size: 0.76rem; color: var(--accent-ink); margin-bottom: 14px; }
+  h1 { font-size: clamp(1.7rem, 3.6vw, 2.3rem); }
+  .lede { font-size: 1.05rem; color: var(--ink-soft); max-width: 68ch; margin-top: 14px; }
+  section { padding-block: 40px; border-bottom: 1px solid var(--line); }
+  .kicker { font-family: var(--font-label); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.74rem; color: var(--ink-faint); margin-bottom: 8px; }
+  h2 { font-size: 1.35rem; margin-bottom: 6px; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-label); font-weight: 600; font-size: 0.76rem; padding: 3px 9px 3px 7px; border-radius: 999px; }
+  .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .badge.good { background: var(--good-soft); color: var(--good); border: 1px solid var(--good-line); }
+  .badge.danger { background: var(--danger-soft); color: var(--danger); border: 1px solid var(--danger-line); }
+  .badge.amber { background: var(--amber-soft); color: var(--amber); border: 1px solid var(--amber-line); }
+  .card { background: var(--paper-raised); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 18px; }
+  .tool-name { font-family: var(--font-mono); font-weight: 600; color: var(--accent-ink); font-size: 1.02rem; }
+  .call-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  @media (max-width: 720px) { .call-grid { grid-template-columns: 1fr; } }
+  .call-label { font-family: var(--font-label); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 4px; }
+  img.shot { max-width: 100%; border-radius: 10px; border: 1px solid var(--line); display: block; margin-top: 10px; }
+  .cap { font-family: var(--font-label); font-size: 0.82rem; color: var(--ink-faint); margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 8px; }
+  thead th { text-align: left; font-family: var(--font-label); font-weight: 600; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-faint); padding: 0 10px 8px; border-bottom: 1.5px solid var(--line-strong); }
+  tbody td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .bug-box { border-radius: 10px; padding: 16px 18px; margin: 14px 0; border: 1px solid var(--danger-line); background: var(--danger-soft); }
+  .bug-box.fixed { border-color: var(--good-line); background: var(--good-soft); }
+  .bug-box h3 { font-size: 1rem; margin-bottom: 8px; }
+  footer { padding-block: 32px 56px; }
+  footer .wrap { font-family: var(--font-label); font-size: 0.82rem; color: var(--ink-faint); }
+</style>
+</head>
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Workflow Development Engineer &middot; Test Report</div>
+    <h1>First real end-to-end write test of the Workflow MCP module</h1>
+    <p class="lede">
+      A real workflow (Manual Trigger &rarr; Send Email via SMTP) built entirely through the
+      Workflow MCP tools, verified at three levels: the MCP responses themselves, the raw database
+      rows, and the real Flow Studio Designer UI. This was the first time this module's write path
+      had ever been exercised end to end — it surfaced and fixed three real bugs along the way.
+    </p>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <div class="kicker">Result</div>
+    <h2>3 real bugs found and fixed, live-verified</h2>
+    <p>All three were found by actually building something real, not by code review alone — each confirmed via the live server log or a direct SQL check before being called "fixed."</p>
+
+    <div class="bug-box fixed">
+      <span class="badge good">Fixed &middot; general, not a workaround</span>
+      <h3>1. <code>create_workflow_project</code> crashed on every call</h3>
+      <p><code>StudioProjectService.ValidateAndDeserializeRequest</code> called <code>request.Data.ToString()</code> assuming it was already JSON text — true for a real HTTP caller (ASP.NET Core's model binder produces a <code>JsonElement</code>, whose <code>ToString()</code> yields raw JSON), but the MCP tool passes an already-typed <code>CreateProjectWithStructureRequest</code> object directly (in-process call, no HTTP hop). <code>.ToString()</code> on that returns the CLR type's full name (<code>"BizFirst.Ai...."</code>) — hence the real error, <code>'B' is an invalid start of a value</code>. Fixed at the service level (handle the already-typed case explicitly) rather than special-casing the MCP tool, since this same bug would hit any future in-process caller.</p>
+    </div>
+
+    <div class="bug-box fixed">
+      <span class="badge good">Fixed &middot; source-level, benefits every future caller</span>
+      <h3>2. <code>email-smtp</code>'s advertised schema had a silent-failure casing bug</h3>
+      <p>The DB <code>ConfigurationSchema</code> column (what <code>get_node_type_schema</code> returns) listed the username field as <code>username</code>, but the real executor reads it case-sensitively as <code>userName</code> (capital N) — already documented as a known gap in this project's own RAG doc, but never actually fixed in the database. An agent following the tool's own advertised schema exactly would silently build a node that falls back to anonymous SMTP relay instead of authenticating, with no error at any layer. Fixed the DB row directly (one JSON key rename) so every future <code>get_node_type_schema</code> call returns the correct key.</p>
+    </div>
+
+    <div class="bug-box fixed">
+      <span class="badge good">Fixed &middot; same shape as the earlier Atlas Forms search bug</span>
+      <h3>3. <code>list_workflows</code> silently missed real matches</h3>
+      <p>The search filter was applied client-side, but only against the <em>first page</em> of unfiltered results (default 50 rows) — with 65 real workflows in this tenant, a workflow outside that first page was invisible to search even though <code>totalRecords</code> correctly reported the true count. This is exactly the "find a workflow you don't already have the ID for" scenario the tool exists for. Fixed using the same "fetch effectively-all via a large PageSize" pattern already established elsewhere in this codebase, applying the caller's real pagination to the filtered result afterward.</p>
+    </div>
+
+    <div class="bug-box">
+      <span class="badge amber">Found, documented, not fixed (separate, out of scope)</span>
+      <h3>4. Flow Studio Designer's own config form doesn't populate <code>Username</code></h3>
+      <p>Even after fixing the DB schema casing (bug #2), the real Designer UI's SMTP config dialog still shows the <code>Username</code> field as an empty placeholder rather than the real configured value — the Designer's own form has a separate, hardcoded field-to-JSON-key binding, independent of both the DB schema and the executor. Screenshot below. This is a genuine, distinct frontend bug worth a follow-up task; not chased further here to stay in scope.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="kicker">What was built</div>
+    <h2>Sample Manual Trigger + Send Email</h2>
+    <table>
+      <thead><tr><th>Entity</th><th>Real ID</th></tr></thead>
+      <tbody>
+        <tr><td>Project</td><td><code>1063</code></td></tr>
+        <tr><td>App</td><td><code>1065</code></td></tr>
+        <tr><td>Process</td><td><code>1073</code></td></tr>
+        <tr><td>ProcessThread (the workflow itself)</td><td><code>1071</code></td></tr>
+        <tr><td>ProcessThreadVersion</td><td><code>1069</code></td></tr>
+        <tr><td>Manual Trigger node</td><td><code>ProcessElementID 2317</code> (type 297)</td></tr>
+        <tr><td>Send Email (SMTP) node</td><td><code>ProcessElementID 2318</code> (type 129)</td></tr>
+        <tr><td>Connection (trigger &rarr; email)</td><td><code>ConnectionID 1291</code></td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:14px">Verified independently three ways: the MCP <code>get_workflow</code> response, a direct SQL query against <code>Process_ProcessElements</code>/<code>AIExt_Connectors</code>/<code>Process_Connections</code> (confirmed the Connector-pairing invariant &mdash; one connector row per node, correctly paired), and the real Flow Studio Designer canvas.</p>
+    <img class="shot" src="screenshots/01-flow-studio-canvas-both-nodes-connected.jpg" alt="Flow Studio Designer canvas showing the Manual Trigger node connected to the Send Email (SMTP) node">
+    <p class="cap"><strong>Fig. 1</strong> &mdash; Real Flow Studio Designer canvas, opened independently of MCP. Both MCP-created nodes render correctly with their ports (Manual Trigger's Main Output, Send Email's Main Input/Success/Error), and the connector between them is intact &mdash; confirming the module's Connector-pairing invariant holds for MCP-created workflows.</p>
+    <img class="shot" src="screenshots/02-send-email-config-dialog.jpg" alt="Send Email SMTP config dialog showing Host and Port populated correctly but Username showing a placeholder instead of the real value">
+    <p class="cap"><strong>Fig. 2</strong> &mdash; The node's real config dialog. Host (<code>smtp.example.com</code>) and Port (<code>587</code>) display correctly (proving the node's configuration round-trips through the real UI), but Username shows the placeholder <code>smtp.user@domain</code> instead of the real configured value &mdash; this is bug #4 above.</p>
+  </div>
+</section>
+
+<section>
+  <div class="kicker">Tool-by-tool coverage</div>
+  <h2 style="padding: 0 24px;">Every Workflow MCP tool exercised, with real request/response data</h2>
+  <div class="wrap" style="padding-top: 20px;">
+
+    <div class="card">
+      <div class="tool-name">tools/list</div>
+      <p>Lists all 49 tools live on this server (Atlas Forms, Credentials, Workflow, App Studio combined) &mdash; confirmed all 13 Workflow tools present with real, current schemas, used throughout this test instead of guessing param shapes.</p>
+    </div>
+
+    <div class="card">
+      <div class="tool-name">create_workflow_project</div>
+      <p>Creates an App + Process + ProcessThread in one call. <strong>First call failed with the bug above; second call (after the fix) succeeded.</strong></p>
+      <div class="call-grid">
+        <div><div class="call-label">Request</div><pre>{"projectName":"Sample Manual Trigger + Send Email",
+"projectDescription":"MCP test workflow: manual
+trigger fires an SMTP email send node"}</pre></div>
+        <div><div class="call-label">Response (after fix)</div><pre>{"success":true,"data":{
+  "projectID":1063,"appID":1065,
+  "processID":1073,"processThreadID":1071,
+  "processThreadVersionID":1069,
+  "projectName":"Sample Manual Trigger + Send Email"}}</pre></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tool-name">get_node_type_schema</div>
+      <p>Read the real config/port schema for both node types before using them &mdash; this is what surfaced bug #2 (the <code>username</code> vs <code>userName</code> casing gap), by cross-referencing the tool's own output against the project's RAG documentation.</p>
+      <div class="call-grid">
+        <div><div class="call-label">manual-trigger</div><pre>{"nodeTypeCode":"manual-trigger"}
+&rarr; processElementTypeID: 297, empty config,
+one output port "main"</pre></div>
+        <div><div class="call-label">email-smtp</div><pre>{"nodeTypeCode":"email-smtp"}
+&rarr; processElementTypeID: 129, requires
+resource/operation/host/port/fromEmail/toEmail,
+one input port "main", outputs "main"+"error"</pre></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tool-name">add_workflow_node</div>
+      <p>Called twice &mdash; once per node. Each call creates the node's paired Connector record automatically (confirmed via SQL: connectors 2288/2289, one per node, correctly linked).</p>
+      <div class="call-grid">
+        <div><div class="call-label">Manual Trigger</div><pre>{"processThreadVersionId":1069,
+"processElementTypeId":297,
+"processElementKey":"trigger-1",
+"displayName":"Manual Trigger",
+"positionX":100,"positionY":150,
+"configuration":"{}","isTrigger":true}
+&rarr; {"processElementID":2317}</pre></div>
+        <div><div class="call-label">Send Email (SMTP)</div><pre>{"processThreadVersionId":1069,
+"processElementTypeId":129,
+"processElementKey":"send-email-1",
+"displayName":"Send Email (SMTP)",
+"positionX":400,"positionY":150,
+"configuration":"{...real SMTP config...}",
+"isTrigger":false}
+&rarr; {"processElementID":2318}</pre></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tool-name">add_connection</div>
+      <p>Wired the trigger's <code>main</code> output to the email node's <code>main</code> input, Standard connection type.</p>
+      <div class="call-grid">
+        <div><div class="call-label">Request</div><pre>{"processThreadVersionId":1069,
+"sourceProcessElementId":2317,"sourcePortKey":"main",
+"targetProcessElementId":2318,"targetPortKey":"main",
+"connectionTypeId":1,"condition":null}</pre></div>
+        <div><div class="call-label">Response</div><pre>{"success":true,"data":{"connectionID":1291}}</pre></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tool-name">get_workflow</div>
+      <p>Read the complete saved workflow back &mdash; both nodes, the edge, and each node's real Connector ID, confirming the round trip.</p>
+      <div class="call-grid">
+        <div><div class="call-label">Request</div><pre>{"processThreadId":1071}</pre></div>
+        <div><div class="call-label">Response (abridged)</div><pre>{"success":true,"data":{
+  "nodes":[{...2317, connectorID:2288...},
+           {...2318, connectorID:2289...}],
+  "edges":[{"connectionID":1291,
+    "sourceProcessElementID":2317,
+    "targetProcessElementID":2318}]}}</pre></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tool-name">update_node_configuration</div>
+      <p>Used to apply the bug #2 fix to this workflow's own node (rewriting <code>username</code> &rarr; <code>userName</code>). Real param name is <code>configurationJson</code>, not <code>configuration</code> &mdash; differs from <code>add_workflow_node</code>'s param naming, worth knowing.</p>
+      <pre>{"processElementId":2318,"configurationJson":"{...corrected config with userName...}"}
+&rarr; {"success":true}</pre>
+    </div>
+
+    <div class="card">
+      <div class="tool-name">list_workflows</div>
+      <p>This is the tool bug #3 was found in. First call (before the fix) returned an empty result for a workflow that definitely existed; second call (after the fix, fresh server build) correctly found it.</p>
+      <div class="call-grid">
+        <div><div class="call-label">Before fix</div><pre>{"search":"Sample Manual Trigger",
+"page":1,"pageSize":10}
+&rarr; {"workflows":[],"totalRecords":65}</pre></div>
+        <div><div class="call-label">After fix</div><pre>{"search":"Sample Manual Trigger",
+"page":1,"pageSize":10}
+&rarr; {"workflows":[{"processThreadID":1071,
+  "name":"Sample Manual Trigger + Send Email
+  Workflow 1", ...}],"totalRecords":1}</pre></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tool-name">find_credentials</div>
+      <p>Checked for an existing, reusable SMTP credential before attempting <code>attach_node_credential</code> &mdash; none exists in this environment.</p>
+      <pre>{"filter":{"credentialTypeID":null,"typeCode":"SMTP_BASIC","activeOnly":true,"page":1,"pageSize":20}}
+&rarr; {"success":true,"data":{"credentials":[],"pageNumber":1,"pageSize":20}}</pre>
+    </div>
+
+    <div class="card">
+      <div class="tool-name">attach_node_credential &middot; workflow execution</div>
+      <span class="badge amber">Blocked &mdash; real, honest blocker</span>
+      <p style="margin-top:8px">No usable SMTP credential exists in this environment (confirmed above via <code>find_credentials</code>), so neither <code>attach_node_credential</code> nor an actual execution run could be exercised. Per this session's standing rule, no fake credential was fabricated and no real email send was attempted. This mirrors the same accepted "blocked on real credentials" pattern already established for the GitHub MCP test earlier this session &mdash; not a failure of the module, a real environment gap.</p>
+    </div>
+
+    <div class="card">
+      <div class="tool-name">save_workflow &middot; update_workflow_node &middot; delete_workflow_node &middot; delete_connection &middot; list_node_types</div>
+      <p>Not independently re-demonstrated in this pass &mdash; <code>list_node_types</code> was already proven working in an earlier session pass (the read-only connectivity check that preceded this test); <code>save_workflow</code> is the bulk/atomic alternative to the incremental <code>add_workflow_node</code>/<code>add_connection</code> path already exercised above and wasn't needed for a 2-node workflow; <code>update_workflow_node</code>/<code>delete_workflow_node</code>/<code>delete_connection</code> are the natural next candidates for a follow-up edit-and-teardown test.</p>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="kicker">Self-improvement</div>
+    <h2>What changed in the codebase and docs as a result of this test</h2>
+    <table>
+      <thead><tr><th>File</th><th>Change</th></tr></thead>
+      <tbody>
+        <tr><td><code>StudioProjectService.cs</code></td><td>Root-cause fix for bug #1 &mdash; handles an already-typed <code>Data</code> object, not just JSON text.</td></tr>
+        <tr><td><code>Process_ProcessElementTypes</code> (DB row, ProcessElementTypeID 129)</td><td>Root-cause fix for bug #2 &mdash; <code>ConfigurationSchema</code>'s <code>username</code> key renamed to <code>userName</code> to match the real executor.</td></tr>
+        <tr><td><code>ListWorkflowsTool.cs</code></td><td>Root-cause fix for bug #3 &mdash; search now runs against the real full result set, not just the first unfiltered page.</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:14px">The <code>email-smtp.md</code> RAG doc's own Gotchas section already correctly warned about the <code>username</code>/<code>userName</code> casing trap &mdash; it just hadn't been used to actually fix the live DB row until this test cross-referenced it against a real MCP call. No RAG doc corrections were needed this pass; the existing docs were accurate throughout.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Workflow Development Engineer &middot; Sample Workflow MCP Test &middot; 2026-09-10</div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,1 @@
+{"resource":"document","operation":"create","host":"https://localhost:9200","username":"elastic","password":"PLACEHOLDER_NOT_A_REAL_CREDENTIAL","allowInsecure":true,"indexName":"agentic-testing-nodes-elasticsearch-20260823","fields":{"title":"Agentic Testing Doc","body":"created by agentic-testing-nodes phase 1"}}

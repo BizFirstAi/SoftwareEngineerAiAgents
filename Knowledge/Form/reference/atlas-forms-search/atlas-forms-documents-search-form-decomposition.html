@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Documents Search Form — Structure Decomposition</title>
+<style>
+  :root {
+    --bg: #14141f;
+    --panel: #1a1a2e;
+    --panel-2: #20203a;
+    --border: #333355;
+    --text: #e8e8f0;
+    --text-dim: #9a9ab0;
+    --accent: #4f8fff;
+    --ok: #4caf7d;
+    --warn: #e0a030;
+    --bad: #e05050;
+    --mono: 'Consolas', 'SFMono-Regular', Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 32px 24px 80px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .subtitle { color: var(--text-dim); font-size: 13px; margin-bottom: 8px; }
+  .revision-banner {
+    background: rgba(224,160,48,0.12);
+    border: 1px solid rgba(224,160,48,0.4);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 12.5px;
+    color: var(--warn);
+    margin: 16px 0 28px;
+  }
+  .revision-banner b { color: #ffcf80; }
+  h2 {
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin: 40px 0 16px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .card-meta {
+    color: var(--text-dim);
+    font-size: 12px;
+    margin-top: 2px;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+  .badge.type { background: rgba(79,143,255,0.15); border-color: rgba(79,143,255,0.4); color: #8fb8ff; }
+  .badge.live { background: rgba(76,175,125,0.15); border-color: rgba(76,175,125,0.4); color: var(--ok); }
+  .badge.gap { background: rgba(224,80,80,0.15); border-color: rgba(224,80,80,0.4); color: #ff8a8a; }
+  .badge.wired { background: rgba(224,160,48,0.15); border-color: rgba(224,160,48,0.4); color: var(--warn); }
+  .badge.unconfirmed { background: rgba(224,160,48,0.15); border-color: rgba(224,160,48,0.4); color: var(--warn); }
+  .section-block {
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .controls-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .controls-row .card { flex: 1 1 220px; margin-bottom: 0; }
+  .field-row {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+  .field-row b { color: var(--text); font-weight: 600; }
+  .grid-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .col-chip {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 6px 8px;
+    font-size: 11px;
+    font-family: var(--mono);
+  }
+  .col-chip .field { color: var(--text-dim); display: block; font-size: 10px; }
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 8px 0 4px;
+  }
+  .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .flow-num {
+    flex: 0 0 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--panel-2);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+  }
+  .flow-connector {
+    width: 26px;
+    display: flex;
+    justify-content: center;
+  }
+  .flow-connector::before {
+    content: '';
+    width: 1px;
+    height: 22px;
+    background: var(--border);
+  }
+  .flow-body { padding-bottom: 18px; flex: 1; }
+  .flow-title { font-weight: 600; font-size: 13.5px; }
+  .flow-desc { color: var(--text-dim); font-size: 12.5px; margin-top: 3px; }
+  code.inline {
+    font-family: var(--mono);
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 11.5px;
+    color: #b8d4ff;
+  }
+  .gap-list { display: flex; flex-direction: column; gap: 10px; }
+  .gap-item {
+    display: flex;
+    gap: 12px;
+    background: var(--panel);
+    border: 1px solid rgba(224,80,80,0.35);
+    border-left: 3px solid var(--bad);
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .gap-item.warn { border-color: rgba(224,160,48,0.35); border-left-color: var(--warn); }
+  .gap-title { font-weight: 600; font-size: 13px; }
+  .gap-desc { color: var(--text-dim); font-size: 12.5px; margin-top: 3px; }
+  .source-list { font-size: 12px; color: var(--text-dim); }
+  .source-list li { margin-bottom: 6px; }
+  .source-list code { color: #b8d4ff; }
+  table.mapping {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 10px;
+  }
+  table.mapping th, table.mapping td {
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  table.mapping th { color: var(--text-dim); font-weight: 600; font-size: 11px; text-transform: uppercase; }
+  table.mapping td { font-family: var(--mono); }
+  .footer-note {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 11.5px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Documents Search Form — Structure Decomposition</h1>
+  <div class="subtitle">
+    <code class="inline">form-documents-search-results-edit</code> · v2, enterprise pattern ·
+    grounded in the real <code class="inline">Doc_Documents</code> table and API ·
+    see <code class="inline">atlas-forms-search-results-edit-form-schema.md</code> §4B for full detail
+  </div>
+
+  <div class="revision-banner">
+    <b>Revised 2026-09-01</b> — the original design (automatic load, client-side filtering, no
+    Search button) was rejected: <i>"I dont like the design. We need pagination, an explicit
+    search/reset button and also server side filter. this is enterprise system."</i>
+    This version reflects that direction. <b>Backend capability now confirmed (§10):</b>
+    pagination is fully real and working today (total count, total pages, next/prev flags — no
+    backend work needed); server-side filtering is confirmed <b>not implemented anywhere in the
+    call chain</b> — a real, but small and precisely-scoped, backend fix (one file,
+    <code class="inline">DocumentRepository.cs</code>) is required before this design's filter
+    fields can do anything server-side. Pieces still marked <span class="badge unconfirmed">unconfirmed</span>
+    (Reset button, dedicated pagination UI) remain best-guess, not yet read from real source.
+  </div>
+
+  <h2>1. Layout — two sections, seven controls</h2>
+
+  <div class="section-block">
+    <div class="section-label">Section: Filters (<code class="inline">section-filters</code>)</div>
+
+    <div class="controls-row">
+      <div class="card">
+        <div class="card-title">filter-search <span class="badge type">text</span></div>
+        <div class="card-meta">Sent to server as a filter param on Search</div>
+      </div>
+      <div class="card">
+        <div class="card-title">filter-document-type <span class="badge type">select</span></div>
+        <div class="card-meta">Real seed values (Identity Document, Contract, ...)</div>
+      </div>
+      <div class="card">
+        <div class="card-title">filter-document-category <span class="badge type">select</span></div>
+        <div class="card-meta">Real seed values (Legal, Financial, ...)</div>
+      </div>
+    </div>
+
+    <div class="controls-row" style="margin-top:10px;">
+      <div class="card">
+        <div class="card-title">search-submit <span class="badge type">submit</span> <span class="badge live">fires action-search-documents</span></div>
+        <div class="card-meta">Explicit Search button — nothing fetches until clicked</div>
+      </div>
+      <div class="card">
+        <div class="card-title">search-reset <span class="badge type">button</span> <span class="badge unconfirmed">unconfirmed</span></div>
+        <div class="card-meta"><code class="inline">config.resetForm: true</code> — best-guess shape, not read from real source yet</div>
+      </div>
+      <div class="card">
+        <div class="card-title">page-number <span class="badge type">number</span> <span class="badge unconfirmed">unconfirmed</span></div>
+        <div class="card-meta">Plain input standing in for real pagination UI — no dedicated pagination control confirmed</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-label">Section: Results (<code class="inline">section-results</code>)</div>
+
+    <div class="card">
+      <div class="card-title">results-grid <span class="badge type">grid</span> <span class="badge live">populated by action-search-documents</span></div>
+      <div class="card-meta">Buttons: edit, delete · pageSize: 25 (client-side page slicing of whatever the server returns)</div>
+      <div class="grid-columns">
+        <div class="col-chip">Name<span class="field">documentName</span></div>
+        <div class="col-chip">File name<span class="field">originalFileName</span></div>
+        <div class="col-chip">Type<span class="field">documentTypeID</span></div>
+        <div class="col-chip">Category<span class="field">documentCategoryID</span></div>
+        <div class="col-chip">Size (bytes)<span class="field">fileSizeBytes</span></div>
+        <div class="col-chip">Last Modified<span class="field">lastModifiedOn</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h2>2. The apiAction — now submit-triggered</h2>
+  <div class="card">
+    <div class="card-title">action-search-documents <span class="badge type">trigger: submit</span> <span class="badge live">real, confirmed endpoint</span> <span class="badge gap">filtering not implemented server-side</span></div>
+    <div class="field-row"><b>endpoint</b> &nbsp; POST /api/v1/documents/list</div>
+    <div class="field-row"><b>auth</b> &nbsp; passport (requires §8's auth build item)</div>
+    <table class="mapping">
+      <tr><th>payloadMapping</th><th>direction</th><th>status</th></tr>
+      <tr><td>"filter-search" → "filters.nameContains"</td><td>outgoing</td><td class="badge gap" style="display:inline-block;">backend ignores this</td></tr>
+      <tr><td>"filter-document-type" → "filters.documentTypeID"</td><td>outgoing</td><td class="badge gap" style="display:inline-block;">backend ignores this</td></tr>
+      <tr><td>"filter-document-category" → "filters.documentCategoryID"</td><td>outgoing</td><td class="badge gap" style="display:inline-block;">backend ignores this</td></tr>
+      <tr><td>"page-number" → "pageInfo.pageNumber"</td><td>outgoing</td><td class="badge live" style="display:inline-block;">confirmed real, works today</td></tr>
+      <tr><td>"results-grid" → "data"</td><td>response → control</td><td class="badge live" style="display:inline-block;">confirmed shape</td></tr>
+    </table>
+    <div class="card-meta" style="margin-top:10px;">
+      Confirmed by tracing the full call chain to the shared <code class="inline">BaseRepository.GetAllAsync</code>:
+      pagination (<code class="inline">PageInfo</code> → Skip/Take, real <code class="inline">totalRecords</code> count) is
+      genuinely applied. <code class="inline">request.Filters</code> is never read anywhere in the chain — the three
+      filter mappings above are wired correctly on the Atlas Forms side but currently have zero effect
+      server-side until <code class="inline">DocumentRepository.GetAllAsync</code> is overridden to read them.
+    </div>
+  </div>
+
+  <h2>3. End-to-end flow</h2>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-num">1</div>
+      <div class="flow-body">
+        <div class="flow-title">Form opens — grid starts empty</div>
+        <div class="flow-desc">No automatic fetch. Real UX departure from Document Manager's own "always show something" pattern — deliberate, per the enterprise-pattern requirement.</div>
+      </div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <div class="flow-body">
+        <div class="flow-title">User fills filters, clicks Search</div>
+        <div class="flow-desc"><code class="inline">search-submit</code> fires <code class="inline">action-search-documents</code>.</div>
+      </div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">3</div>
+      <div class="flow-body">
+        <div class="flow-title">Filter values sent to the server</div>
+        <div class="flow-desc"><b style="color:#ff8a8a">Confirmed no-op today</b> — traced the full call chain to the shared <code class="inline">BaseRepository.GetAllAsync</code>; <code class="inline">request.Filters</code> is never read anywhere in it. The backend will silently return an unfiltered (but correctly paginated) page regardless of what's sent here, until <code class="inline">DocumentRepository.GetAllAsync</code> is overridden to apply them (§10 — one file, precedented pattern already used by that file's own <code class="inline">GetByTypeAsync</code>/<code class="inline">GetByCategoryAsync</code>).</div>
+      </div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">4</div>
+      <div class="flow-body">
+        <div class="flow-title">Server returns one filtered, paginated page</div>
+        <div class="flow-desc">Response maps into <code class="inline">results-grid</code> — <b style="color:#ff8a8a">blocked today</b>: response-mapping only fires for the <code class="inline">load</code> trigger in real code, never <code class="inline">submit</code> (§5 Q3). Needs fixing before this works at all.</div>
+      </div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">5</div>
+      <div class="flow-body">
+        <div class="flow-title">User changes page-number, clicks Search again</div>
+        <div class="flow-desc">Re-runs the same action with an updated page parameter — a real dedicated pagination UI (Prev/Next, page picker) would be nicer than a raw number input, flagged as a follow-up.</div>
+      </div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">6</div>
+      <div class="flow-body">
+        <div class="flow-title">User clicks Reset</div>
+        <div class="flow-desc"><code class="inline">search-reset</code>'s <code class="inline">config.resetForm</code> is an unconfirmed capability — needs verifying against real source before this button can be trusted to actually clear the filter fields.</div>
+      </div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">7</div>
+      <div class="flow-body">
+        <div class="flow-title">User edits a row via the grid's built-in Edit button</div>
+        <div class="flow-desc">Unchanged from v1 — targets real <code class="inline">PUT /api/v1/documents/{id}</code> with documentName / documentDescription / documentTypeID / documentCategoryID / classificationName.</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>4. Known gaps &amp; blockers</h2>
+  <div class="gap-list">
+    <div class="gap-item">
+      <div>
+        <div class="gap-title">Server-side filter support — confirmed not implemented (small, scoped fix identified)</div>
+        <div class="gap-desc">Traced the full call chain to the shared <code class="inline">BaseRepository.GetAllAsync</code> — <code class="inline">request.Filters</code> is never read anywhere in it, platform-wide, not just for Documents. Concrete fix: override <code class="inline">GetAllAsync</code> in <code class="inline">DocumentRepository.cs</code> (one file) to read <code class="inline">Filters["nameContains"/"documentTypeID"/"documentCategoryID"]</code> and apply <code class="inline">.Where()</code> clauses, mirroring that same file's existing <code class="inline">GetByTypeAsync</code>/<code class="inline">GetByCategoryAsync</code>. No controller/service/DTO changes needed. A generic platform-wide fix in the shared <code class="inline">BaseRepository</code> was considered and deliberately not recommended (too much blast radius).</div>
+      </div>
+    </div>
+    <div class="gap-item">
+      <div>
+        <div class="gap-title">Response-mapping only wired for the <code class="inline">load</code> trigger</div>
+        <div class="gap-desc">This design's move to <code class="inline">submit</code> makes this a hard blocker, not a footnote — search results cannot reach the grid until this is fixed.</div>
+      </div>
+    </div>
+    <div class="gap-item">
+      <div>
+        <div class="gap-title">Outgoing payloadMapping is applied backwards in the one real consumer</div>
+        <div class="gap-desc">The Studio preview's request-building code inverts key/value from the confirmed authoring convention — filter values would not reach the backend correctly until this is fixed.</div>
+      </div>
+    </div>
+    <div class="gap-item">
+      <div>
+        <div class="gap-title">Form-Actions Player bug (still the base blocker)</div>
+        <div class="gap-desc">The real deployed Player doesn't fire authored <code class="inline">apiActions</code> at all today, regardless of trigger. Fix designed, not yet implemented.</div>
+      </div>
+    </div>
+    <div class="gap-item">
+      <div>
+        <div class="gap-title">Auth not wired to apiActions calls</div>
+        <div class="gap-desc">No real session JWT reaches any <code class="inline">apiActions</code> call today. 5-file build item, target contract <code class="inline">auth: "passport" | "none"</code>.</div>
+      </div>
+    </div>
+    <div class="gap-item warn">
+      <div>
+        <div class="gap-title">Reset button and real pagination UI — unconfirmed capabilities</div>
+        <div class="gap-desc"><code class="inline">config.resetForm</code> and any dedicated server-driven pagination control are best-guess designs, not read from real source. Need the same verification treatment as everything else before being trusted.</div>
+      </div>
+    </div>
+    <div class="gap-item warn">
+      <div>
+        <div class="gap-title">Foreign-key columns show raw IDs, not names</div>
+        <div class="gap-desc">Unchanged from v1 — <code class="inline">documentTypeID</code>/<code class="inline">documentCategoryID</code> render as raw numeric IDs; no confirmed grid capability to resolve them to display names.</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>5. Real sourcing</h2>
+  <ul class="source-list">
+    <li>Table schema: <code>BizFirstFiV3DB\dbo\Tables\Doc_Documents.sql</code></li>
+    <li>API client: <code>doc-app\packages\@doc-app\api-client\src\documentClient.ts</code></li>
+    <li>Backend controller: <code>BizFirstFi.Go.Documents.Api.Base.Controllers.BaseDocumentController</code></li>
+    <li>Request DTO: <code>BizFirstFi.Go.Essentials.Domain.Request.Request.Search.StandardListRequest</code></li>
+    <li>Reference app: <code>doc-app\apps\document-manager</code></li>
+  </ul>
+
+  <div class="footer-note">
+    Generated 2026-09-01 from the current state of <code>atlas-forms-search-results-edit-form-schema.md</code>
+    §4B. This is a working design artifact with explicitly-flagged unconfirmed pieces, not a final spec —
+    re-check against that document once §10 lands.
+  </div>
+
+</div>
+</body>
+</html>
