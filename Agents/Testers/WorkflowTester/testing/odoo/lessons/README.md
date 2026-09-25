@@ -4,10 +4,10 @@
 picking up work on the `odoo` node **must read this file first**, before touching `resource.md`,
 `test-plan.md`, or `workflow-build\`. Any real finding, defect, or process improvement discovered
 while working on this node **must** be appended here as a new dated entry before the work is
-considered done — the same standing requirement as `..\elasticsearch\lessons\README.md`. Newest
+considered done — the same standing requirement as `..\..\elasticsearch\lessons\README.md`. Newest
 entries first. Keep each entry short and specific.
 
-Also check `..\elasticsearch\lessons\README.md` before starting new work here — several of its
+Also check `..\..\elasticsearch\lessons\README.md` before starting new work here — several of its
 findings are general, not Elasticsearch-specific: the decoy-duplicate-folder check (this node came up
 clean, but always re-check), stale-test-report skepticism (this node has no test project at all,
 which is its own, different flavor of the same underlying risk — see below), the
@@ -28,7 +28,7 @@ forward:
 **1. A node can already have its "credential sourcing" problem solved by unrelated prior work in the
 same session/repo — check for that before assuming every node needs the full vendor-signup
 playbook.** Elasticsearch's round is permanently stuck on sourcing a real external account
-(`..\02-guidelines.md` Step 6's full playbook). This node didn't need any of that — a real local Odoo
+(`..\..\02-guidelines.md` Step 6's full playbook). This node didn't need any of that — a real local Odoo
 instance already existed from a different task earlier the same day, and its connection details were
 already documented in `Documentation\WorkManagement\LeadFirst\Workflows\Odoo\password.md`. **Lesson:
 before writing a node's credential-sourcing section as "blocked, here's the vendor signup flow,"

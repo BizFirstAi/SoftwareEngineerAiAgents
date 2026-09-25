@@ -2,7 +2,7 @@
 
 All queries are read-only. Local run form:
 `sqlcmd -S ".\SQLEXPRESS" -d data-ocean-platform-prod -E -C -W -s "|" -Q "<query>"`.
-For the remote DB use host/db from `resource.md` with credentials from appsettings or from the user (never saved).
+For the remote DB use host/db from `..\..\..\Knowledge\Workflow\node-forms\resource.md` with credentials from appsettings or from the user (never saved).
 Column names of `Atlas_Forms` other than `FormID, FormCode, PrimaryUsage, NodeUsage, NodeSubUsage, Deleted` are unverified:
 if a query errors, run `sp_help 'dbo.Atlas_Forms'` and adjust. `<node>` = node type code.
 
@@ -70,7 +70,7 @@ JOIN dbo.AIExt_Connectors c ON c.ConnectorID = pe.ConnectorID      -- join colum
 WHERE pe.ProcessElementID = <processElementID>;
 ```
 
-## JS snippets (Chrome page context, see `resource.md` section 5)
+## JS snippets (Chrome page context, see `..\..\..\Knowledge\Workflow\node-forms\resource.md` section 5)
 
 **J1 - GetNodeForms summary** (returns tier counts and form usages, no token):
 ```js

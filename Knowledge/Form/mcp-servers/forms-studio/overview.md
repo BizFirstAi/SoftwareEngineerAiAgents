@@ -52,7 +52,7 @@ design: `Documentation\Employees\agentic-coding\bizfirst-ai-mcp-servers-spec\arc
 (`find_forms`, `create_form`, `get_form_schema`, `add_form_control`, `update_form_control`,
 `remove_form_control`, `reorder_form_controls`, `set_form_enabled`), calling the already-built
 `IFormsExtendedService`/`IFormService` directly in-process. Full design:
-`Documentation\Employees\agentic-coding\bizfirst-ai-mcp-servers-spec\atlas-forms-design.md`. The
+`Knowledge\Form\mcp-servers\atlas-forms-design.md`. The
 service layer this depends on is **already done** — real C#, 0 build errors, 26/26 tests passed
 (see that doc's implementation, done earlier the same night).
 
@@ -82,7 +82,7 @@ created a row. (2) Flow-Studio-canvas Teams (`team-leader`/`team-member` satelli
 wired but only Priority 3 fallback, creation is human-only via Flow Studio, no realistic
 programmatic path. **Conclusion: "agent teams creates" = a CRUD write path for mechanism 1**, a
 well-scoped MCP tool target. Design doc:
-`Documentation\Employees\agentic-coding\bizfirst-ai-mcp-servers-spec\agent-teams-design.md` —
+`Knowledge\Workflow\mcp-servers\agent-teams-design.md` —
 proposes `IAgentTeamService` in `BizFirstAI.V21`'s `Octopus.Core` (matching where the only existing
 read path lives — note this is a *different* placement decision than Atlas Forms' tool module) +
 `BizFirst.Ai.Mcp.Tools.AgentTeams` (6 new tools, all genuinely new, no reuse-wrappers). 5 open
@@ -93,8 +93,7 @@ Forms.
 ## Item 5 — RAG upload design
 
 **Status: DONE (design) — actual upload is a manual step, by Binoy's explicit direction, not
-further agent work.** Design doc: `Documentation\Employees\atlas-forms\atlas-forms-rag\agent\
-ragUploadDesign.md`. Confirmed the real tool Binoy meant by "we already have tools": **FlowRag**
+further agent work.** Design doc: `Knowledge\Form\atlas-forms-rag\agent\ragUploadDesign.md`. Confirmed the real tool Binoy meant by "we already have tools": **FlowRag**
 (`BizFirst.Ai.ExecutionNodes.Flow.FlowRag`, a real, already-built Flow Studio node — Insert/Update/
 Delete/Search, takes raw text directly, atomic Update-by-`knowledge_id` refresh). Also found a real,
 separate live bug worth knowing about even though it's now out of scope here: the native

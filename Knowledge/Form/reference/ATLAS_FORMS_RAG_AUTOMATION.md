@@ -8,7 +8,7 @@ page is an edited, de-duplicated synthesis of them for a developer who wasn't th
 ## Read this first: what this project is
 
 Goal: a real, working Octopus AI agent that can build and edit **Atlas Forms** through natural-language
-conversation, backed by the Atlas Forms v2 RAG spec (`Documentation\Employees\atlas-forms\atlas-forms-rag\v2\`,
+conversation, backed by the Atlas Forms v2 RAG spec (`Knowledge\Form\atlas-forms-rag\v2\`,
 74 files) and the 8 real Atlas Forms MCP tools, proven end-to-end via a Flow Studio workflow that
 actually creates and edits a sample form.
 

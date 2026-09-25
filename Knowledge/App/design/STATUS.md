@@ -4,7 +4,7 @@ Living status file. Updated as work completes — single source of truth for wha
 a changelog. See `design-and-plan.md` for the plan and `lessons/README.md` for accumulated findings.
 `architecture.md` is the end-to-end reference. The authoritative, most granular live-status file for
 the wix-style-design build phase specifically remains
-`Documentation\Employees\agentic-coding\docs\wix-style-design\00-implementation-status.md` — this
+`Knowledge\App\design\wix-style-design\00-implementation-status.md` — this
 file summarizes it, doesn't replace it.
 
 ## Done
@@ -68,7 +68,7 @@ file summarizes it, doesn't replace it.
   the live dev DB and the declarative SSDT source (in both directions — see `lessons/README.md`).
 - **A Wix vs. Vercel Hobby vs. App Studio comparison chart**, built as a real HTML file (not an
   externally-hosted Artifact, per project policy) at
-  `Documentation\Employees\agentic-coding\docs\wix-style-design\comparison-wix-vercel-appstudio.html`
+  `Knowledge\App\design\wix-style-design\comparison-wix-vercel-appstudio.html`
   — App Studio's column filled honestly from actually-verified capabilities, not aspirational claims.
 
 ## Not started
