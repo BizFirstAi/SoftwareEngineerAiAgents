@@ -1,0 +1,92 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "formID": "job_application",
+    "title": "Job Application",
+    "description": "Apply for an open position.",
+    "numberOfColumns": 2,
+    "formContentStyle": "input",
+    "formBehavior": "interactive"
+  },
+  "sections": [
+    { "id": "sec_personal", "title": "Personal Information", "order": 1 },
+    { "id": "sec_position", "title": "Position", "order": 2 },
+    { "id": "sec_resume", "title": "Resume & Skills", "order": 3 },
+    { "id": "sec_account", "title": "Create Your Account", "order": 4 },
+    { "id": "sec_agreement", "title": "Agreement", "order": 5 }
+  ],
+  "controls": [
+    { "id": "personal_header", "type": "header", "order": 0, "sectionId": "sec_personal",
+      "config": { "content": "Tell us about yourself", "level": 3 } },
+    { "id": "full_name", "type": "text", "label": "Full Name", "order": 1, "sectionId": "sec_personal",
+      "width": "half", "required": true, "validation": { "required": true, "maxLength": 120 } },
+    { "id": "email", "type": "email", "label": "Email", "order": 2, "sectionId": "sec_personal",
+      "width": "half", "required": true,
+      "validation": { "required": true, "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$", "message": "Enter a valid email" } },
+    { "id": "phone", "type": "tel", "label": "Phone", "order": 3, "sectionId": "sec_personal", "width": "half" },
+    { "id": "start_date", "type": "date", "label": "Earliest Start Date", "order": 4, "sectionId": "sec_personal",
+      "width": "half", "validation": { "min": "2026-09-01" } },
+
+    { "id": "position", "type": "select", "label": "Position Applying For", "order": 1, "sectionId": "sec_position",
+      "required": true, "validation": { "required": true },
+      "config": { "options": [
+        { "value": "eng_fe", "label": "Frontend Engineer" },
+        { "value": "eng_be", "label": "Backend Engineer" },
+        { "value": "pm", "label": "Product Manager" }
+      ] } },
+    { "id": "employment_type", "type": "radio", "label": "Employment Type", "order": 2, "sectionId": "sec_position",
+      "required": true, "validation": { "required": true },
+      "config": { "defaultValue": "full_time", "options": [
+        { "value": "full_time", "label": "Full-Time" },
+        { "value": "contract", "label": "Contract" }
+      ] } },
+    { "id": "referral_source", "type": "text", "label": "How did you hear about us?", "order": 3,
+      "sectionId": "sec_position",
+      "visibilityRule": { "type": "expression", "condition": "{{ employment_type === 'full_time' }}" } },
+
+    { "id": "resume", "type": "file-upload", "label": "Resume", "order": 1, "sectionId": "sec_resume",
+      "required": true, "validation": { "required": true }, "config": { "accept": ".pdf,.doc,.docx" } },
+    { "id": "skills", "type": "tag-input", "label": "Key Skills", "order": 2, "sectionId": "sec_resume",
+      "placeholder": "Type a skill and press Enter" },
+    { "id": "portfolio_url", "type": "url", "label": "Portfolio / LinkedIn URL", "order": 3, "sectionId": "sec_resume" },
+
+    { "id": "account_card", "type": "card-container", "label": "Login Details", "order": 1, "sectionId": "sec_account",
+      "config": { "controls": [
+        { "id": "username", "type": "text", "label": "Username", "order": 1, "required": true,
+          "validation": { "required": true, "minLength": 4, "maxLength": 30 } },
+        { "id": "password", "type": "password", "label": "Password", "order": 2, "required": true,
+          "validation": { "required": true, "minLength": 8 }, "config": { "autoComplete": "new-password" } }
+      ] } },
+
+    { "id": "agree_terms", "type": "checkbox", "label": "I agree to the Terms of Service and Privacy Policy",
+      "order": 1, "sectionId": "sec_agreement", "required": true, "validation": { "required": true } },
+    { "id": "signature", "type": "signature-pad", "label": "Signature", "order": 2, "sectionId": "sec_agreement",
+      "required": true, "validation": { "required": true } },
+
+    { "id": "form_security", "type": "security-settings", "scope": "form", "order": 99,
+      "config": { "captchaType": "checkbox", "honeypotEnabled": true } }
+  ],
+  "apiActions": [
+    {
+      "id": "submit_application",
+      "actionKey": "submitJobApplication",
+      "trigger": "OnSubmit",
+      "payload": {
+        "mappings": [
+          { "fromField": "full_name", "toField": "fullName", "required": true },
+          { "fromField": "email", "toField": "email", "required": true },
+          { "fromField": "position", "toField": "positionId", "required": true },
+          { "fromField": "resume", "toField": "resumeFile", "required": true },
+          { "fromField": "username", "toField": "username", "required": true },
+          { "fromField": "password", "toField": "password", "required": true }
+        ]
+      },
+      "successActions": [
+        { "type": "redirect", "config": { "url": "/apply/thank-you" } }
+      ],
+      "errorActions": [
+        { "type": "message", "config": { "text": "We couldn't submit your application. Please try again." } }
+      ]
+    }
+  ]
+}

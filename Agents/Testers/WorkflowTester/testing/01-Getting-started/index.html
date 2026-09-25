@@ -1,0 +1,407 @@
+<title>Node Testing Field Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Literata:ital,opsz,wght@0,18..144,400;0,18..144,500;0,18..144,600;1,18..144,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --bg:#f2f4f7; --surface:#ffffff; --surface-2:#eaeef3; --border:#d7dee6;
+    --text:#141b26; --text-dim:#5a6472; --text-faint:#8792a1;
+    --amber:#b45f06; --amber-soft:#f3e2cd;
+    --teal:#0f6e64; --teal-soft:#d9ebe8;
+    --code-bg:#eef1f5; --code-text:#2a3442;
+    --shadow: 0 1px 2px rgba(20,27,38,.06), 0 8px 24px -12px rgba(20,27,38,.12);
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#10151c; --surface:#161d26; --surface-2:#1d2530; --border:#2b3543;
+      --text:#e7ecf2; --text-dim:#a6b0bd; --text-faint:#7b8593;
+      --amber:#e0954a; --amber-soft:#3a2a17;
+      --teal:#5ec4b6; --teal-soft:#153630;
+      --code-bg:#0d1319; --code-text:#c9d3de;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px -14px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#10151c; --surface:#161d26; --surface-2:#1d2530; --border:#2b3543;
+    --text:#e7ecf2; --text-dim:#a6b0bd; --text-faint:#7b8593;
+    --amber:#e0954a; --amber-soft:#3a2a17;
+    --teal:#5ec4b6; --teal-soft:#153630;
+    --code-bg:#0d1319; --code-text:#c9d3de;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px -14px rgba(0,0,0,.55);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Literata', Georgia, 'Times New Roman', serif;
+    font-size:17px; line-height:1.65;
+  }
+  h1,h2,h3,h4,.eyebrow,.nav-title,.tag,button,.btn{
+    font-family:'Manrope', 'Segoe UI', system-ui, sans-serif;
+  }
+  code, pre, .mono, .checklist input{
+    font-family:'IBM Plex Mono', ui-monospace, Consolas, monospace;
+  }
+
+  a{ color: var(--teal); text-decoration-color: color-mix(in srgb, var(--teal) 45%, transparent); }
+  a:hover{ text-decoration-color: var(--teal); }
+  a:focus-visible, button:focus-visible, summary:focus-visible{
+    outline: 2px solid var(--amber); outline-offset: 2px;
+  }
+
+  .shell{ display:grid; grid-template-columns: 260px minmax(0,1fr); max-width:1200px; margin:0 auto; }
+  @media (max-width: 920px){ .shell{ grid-template-columns: 1fr; } .side{ display:none; } }
+
+  .side{
+    position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto;
+    padding: 28px 20px 40px; border-right:1px solid var(--border);
+  }
+  .side .brand{ display:flex; align-items:center; gap:10px; margin-bottom:22px; }
+  .side .brand .dot{ width:11px; height:11px; border-radius:3px; background:var(--amber); transform: rotate(45deg); flex:0 0 auto; }
+  .side .brand-text{ font-weight:800; font-size:14px; letter-spacing:.02em; }
+  .side .brand-text small{ display:block; font-weight:500; color:var(--text-faint); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; margin-top:1px;}
+  .side nav{ display:flex; flex-direction:column; gap:2px; }
+  .side nav a{
+    color:var(--text-dim); text-decoration:none; font-size:13.5px; font-weight:600;
+    padding:7px 10px; border-radius:7px; letter-spacing:.01em;
+  }
+  .side nav a:hover{ background:var(--surface-2); color:var(--text); }
+  .side .group-label{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-faint); font-weight:700; margin:18px 0 6px 10px; }
+  .side .group-label:first-of-type{ margin-top:0; }
+
+  main{ padding: 44px 48px 100px; min-width:0; }
+  @media (max-width: 620px){ main{ padding: 28px 20px 80px; } }
+
+  .kicker{ display:flex; align-items:center; gap:8px; color:var(--amber); font-weight:700; font-size:12.5px; letter-spacing:.09em; text-transform:uppercase; margin-bottom:14px; }
+  .kicker .line{ width:22px; height:2px; background:var(--amber); }
+
+  h1{ font-size: clamp(30px, 4.4vw, 44px); line-height:1.08; margin:0 0 14px; letter-spacing:-.01em; text-wrap:balance; }
+  .lede{ font-size:19px; color:var(--text-dim); max-width:640px; margin:0 0 8px; }
+  .byline{ font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-faint); margin: 18px 0 46px; display:flex; gap:14px; flex-wrap:wrap; }
+  .byline b{ color:var(--text-dim); font-weight:700; }
+
+  section{ margin-bottom:58px; scroll-margin-top: 24px; }
+  h2{ font-size:26px; letter-spacing:-.01em; margin: 0 0 6px; text-wrap:balance; }
+  .section-sub{ font-family:'Manrope',sans-serif; color:var(--text-faint); font-size:13px; margin:0 0 20px; }
+  h3{ font-size:18px; margin: 26px 0 8px; }
+  p{ max-width: 66ch; margin: 0 0 14px; }
+  ul, ol{ max-width: 66ch; padding-left: 22px; margin: 0 0 16px; }
+  li{ margin-bottom:7px; }
+  strong{ font-weight:600; }
+
+  .card-grid{ display:grid; grid-template-columns: repeat(3,1fr); gap:14px; margin: 22px 0 8px; }
+  @media (max-width: 760px){ .card-grid{ grid-template-columns: 1fr; } }
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 18px 16px; box-shadow: var(--shadow); }
+  .card .num{ font-family:'Manrope',sans-serif; font-weight:800; font-size:12px; color:var(--text-faint); letter-spacing:.05em; }
+  .card h4{ font-family:'Manrope',sans-serif; font-size:15.5px; margin:6px 0 6px; }
+  .card p{ font-size:14.5px; color:var(--text-dim); margin:0; }
+
+  .phase-row{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin:20px 0 6px; }
+  @media (max-width: 720px){ .phase-row{ grid-template-columns:1fr; } }
+  .phase{ border-radius:var(--radius); padding:20px 20px 18px; border:1px solid var(--border); }
+  .phase.p1{ background: color-mix(in srgb, var(--teal-soft) 100%, transparent); border-color: color-mix(in srgb, var(--teal) 35%, var(--border)); }
+  .phase.p2{ background: color-mix(in srgb, var(--amber-soft) 100%, transparent); border-color: color-mix(in srgb, var(--amber) 35%, var(--border)); }
+  .phase .tag{ display:inline-block; font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; padding:3px 9px; border-radius:5px; margin-bottom:10px; }
+  .phase.p1 .tag{ background:var(--teal); color:#fff; }
+  .phase.p2 .tag{ background:var(--amber); color:#fff; }
+  .phase h4{ font-family:'Manrope',sans-serif; font-size:17px; margin:0 0 8px; }
+  .phase p{ font-size:14.5px; color:var(--text-dim); margin:0; }
+  .phase-arrow{ display:flex; align-items:center; justify-content:center; font-family:'Manrope',sans-serif; color:var(--text-faint); font-size:13px; font-weight:700; }
+  @media (max-width: 720px){ .phase-arrow{ transform: rotate(90deg); padding: 4px 0; } }
+
+  blockquote.directive{
+    margin: 22px 0; padding: 18px 20px 18px 22px; background:var(--surface);
+    border:1px dashed color-mix(in srgb, var(--amber) 55%, var(--border)); border-radius: var(--radius);
+    position:relative;
+  }
+  blockquote.directive .label{
+    font-family:'Manrope',sans-serif; font-size:11px; font-weight:800; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--amber); display:block; margin-bottom:8px;
+  }
+  blockquote.directive p:last-child{ margin-bottom:0; }
+  blockquote.directive p{ font-size:15.5px; }
+
+  .steps{ counter-reset: step; list-style:none; padding:0; margin:20px 0; }
+  .steps li{ counter-increment: step; position:relative; padding-left:40px; margin-bottom:18px; max-width:64ch; }
+  .steps li::before{
+    content: counter(step); position:absolute; left:0; top:1px; width:26px; height:26px;
+    border-radius:50%; background:var(--surface-2); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; font-family:'Manrope',sans-serif;
+    font-weight:800; font-size:12.5px; color:var(--text-dim);
+  }
+  .steps li b{ display:block; font-family:'Manrope',sans-serif; font-size:15px; margin-bottom:3px; color:var(--text); }
+
+  table{ width:100%; border-collapse:collapse; margin:18px 0; font-size:14.5px; }
+  th,td{ text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+  th{ font-family:'Manrope',sans-serif; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); font-weight:700; }
+  td code, th code{ font-size:13px; }
+  .table-wrap{ overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); }
+  .table-wrap table{ margin:0; }
+  .table-wrap th{ background:var(--surface-2); }
+
+  code{ background:var(--code-bg); color:var(--code-text); padding:1.5px 6px; border-radius:5px; font-size:14px; }
+  pre{
+    background:var(--code-bg); color:var(--code-text); padding:16px 18px; border-radius:var(--radius);
+    overflow-x:auto; font-size:13.3px; line-height:1.6; border:1px solid var(--border); margin: 16px 0;
+  }
+  pre code{ background:none; padding:0; }
+
+  .checklist{ list-style:none; padding:0; margin: 16px 0; }
+  .checklist li{ display:flex; gap:10px; align-items:flex-start; margin-bottom:10px; font-size:15px; }
+  .checklist .box{ width:16px; height:16px; border:1.5px solid var(--text-faint); border-radius:4px; margin-top:4px; flex:0 0 auto; }
+
+  .divider{ height:1px; background:var(--border); margin: 54px 0; border:none; }
+  footer{ font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-faint); padding: 20px 48px 60px; }
+  .pill-link{
+    display:inline-flex; align-items:center; gap:6px; font-family:'Manrope',sans-serif; font-weight:700; font-size:13.5px;
+    color:var(--text); background:var(--surface); border:1px solid var(--border); padding:7px 13px; border-radius:999px;
+    text-decoration:none; margin: 4px 8px 4px 0;
+  }
+  .pill-link:hover{ border-color: var(--teal); }
+</style>
+
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><span class="dot"></span><span class="brand-text">Agentic Testing<small>Nodes Field Guide</small></span></div>
+    <nav>
+      <div class="group-label">Orientation</div>
+      <a href="#what-is-a-node">What is a node?</a>
+      <a href="#why">Why this exists</a>
+      <a href="#structure">Folder structure</a>
+      <div class="group-label">Method</div>
+      <a href="#resources">Resources, per node</a>
+      <a href="#phases">Two-phase testing</a>
+      <a href="#automation">Building &amp; running workflows</a>
+      <a href="#backend-verification">Verifying the real backend</a>
+      <div class="group-label">Credentials</div>
+      <a href="#credentials">Special instruction: sourcing test accounts</a>
+      <div class="group-label">Finishing</div>
+      <a href="#certification">Certification &amp; sign-off</a>
+      <a href="#next">Where to go next</a>
+    </nav>
+  </aside>
+
+  <main>
+    <div class="kicker"><span class="line"></span>Methodology · applies to every node type</div>
+    <h1>Testing a node you can't click on</h1>
+    <p class="lede">A workflow execution node has no screen of its own — it only does something once it's wired
+      into a real Flow Studio workflow and run. This is the playbook for testing one anyway: for real, with
+      real evidence, without guessing at credentials you were never given.</p>
+    <p class="byline"><span><b>Scope:</b> every Octopus / Flow Studio execution node type</span>
+      <span><b>Worked example:</b> Elasticsearch</span>
+      <span><b>Companion doc:</b> <code>02-guidelines.md</code> — the step-by-step bootstrap procedure</span></p>
+
+    <section id="what-is-a-node">
+      <h2>What is a "node," exactly</h2>
+      <p class="section-sub">The building block, not the building</p>
+      <p>A <strong>node type</strong> is a registered entry in <code>Process_ProcessElementTypes</code> — a
+        row with a <code>Code</code> like <code>elasticsearch</code>, <code>http-request</code>, or
+        <code>sql-server</code> — paired with a real C# executor class under
+        <code>BizFirstPayrollV3\src\mvc-server\AI\ExecutionNodes\</code>. It is what a user drags onto a Flow
+        Studio canvas: one shape, one config form, one job.</p>
+      <p>It is <strong>not</strong> a React app. It has no URL of its own, no page to open, no login screen.
+        The only way to see it do anything is to wire it into a real workflow — a trigger feeding it, its
+        output going somewhere observable — and execute that workflow for real. Every convention in this
+        framework exists because of that one fact.</p>
+      <div class="card-grid">
+        <div class="card"><span class="num">01</span><h4>Registry row</h4><p>Confirm it live in the DB, not
+          just present as an unapplied script — <code>Process_ProcessElementTypes.Code</code>.</p></div>
+        <div class="card"><span class="num">02</span><h4>Real executor</h4><p>A C# class that actually
+          registers itself and routes execution — not a stale or duplicate folder sitting nearby.</p></div>
+        <div class="card"><span class="num">03</span><h4>Config schema</h4><p>What its Atlas Form asks for,
+          cross-checked against what its code actually reads and validates at runtime.</p></div>
+      </div>
+    </section>
+
+    <section id="why">
+      <h2>Why this exists</h2>
+      <p class="section-sub">Manual verification doesn't scale, and neither does trusting a claim</p>
+      <p>Dozens of node types ship across this platform. "It compiles" and "the form looks right" are not the
+        same claim as "it actually executes and does the right thing against a real external system." This
+        framework closes that gap the same way its sibling, <code>agentic-testing\</code>, closes it for React
+        apps: an agent builds real test cases, runs them for real, and writes down exactly what happened —
+        Pass, Fail, or honestly Blocked — with evidence a human can check afterward instead of a summary they
+        have to take on faith.</p>
+    </section>
+
+    <section id="structure">
+      <h2>Folder structure</h2>
+      <p class="section-sub">One shape, every node type</p>
+      <pre><code>agentic-testing-nodes\
+  about.html            landing page for this whole framework
+  01-Getting-started\    this page — the methodology
+  02-guidelines.md        step-by-step: bootstrap testing for a brand-new node type
+  globals.md              shared vocabulary — Pass/Fail/Blocked, what "resources" means
+  {node-slug}\
+    README.md              orientation — what it is, registry code, executor path, status
+    resource.md              the index: prior DB-side work, backend code, feature/test-case
+                            map, credential-sourcing checklist
+    resources\                backing detail — config-schema.md, credentials.md,
+                            backend-projects.md, db-catalog.md
+    test-plan.md              Phase 0 (static) + Phase 1 (isolated) + Phase 2 (combined)
+    workflow-build\            the automation — real build scripts, already run
+    lessons\README.md            running, dated log of real findings — read first, append always
+    testround\r1\               results.md + real evidence, once a round executes</code></pre>
+      <p>The <a href="../elasticsearch/README.md">Elasticsearch folder</a> is the first one built this way,
+        start to finish — read it alongside this page as the worked example, not a description of one.
+        Its own <a href="../elasticsearch/lessons/README.md"><code>lessons\README.md</code></a> is the
+        first entry in this framework's cross-node knowledge base — every node folder maintains one, and
+        every future node type starts by checking the others.</p>
+    </section>
+
+    <section id="resources">
+      <h2>What "resources" means for a node</h2>
+      <p class="section-sub">Four things every <code>resource.md</code> must cover</p>
+      <ol>
+        <li><strong>Prior-reviewed DB-side work.</strong> A node-engineer pipeline usually already built and
+          validated this node's Atlas Forms, DataTemplates, and registry row under
+          <code>BizFirstFiDB\...\dbo\Data\projects\{Category}\{Node}\</code> — often with its own
+          <code>NodeReport.md</code> coverage matrix. Point to it. Use it. Don't redo it.</li>
+        <li><strong>Backend code.</strong> The real executor/domain/services project paths — and whether the
+          node's own unit-test project, if it has one, actually still builds. (It's not guaranteed to — see
+          the Elasticsearch example, where a real one didn't.)</li>
+        <li><strong>Feature/capability breakdown.</strong> One row per real operation the node routes on,
+          each mapped to a specific Phase&nbsp;1 test case.</li>
+        <li><strong>Credential sourcing.</strong> See the special instruction below — mandatory whenever the
+          node needs a real external account to execute for real.</li>
+      </ol>
+    </section>
+
+    <section id="phases">
+      <h2>Two-phase testing, strictly sequenced</h2>
+      <p class="section-sub">Prove each part alone before proving the whole</p>
+      <div class="phase-row">
+        <div class="phase p1">
+          <span class="tag">Phase 1</span>
+          <h4>Isolated, one feature at a time</h4>
+          <p>One trigger node wired straight into one instance of the node under test, configured for exactly
+            one capability. Ten features, ten small workflows. Proves each one works on its own.</p>
+        </div>
+        <div class="phase p2">
+          <span class="tag">Phase 2</span>
+          <h4>One combined, chained workflow</h4>
+          <p>Built <em>only after</em> every Phase&nbsp;1 case has a verdict. Chains every feature from
+            Phase&nbsp;1 into a single realistic sequence, executable end to end in one click.</p>
+        </div>
+      </div>
+      <p>Do not build or run Phase 2 in parallel with Phase 1, and do not skip straight to it. A combined
+        workflow that fails tells you something failed — a workflow built feature-by-feature first tells you
+        exactly <em>which</em> feature, because you already know the other nine work alone.</p>
+    </section>
+
+    <section id="automation">
+      <h2>Building and running workflows: UI first, DB fallback only when needed</h2>
+      <p class="section-sub">A node isn't an app, so "run the test" means "build a workflow" first</p>
+      <p><strong>Chrome-driven, through Flow Studio's real UI, is the preferred and default method.</strong>
+        Reach for a direct-DB build only when the real UI is genuinely unusable for the case at hand — a
+        logged-out session you can't quickly re-authenticate, or a large batch of near-identical isolated
+        Phase&nbsp;1 cases where a DB build followed by a confirming UI pass is more practical than clicking
+        through all of them by hand. It is never a first choice, and it never replaces the confirming UI pass
+        a node still owes before sign-off.</p>
+      <ol class="steps">
+        <li><b>Preferred — Chrome-driven, through Flow Studio's real UI.</b> Confirm the session is actually
+          logged in before anything else (it can be silently logged out). Drag the node's real palette
+          template onto the canvas, fill its Atlas Form with real values, wire a trigger into it, save, and
+          execute via Flow Studio's own run/observer surface. The only path that proves the Atlas Form itself
+          renders and accepts input correctly, and that a failure shows up legibly on the canvas.</li>
+        <li><b>Fallback only — direct-DB build.</b> Clone a known-good prior workflow's row shape
+          (<code>Process_Processes</code> → <code>...Threads</code> → <code>...ThreadVersions</code> →
+          <code>...Elements</code> → <code>...Connections</code>) via dynamic SQL keyed off
+          <code>INFORMATION_SCHEMA.COLUMNS</code>, swap in the node's real config JSON, and read every row
+          back to confirm it landed exactly as intended. Record explicitly in <code>results.md</code>
+          <em>why</em> the fallback was used — the Elasticsearch pilot used it because the browser session was
+          logged out at build time, not by default choice.</li>
+      </ol>
+      <p>Executing a built workflow for real, either way, uses a genuinely proven endpoint (needed directly
+        when using the DB fallback; Flow Studio's own UI calls the same thing under the hood):</p>
+      <pre><code>POST https://localhost:10001/api/v1/process-engine/execution/execute-by-id
+Authorization: Bearer {locally-minted JWT}
+
+{"ProcessID": &lt;id&gt;, "AppID": 1}</code></pre>
+      <p>Full recipe — where the signing key lives, the exact claim shape, the security caveat worth repeating
+        to whoever reads it next — lives in <code>elasticsearch\workflow-build\README.md</code>. Reuse that
+        recipe rather than re-deriving it per node.</p>
+    </section>
+
+    <section id="backend-verification">
+      <h2>Verifying against the real backend — required, not optional</h2>
+      <p class="section-sub">A node's own "success" status is a claim, not evidence</p>
+      <p>Whichever build method was used, and even for a Phase&nbsp;2 chain where one step reads back what an
+        earlier step wrote, <strong>the node's own reported result is not sufficient evidence</strong> for any
+        case that touches real external data — that only proves the node's calls agree with each other, not
+        that either one is actually correct against the real system. For every write or query case,
+        independently confirm against the external system's <strong>own</strong> interface:</p>
+      <ul>
+        <li><strong>Write case:</strong> after the node reports success, call the real backend's own API
+          directly (for Elasticsearch: a plain <code>curl</code> with the same credentials) and confirm the
+          record genuinely exists, field-by-field, matching what was written.</li>
+        <li><strong>Query/search case:</strong> run the same query directly against the real backend and
+          confirm its result matches what the workflow returned.</li>
+      </ul>
+      <p>Record both the workflow's own output and the independent verification call's raw output side by
+        side in <code>results.md</code> — a Pass requires both, not either alone. This is a standing
+        requirement for every node type this framework tests, not specific to Elasticsearch.</p>
+    </section>
+
+    <section id="credentials">
+      <h2>Sourcing real test credentials</h2>
+      <p class="section-sub">A standing instruction, for every node type — not a one-off workaround</p>
+      <blockquote class="directive">
+        <span class="label">Special instruction — from Binoy</span>
+        <p>An agent cannot create an account or enter payment details on the operator's behalf — that stays a
+          human action. But "blocked, need credentials" is not a real answer for a junior operator either.
+          Instead: find the real external service's free or trial tier, tell the operator exactly which
+          account to create and where, have them open it in the Chrome extension once it's ready, and take it
+          from there.</p>
+      </blockquote>
+      <ol class="steps">
+        <li><b>Find the real free/trial tier.</b> Check the vendor's actual current signup page yourself —
+          terms change. Document what you found, dated, in the node's <code>resource.md</code>.</li>
+        <li><b>Name the exact ask.</b> Tell the operator, concretely: which URL to sign up at, and to open the
+          resulting console in the Chrome tab this session is already using — a fresh tab, never one another
+          concurrent agent might be mid-use on.</li>
+        <li><b>Read the real values from the open session.</b> Once the operator confirms it's open, the agent
+          reads the endpoint/API key directly via <code>claude-in-chrome</code> — never by asking for a
+          password to be pasted into chat.</li>
+        <li><b>Configure and validate for real.</b> Update the already-built workflow's config with the real
+          values (an <code>UPDATE</code>, not a rebuild), execute it, capture the result.</li>
+      </ol>
+      <p>Worked example: for Elasticsearch, this is
+        <a href="https://www.elastic.co/cloud/elasticsearch-service/signup">Elastic Cloud's free 14-day
+        trial</a> — no credit card required to start, verified live against their own signup page, not
+        assumed. See <code>elasticsearch\resource.md</code> §5 for the exact checklist this produced.</p>
+    </section>
+
+    <section id="certification">
+      <h2>Certification &amp; sign-off</h2>
+      <p class="section-sub">What "done" actually means</p>
+      <p>A node is ready for sign-off only when every Phase&nbsp;1 case, individually, and the Phase&nbsp;2
+        combined case all show a real <strong>Pass</strong> — backed by real execution results and real
+        screenshots for anything UI-facing — not a description of what should happen.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Verdict</th><th>Means</th></tr></thead>
+          <tbody>
+            <tr><td><code>Pass</code></td><td>Executed for real, expected result observed, evidence attached.</td></tr>
+            <tr><td><code>Fail</code></td><td>A real defect — evidence attached, reproducible.</td></tr>
+            <tr><td><code>Blocked</code></td><td>Couldn't run yet — reason named explicitly. Never silent, never
+              fabricated as a Pass to close the gap.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>An honest, in-progress certification round — real Pass everywhere verifiable without live
+        credentials, real Blocked-with-a-checklist everywhere else — is exactly what
+        <code>elasticsearch\testround\r1\results.md</code> looks like today. That is the bar, not a finished
+        state to imitate only once everything is green.</p>
+    </section>
+
+    <section id="next">
+      <h2>Where to go next</h2>
+      <p class="section-sub">Depending on what you're here to do</p>
+      <a class="pill-link" href="../about.html">↩ Framework overview</a>
+      <a class="pill-link" href="../02-guidelines.md">Bootstrap a new node type →</a>
+      <a class="pill-link" href="../elasticsearch/README.md">Read the Elasticsearch example →</a>
+      <a class="pill-link" href="../globals.md">Shared vocabulary (globals.md) →</a>
+    </section>
+  </main>
+</div>

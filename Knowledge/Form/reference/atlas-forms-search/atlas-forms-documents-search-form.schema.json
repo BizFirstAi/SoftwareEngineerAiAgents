@@ -1,0 +1,249 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "formID": "form-documents-search-results-edit",
+    "title": "Documents",
+    "code": "documents_search_results_edit_v2",
+    "hideSubmitButton": true,
+    "formContentStyle": "data"
+  },
+  "sections": [
+    { "id": "section-filters", "title": "Filters", "order": 0, "columns": 3 },
+    { "id": "section-results", "title": "Documents", "order": 1 }
+  ],
+  "controls": [
+    {
+      "id": "filter-search",
+      "type": "text",
+      "label": "Search",
+      "helpText": "Searches name, filename, description, classification",
+      "sectionId": "section-filters",
+      "order": 0,
+      "required": false,
+      "readonly": false,
+      "disabled": false,
+      "hidden": false
+    },
+    {
+      "id": "filter-document-type",
+      "type": "select",
+      "label": "Document Type",
+      "sectionId": "section-filters",
+      "order": 1,
+      "required": false,
+      "readonly": false,
+      "disabled": false,
+      "hidden": false,
+      "config": {
+        "options": [{ "label": "Any", "value": "" }],
+        "optionsSource": {
+          "endpoint": "/api/v1/documents/types/active",
+          "method": "POST",
+          "requestBody": {},
+          "valueField": "documentTypeID",
+          "labelField": "documentTypeName",
+          "auth": "passport"
+        }
+      }
+    },
+    {
+      "id": "filter-document-category",
+      "type": "select",
+      "label": "Document Category",
+      "sectionId": "section-filters",
+      "order": 2,
+      "required": false,
+      "readonly": false,
+      "disabled": false,
+      "hidden": false,
+      "config": {
+        "options": [{ "label": "Any", "value": "" }],
+        "optionsSource": {
+          "endpoint": "/api/v1/documents/categories/active",
+          "method": "POST",
+          "requestBody": {},
+          "valueField": "documentCategoryID",
+          "labelField": "documentCategoryName",
+          "auth": "passport"
+        }
+      }
+    },
+    {
+      "id": "add-new-document",
+      "type": "button",
+      "label": "Add New Document",
+      "sectionId": "section-filters",
+      "order": 3,
+      "required": false,
+      "readonly": false,
+      "disabled": false,
+      "hidden": false,
+      "gridPosition": { "column": 1 },
+      "styles": {
+        "containerStyle": {
+          "display": "flex",
+          "justifyContent": "flex-start"
+        }
+      },
+      "config": {
+        "requiredRoles": ["Admin", "TenantSuperAdmin", "PlatformSuperAdmin"],
+        "createForm": {
+          "formId": 30501,
+          "endpoint": "/api/v1/documents",
+          "method": "POST",
+          "dataKey": "data",
+          "auth": "passport"
+        }
+      }
+    },
+    {
+      "id": "search-submit",
+      "type": "button",
+      "label": "Search",
+      "sectionId": "section-filters",
+      "order": 4,
+      "required": false,
+      "readonly": false,
+      "disabled": false,
+      "hidden": false,
+      "gridPosition": { "column": 3 },
+      "styles": {
+        "containerStyle": {
+          "display": "flex",
+          "justifyContent": "flex-end"
+        }
+      }
+    },
+    {
+      "id": "page-size",
+      "type": "select",
+      "label": "Page size",
+      "sectionId": "section-results",
+      "order": 1,
+      "required": false,
+      "readonly": false,
+      "disabled": false,
+      "hidden": true,
+      "defaultValue": "20"
+    },
+    {
+      "id": "page-number",
+      "type": "server-pagination",
+      "label": "",
+      "sectionId": "section-results",
+      "order": 2,
+      "required": false,
+      "readonly": false,
+      "disabled": false,
+      "hidden": false,
+      "defaultValue": 1,
+      "config": {
+        "resultsControlID": "results-grid",
+        "totalControlID": "total-count",
+        "pageSizeControlID": "page-size",
+        "pageSizeOptions": [10, 20, 50, 100],
+        "defaultPageSize": 20
+      }
+    },
+    {
+      "id": "total-count",
+      "type": "text",
+      "label": "Total",
+      "sectionId": "section-results",
+      "order": 3,
+      "required": false,
+      "readonly": true,
+      "disabled": false,
+      "hidden": true
+    },
+    {
+      "id": "results-grid",
+      "type": "grid",
+      "label": "Documents",
+      "sectionId": "section-results",
+      "order": 0,
+      "required": false,
+      "readonly": false,
+      "disabled": false,
+      "hidden": false,
+      "config": {
+        "columns": [
+          { "id": "documentName", "label": "Name", "type": "text", "width": 200, "freezePosition": "left" },
+          { "id": "originalFileName", "label": "File name", "type": "text" },
+          { "id": "documentTypeID", "label": "Type", "type": "text" },
+          { "id": "documentCategoryID", "label": "Category", "type": "text" },
+          { "id": "fileSizeBytes", "label": "Size (bytes)", "type": "text" },
+          { "id": "lastModifiedOn", "label": "Last Modified", "type": "text" },
+          {
+            "id": "_actionView",
+            "label": "",
+            "type": "link",
+            "link": {
+              "label": "View",
+              "showAs": "button",
+              "variant": "secondary",
+              "action": { "kind": "form", "formId": 30501, "mode": "view" }
+            }
+          },
+          {
+            "id": "_actionEdit",
+            "label": "",
+            "type": "link",
+            "link": {
+              "label": "Edit",
+              "showAs": "button",
+              "variant": "primary",
+              "requiredRoles": ["Admin", "TenantSuperAdmin", "PlatformSuperAdmin"],
+              "action": { "kind": "form", "formId": 30501, "mode": "edit" }
+            }
+          },
+          {
+            "id": "_actionDelete",
+            "label": "",
+            "type": "link",
+            "link": {
+              "label": "Delete",
+              "showAs": "button",
+              "variant": "danger",
+              "requiredRoles": ["Admin", "TenantSuperAdmin", "PlatformSuperAdmin"],
+              "action": {
+                "kind": "delete",
+                "endpointTemplate": "/api/v1/documents/{{row.documentID}}",
+                "method": "DELETE",
+                "confirmMessage": "Delete \"{{row.documentName}}\"? This cannot be undone."
+              }
+            }
+          }
+        ],
+        "editFormID": 30501
+      }
+    }
+  ],
+  "apiActions": [
+    {
+      "id": "action-search-documents",
+      "name": "Search Documents",
+      "trigger": "search",
+      "endpoint": "/api/v1/documents/search",
+      "method": "POST",
+      "payloadMapping": {
+        "filter-search": "nameContains",
+        "filter-document-type": "documentTypeID.id",
+        "filter-document-category": "documentCategoryID.id",
+        "page-number": "pageInfo.pageNumber",
+        "page-size": "pageInfo.pageSize"
+      },
+      "responseMapping": {
+        "results-grid": "data",
+        "total-count": "pageInfo.totalRecords",
+        "page-number": "pageInfo.pageNumber",
+        "page-size": "pageInfo.pageSize"
+      },
+      "auth": "passport",
+      "headers": {},
+      "onSuccess": "none",
+      "onError": "none"
+    }
+  ],
+  "styles": {}
+}

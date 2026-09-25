@@ -1,0 +1,107 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "formID": "contact_us",
+    "title": "Contact Us",
+    "description": "Send us a message and we'll get back to you within one business day.",
+    "numberOfColumns": 1,
+    "formContentStyle": "input",
+    "formBehavior": "interactive"
+  },
+  "sections": [
+    { "id": "sec_contact", "title": "Your Details", "order": 1 }
+  ],
+  "controls": [
+    {
+      "id": "full_name",
+      "type": "text",
+      "label": "Full Name",
+      "placeholder": "Jane Doe",
+      "order": 1,
+      "sectionId": "sec_contact",
+      "required": true,
+      "validation": { "required": true, "minLength": 2, "maxLength": 120 }
+    },
+    {
+      "id": "email",
+      "type": "email",
+      "label": "Email Address",
+      "placeholder": "you@company.com",
+      "order": 2,
+      "sectionId": "sec_contact",
+      "required": true,
+      "validation": {
+        "required": true,
+        "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+        "message": "Enter a valid email address"
+      }
+    },
+    {
+      "id": "phone",
+      "type": "tel",
+      "label": "Phone Number",
+      "placeholder": "+1 555 123 4567",
+      "order": 3,
+      "sectionId": "sec_contact"
+    },
+    {
+      "id": "topic",
+      "type": "select",
+      "label": "What can we help with?",
+      "order": 4,
+      "sectionId": "sec_contact",
+      "required": true,
+      "validation": { "required": true },
+      "config": {
+        "options": [
+          { "value": "sales", "label": "Sales Question" },
+          { "value": "support", "label": "Technical Support" },
+          { "value": "billing", "label": "Billing" },
+          { "value": "other", "label": "Something Else" }
+        ]
+      }
+    },
+    {
+      "id": "message",
+      "type": "textarea",
+      "label": "Message",
+      "placeholder": "How can we help?",
+      "order": 5,
+      "sectionId": "sec_contact",
+      "required": true,
+      "validation": { "required": true, "minLength": 10, "maxLength": 2000 },
+      "config": { "rows": 6 }
+    },
+    {
+      "id": "agree_privacy",
+      "type": "checkbox",
+      "label": "I agree to the Privacy Policy",
+      "order": 6,
+      "sectionId": "sec_contact",
+      "required": true,
+      "validation": { "required": true }
+    }
+  ],
+  "apiActions": [
+    {
+      "id": "submit_contact",
+      "actionKey": "submitContactForm",
+      "trigger": "OnSubmit",
+      "payload": {
+        "mappings": [
+          { "fromField": "full_name", "toField": "name", "required": true },
+          { "fromField": "email", "toField": "email", "required": true },
+          { "fromField": "phone", "toField": "phone" },
+          { "fromField": "topic", "toField": "topic", "required": true },
+          { "fromField": "message", "toField": "message", "required": true }
+        ]
+      },
+      "successActions": [
+        { "type": "message", "config": { "text": "Thanks — we'll be in touch soon." } }
+      ],
+      "errorActions": [
+        { "type": "message", "config": { "text": "Something went wrong. Please try again." } }
+      ]
+    }
+  ]
+}
