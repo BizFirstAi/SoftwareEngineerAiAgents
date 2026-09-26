@@ -3,8 +3,8 @@
 A repeatable system for testing Flow Studio / Octopus **workflow execution node types** — the
 building blocks a user drags onto a workflow canvas (an Elasticsearch node, an HTTP node, a SQL
 node, an AI Agent node, ...) — with an AI agent building a real minimal workflow, executing it, and
-recording real evidence. Sibling system to `..\agentic-testing\` (that one drives React apps end to
-end through a browser) and, closer in spirit, to `..\agentic-testing\features\` (backend
+recording real evidence. Sibling system to `Documentation\Employees\agentic-testing\` (that one drives React apps end to
+end through a browser) and, closer in spirit, to `Documentation\Employees\agentic-testing\features\` (backend
 features/protocols with no dedicated app UI).
 
 **Start here:**

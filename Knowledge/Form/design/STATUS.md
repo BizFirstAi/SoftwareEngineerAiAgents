@@ -232,7 +232,7 @@ research task) will be the end-to-end design reference.
   found it again with real cosine-similarity scores (0.79, 0.78) above the KB's 0.7 threshold. Test
   rows cleaned up afterward.
 - **74 real RAG source files uploaded via the actual document-manager UI**, not synthetic test data —
-  the Atlas Forms control reference docs (`Documentation\Employees\atlas-forms\atlas-forms-rag\v2\`),
+  the Atlas Forms control reference docs (`Knowledge\Form\atlas-forms-rag\v2\`),
   Type = "RAG Document", batch-uploaded in one submission (confirmed the app supports true multi-file
   batch upload with shared metadata). Verified via DB: 74 `Doc_Documents` rows created, `documentName`
   correctly defaults from filename (no per-file name field in the batch UI). Explicitly associated with
@@ -649,7 +649,7 @@ ConnectorConfigDialog.tsx` (Bug A fix, both entity-ID-resolution sites).
 - **document-manager browser session is logged out** — blocks any further UI-driven or API-driven document
   upload until Binoy (or an authorized session) logs back in.
 - **74 real RAG source files** are ready and waiting, never uploaded, at
-  `Documentation\Employees\atlas-forms\atlas-forms-rag\v2\` (5 Tier-1 + 69 Tier-2 control docs, correctly
+  `Knowledge\Form\atlas-forms-rag\v2\` (5 Tier-1 + 69 Tier-2 control docs, correctly
   excluding the 3 `worked-examples\*.json` files per this project's own design). Target: Library Collection
   `atlas-forms-automation` (`DocumentCollectionID = 1`, `TenantID = 1`).
 - **No Knowledge Retriever MCP tool / retrieval endpoint exists yet** on the live stack — confirmed via

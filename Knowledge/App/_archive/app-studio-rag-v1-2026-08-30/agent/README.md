@@ -3,8 +3,8 @@
 Meta note on how/when the `rag/v1/` content in this folder gets into a real, queryable Knowledge Base
 — NOT a re-derivation of the ingestion mechanism itself. That mechanism is already fully designed and
 partially proven end-to-end in the sibling project
-`Documentation\Employees\agentic-coding\atlas-form-automation-project\lessons\README.md` and
-`Documentation\Employees\atlas-forms\atlas-forms-rag\agent\ragUploadDesign.md` — **read those first,
+`Knowledge\Form\lessons\README.md` and
+`Knowledge\Form\atlas-forms-rag\agent\ragUploadDesign.md` — **read those first,
 reuse the same process, don't reinvent it.**
 
 ## What's real and proven, as of the atlas-forms precedent (reuse this, don't re-derive)

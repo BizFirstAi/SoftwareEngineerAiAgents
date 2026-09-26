@@ -67,7 +67,7 @@ built 11 real, verified-in-DB workflows.
 ## Executing a built workflow for real
 
 Real, proven endpoint (confirmed working, not theoretical — see
-`Documentation\Employees\agentic-coding\atlas-form-automation-project\STATUS.md`, "Done (cont. 7)",
+`Knowledge\Form\design\STATUS.md`, "Done (cont. 7)",
 7 real executions logged there):
 
 ```
@@ -120,6 +120,6 @@ Also currently blocked, independent of credentials: **the Consolidated WebApi ba
 (`https://localhost:10001`) was found down** (`000`/connection-refused) partway through this session
 — confirmed not caused by this task's own actions (SQL Server itself, reached directly via `sqlcmd`,
 stayed up and reachable throughout; only the WebApi process was affected — same class of external
-interruption noted previously in `STATUS.md`). Per `..\..\agentic-testing\globals.md`, its
+interruption noted previously in `STATUS.md`). Per `Documentation\Employees\agentic-testing\globals.md`, its
 lifecycle is reserved for direct human action — **do not restart it as part of this testing task**.
 Both `execute-by-id` calls and any Chrome-driven Flow Studio pass need it back up first.

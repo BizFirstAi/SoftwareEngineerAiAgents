@@ -6,7 +6,7 @@ entry short and specific — what was assumed going in, what turned out to be tr
 be done differently next time. This is for the *next* person/agent picking up similar work, so bias
 toward the surprising and the concrete over the obvious.
 
-Entries land here as Task 1, 2, and 3 (see `..\design-and-plan.md`) actually complete — none have
+Entries land here as Task 1, 2, and 3 (see `..\design\design-and-plan.md`) actually complete — none have
 finished yet as of this file's creation, so there is nothing to record yet beyond this placeholder.
 
 ## 2026-08-25/26 — Combined RAG+MCP test via the real Flow Studio chat UI: HIL chat genuinely works for
@@ -88,7 +88,7 @@ is now proven live, end-to-end, for the first time this project has actually run
 
 ## 2026-08-23 — Task 4: full execution-lifecycle trace — V21 bridge resolved as in-process, not networked
 
-Full findings: `..\architecture.md` (new). Summary of what changed from prior assumptions:
+Full findings: `..\design\architecture.md` (new). Summary of what changed from prior assumptions:
 
 **The V21 "bridge" question is resolved for good, with hard evidence, not inference.**
 `OctopusAgentInvokerService`'s doc comment about "bridging to the V21 AI Engine" describes a real

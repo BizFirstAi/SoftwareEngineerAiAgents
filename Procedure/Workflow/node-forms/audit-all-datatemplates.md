@@ -1,8 +1,8 @@
 # Audit All Data Templates (all node types)
 
 Repeatable, read-only. Purpose: list every node type whose forms and palette templates do not line up, so
-`rag\node-type-status-table.md` can be filled from facts. Run against the DB the API actually serves
-(`rag\database-topology.md`); repeat for the other DB if in doubt.
+`..\..\..\Knowledge\Workflow\node-forms\node-type-status-table.md` can be filled from facts. Run against the DB the API actually serves
+(`..\..\..\Knowledge\Workflow\node-forms\database-topology.md`); repeat for the other DB if in doubt.
 
 ## Findings reported
 
@@ -105,7 +105,7 @@ Sketch, untested. `-W` and `-y` cannot be combined; `-Q` with a long multi-line 
 
 ## Output format
 
-Deliver a table sorted by node, then finding, and a per-node summary that feeds `rag\node-type-status-table.md`:
+Deliver a table sorted by node, then finding, and a per-node summary that feeds `..\..\..\Knowledge\Workflow\node-forms\node-type-status-table.md`:
 
 | Node | Finding | Ref ID | Name | Detail |
 |---|---|---|---|---|

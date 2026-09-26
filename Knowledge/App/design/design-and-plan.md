@@ -31,7 +31,7 @@ data-model feature invisible in the tool meant to edit it.
 Binoy, after reviewing the qoboto clone against real Wix and against the pre-existing Designer UI:
 "The current setup less than usable for users compared to Wix... I need the best user experience -
 otherwise nobody will use apps like this." Directed six parallel research-and-design passes (each its
-own numbered doc under `Documentation\Employees\agentic-coding\docs\wix-style-design\`), reviewed
+own numbered doc under `Knowledge\App\design\wix-style-design\`), reviewed
 together in one consolidated pass before any implementation started (explicit instruction: avoid
 shared-file collisions between parallel implementation agents), then built in dependency order.
 

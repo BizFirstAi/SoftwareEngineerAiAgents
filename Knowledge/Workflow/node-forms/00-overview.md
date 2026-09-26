@@ -1,6 +1,6 @@
 # Node Forms RAG - Overview (index)
 
-Backing knowledge for `..\..\..\Agents\Builders\WorkflowDeveloper\node-forms-fixer.md`. Verified live 2026-09-20 on the SQL Server case; anything not so verified is
+Backing knowledge for `..\..\..\Procedure\Workflow\node-forms\node-forms-fixer.md`. Verified live 2026-09-20 on the SQL Server case; anything not so verified is
 labelled "unverified". Read in this order when debugging a node type:
 
 | # | Doc | Answers |

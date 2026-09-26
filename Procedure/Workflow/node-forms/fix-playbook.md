@@ -9,7 +9,7 @@ Use after `debug-runbook.md` concluded: forms exist, but the node has no per-ope
   `BizFirstFiDB\BizFirstFiV3DB\BizFirstFiV3DB\dbo\Data\projects\`).
 - The forms: Q1 in the runbook, ordered by `FormID`.
 - A reference template: SQL Server's `...\projects\SqlServer\DataTemplates\Template_DataTemplates_91030001_sqlserver-query-execute.data.sql`
-  (skeleton in `rag\data-template-anatomy.md`). For a non-database node, copy ports/credential types from that node's existing
+  (skeleton in `..\..\..\Knowledge\Workflow\node-forms\data-template-anatomy.md`). For a non-database node, copy ports/credential types from that node's existing
   generic template instead of the SQL Server ones (`acceptedCredentialTypes` differs per node).
 
 ## 2. Choose an unused ID range (query the DB AND scan the repo)
@@ -111,7 +111,7 @@ for f in /c/BizFirstGO_FI_AI/BizFirstFiDB/BizFirstFiV3DB/BizFirstFiV3DB/dbo/Data
 done
 ```
 For the remote DB use its host/db with credentials read from appsettings at run time (never in a saved script).
-Then clear caches (`rag\caching-layers.md`): user restarts WebApi, Ctrl+F5.
+Then clear caches (`..\..\..\Knowledge\Workflow\node-forms\caching-layers.md`): user restarts WebApi, Ctrl+F5.
 
 ## 6. Verify
 
@@ -125,8 +125,8 @@ UI level: Ctrl+F5, drop each operation, confirm the first form in the dialog mat
 
 ## 7. Log
 
-Append to `DevelopmentHistoryLog.md`: node, ID range, DB written (host/db only), count, evidence, and unverified items.
-Update `rag\node-type-status-table.md`. Do not commit unless asked; when the user does ask, commit in the BizFirstFiDB repo
+Append to `..\..\..\Knowledge\Workflow\node-forms\DevelopmentHistoryLog.md`: node, ID range, DB written (host/db only), count, evidence, and unverified items.
+Update `..\..\..\Knowledge\Workflow\node-forms\node-type-status-table.md`. Do not commit unless asked; when the user does ask, commit in the BizFirstFiDB repo
 (SQL Server precedent: commit e72dc863 on BizFirstFiDB main).
 
-> POLICY: profile-driven and node-type forms must have Atlas_Forms.DisplayOrder strictly between 100 and 500 (101..499); common forms stay at 1002 and above. See rag/display-order-and-menu.md (section POLICY) for the detector SQL and the normaliser script. Check it in every fix and audit.
+> POLICY: profile-driven and node-type forms must have Atlas_Forms.DisplayOrder strictly between 100 and 500 (101..499); common forms stay at 1002 and above. See ../../../Knowledge/Workflow/node-forms/display-order-and-menu.md (section POLICY) for the detector SQL and the normaliser script. Check it in every fix and audit.

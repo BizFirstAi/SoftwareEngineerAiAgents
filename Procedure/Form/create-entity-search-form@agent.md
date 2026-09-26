@@ -14,7 +14,7 @@ and gotcha below was learned building it, not theorized.
 Where this doc says "see the reference," it means these exact files.
 
 **Reference control-type/schema library:**
-`Documentation\Employees\agentic-coding\atlas-form-automation-project\atlas-forms-rag\v2\`
+`Knowledge\Form\atlas-forms-rag\v2\`
 — `controls/*.md` documents every Atlas Forms control type in depth (one file per
 control, e.g. `controls/checkbox.md`, `controls/number.md`, `controls/grid.md`,
 `controls/select.md`), `worked-examples/*.json` are full real form schemas, and

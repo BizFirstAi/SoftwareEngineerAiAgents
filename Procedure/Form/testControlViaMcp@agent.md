@@ -2,19 +2,18 @@
 
 **Use this when asked to test/document one or more Atlas Forms control types' real rendered
 behavior** — building a property-combination reference page, verifying a control renders correctly,
-or extending `Documentation\Employees\agentic-development-engineers\form-development-engineer\
-test-results\test2-control-reference\` to a new category. Written from a real, live pilot run
+or extending `Agents\Testers\FormTester\test-results\test2-control-reference\` to a new category. Written from a real, live pilot run
 (2026-09-10, Input category, 14 controls) — every step below was actually executed, not theorized.
 
 ## 0. Read before you build anything
 
-1. `..\..\..\Knowledge\Form\atlas-forms-rag\v2\00-overview.md` — the control type index and the FormSchema top-level shape. **Read the
+1. `..\..\Knowledge\Form\atlas-forms-rag\v2\00-overview.md` — the control type index and the FormSchema top-level shape. **Read the
    "not every real Atlas_Forms row uses this shape" section** before sampling any existing form from
    the database for reference — `NODE-FORM-CONFIGURATION`-type rows use a completely different,
    incompatible raw JSON Schema convention.
-2. `..\..\..\Knowledge\Form\atlas-forms-rag\v2\01-common-properties.md` — every control's shared fields (id/type/order/label/required/
+2. `..\..\Knowledge\Form\atlas-forms-rag\v2\01-common-properties.md` — every control's shared fields (id/type/order/label/required/
    validation/etc.) so you don't reinvent field names per control.
-3. `..\v2\controls\{type}.md` for every control type you're about to test — these are the real,
+3. `..\..\Knowledge\Form\atlas-forms-rag\v2\controls\{type}.md` for every control type you're about to test — these are the real,
    code-verified `config` shapes. If a doc is missing or looks wrong once you've tested it live,
    **fix it directly** — you're the one with fresh ground truth, don't just note the gap and move on.
 
@@ -96,7 +95,7 @@ same run.
 - One `00-test-cases.md` per category batch — a durable, HTML-independent test-case table (property
   combination → expected behavior → real result) so a future pass can extend coverage without
   re-deriving the config shapes or the batching ratio.
-- **Feed real findings back into `..\v2\controls\{type}.md` and `..\..\..\Knowledge\Form\atlas-forms-rag\v2\00-overview.md`/
+- **Feed real findings back into `..\..\Knowledge\Form\atlas-forms-rag\v2\controls\{type}.md` and `..\..\Knowledge\Form\atlas-forms-rag\v2\00-overview.md`/
   `01-common-properties.md` directly** — don't let a doc correction live only in your own test
   report. This runbook itself should be updated the same way if you find a step here that's now
   wrong or incomplete.
