@@ -6,7 +6,7 @@ resource/operation dispatch pattern as `slack`. Talks to Odoo's own JSON-RPC end
 (`OdooJsonRpcTransport`, `{siteUrl}/jsonrpc`).
 
 **Not previously in this doc set** — promoted here 2026-09-18 from investigative notes at
-`..\..\..\testing\odoo\resources\{config-schema,credentials}.md` (that folder's own test-plan work,
+`..\..\..\..\Agents\Testers\WorkflowTester\testing\odoo\resources\{config-schema,credentials}.md` (that folder's own test-plan work,
 P0-02) plus direct source confirmation for this doc. Source read directly:
 `BizFirstPayrollV3\src\mvc-server\Ai\ExecutionNodes\RealEstate\Odoo\
 BizFirst.Ai.ExecutionNodes.RealEstate.Odoo\Main\Executor\OdooNodeExecutor.cs` (+ `.Config.cs`) and

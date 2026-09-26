@@ -1,7 +1,7 @@
 # Node Forms Agent - Resource Sheet
 
 Everything the agent needs in one place. Facts verified live 2026-09-20 unless marked "unverified".
-Index of deep-dive docs: `rag\00-overview.md`.
+Index of deep-dive docs: `.\00-overview.md`.
 
 ## 1. Repo paths
 
@@ -26,7 +26,7 @@ ScrapeApi, Social, SqlServer, Standard`. SqlServer, MySql, PostgreSQL sit direct
 (e.g. Elasticsearch) sit under a group (`DB\ElasticSearch`). Find a node's folder with a scoped Glob; do not assume.
 Do not apply scripts from folders named `obsolete`, `backup`, `unapproved`, `unsorted` (2794 `.sql` files in total).
 
-## 2. Databases (summary - full detail in `rag\database-topology.md`)
+## 2. Databases (summary - full detail in `.\database-topology.md`)
 
 | DB | Where | How to reach |
 |---|---|---|

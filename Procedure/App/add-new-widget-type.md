@@ -2,8 +2,7 @@
 
 Use this runbook whenever a widget type needs a Tier 1 doc — a new `WidgetType` was added to the
 codebase, or an existing one's config changed. Written to be handed directly to a fresh agent with
-zero prior context. Mirrors the discipline `..\..\..\workflow-development-engineer\rag\
-workflow-nodes-rag\agent\add-new-node-type.md` established for its own doc set — same two-tier
+zero prior context. Mirrors the discipline `..\Workflow\add-new-node-type.md` established for its own doc set — same two-tier
 shape, same "ground truth is the code" rule, adapted for App Studio widgets.
 
 ## The one non-negotiable rule

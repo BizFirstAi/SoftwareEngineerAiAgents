@@ -8,7 +8,7 @@ concrete findings.
 
 Everything below was traced from real code (file paths and class names cited throughout) plus, where
 noted, from already-written companion RAG spec docs in
-`Documentation\Employees\agentic-coding\bizfirst-ai-mcp-servers-spec\workflow-nodes-rag\` that this pass
+`Knowledge\Workflow\workflow-nodes-rag\` that this pass
 re-verified rather than re-derived. Anything not independently confirmed this pass is explicitly marked
 **OPEN QUESTION** — do not treat unmarked statements as guesses.
 

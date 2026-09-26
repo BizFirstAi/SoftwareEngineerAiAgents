@@ -49,7 +49,7 @@ numbers collide (SQL Server: 38 templates spread over palette ranks 357..1155). 
 with DisplayOrder >= 1002 lands after Data Mapping/Output Data/Autonomous Identity (1002/1003/2000) or below all commons.
 
 **Rule:** profile/node-type forms 1-999 (first form of the node lowest), common forms 1002+; give each node code a private
-contiguous DisplayOrder band in the palette. Detector and normaliser SQL: `rag\display-order-and-menu.md` section 5.
+contiguous DisplayOrder band in the palette. Detector and normaliser SQL: `..\display-order-and-menu.md` section 5.
 
 **Caveat:** local DB showed max 1001 for profile/node-type forms, so the reported large values (Odoo 3601+, Jira 30001+,
 Docker 40363, SSH 40202+) are in the served REMOTE DB or unapplied scripts: unverified. Always query the DB the API serves.
@@ -93,7 +93,7 @@ run only the scripts whose rows are missing, one file at a time with -b, then re
 
 **Symptom:** `dbo\Data\projects` held 95 files in `obsolete`, `backup`, `unapproved`, `unsorted` folders and with `TBR_` / `Std_` / vendor prefixes; nobody could tell which script was the live definition, and some "parked" scripts were the only definition of nodes that exist in code (Audio, RAG document add/delete/update, workflow-control, RunTime forms 10002/10003) while the DB lacked them.
 
-**What was done:** every file was proven against active scripts, the live DB and the C# executor/settings classes; duplicates and redundant items were `git rm`-ed, unique ones promoted with guarded scripts and inserted, stale ones rewritten to the executor keys. Full table: `audit\cleanup-2026-09-20.md`. Standard: `rag\db-project-folder-standard.md`.
+**What was done:** every file was proven against active scripts, the live DB and the C# executor/settings classes; duplicates and redundant items were `git rm`-ed, unique ones promoted with guarded scripts and inserted, stale ones rewritten to the executor keys. Full table: `audit\cleanup-2026-09-20.md`. Standard: `..\db-project-folder-standard.md`.
 
 | # | Lesson |
 |---|---|

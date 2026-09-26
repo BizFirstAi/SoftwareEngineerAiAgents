@@ -3,7 +3,7 @@
 Takes a plain-language description of an app a user wants, gathers the specific information needed,
 and builds a real, working App Studio app end-to-end — either from an existing template or from
 scratch — using the real widgets/pages/API surface documented in
-`..\..\..\Knowledge\App\`. Read `..\..\..\Knowledge\App\00-overview.md`,
+`..\..\Knowledge\App\`. Read `..\..\Knowledge\App\00-overview.md`,
 `app-model.md`, and `app-creation-flow.md` before starting — this agent is a consumer of that RAG
 set, not a replacement for it.
 

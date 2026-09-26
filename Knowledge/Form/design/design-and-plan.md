@@ -18,20 +18,20 @@ guidelines.md` were first written.
 
 Stand up a real, working Octopus AI agent (or small team of agents) that can build and edit Atlas
 Forms through natural-language conversation, backed by the already-built Atlas Forms v2 RAG spec
-(`Documentation\Employees\atlas-forms\atlas-forms-rag\v2\`, 77 files, Tier 1/Tier 2 structure) and the
+(`Knowledge\Form\atlas-forms-rag\v2\`, 77 files, Tier 1/Tier 2 structure) and the
 8 real Atlas Forms MCP tools, then prove it works end-to-end via a real Flow Studio workflow that
 creates a sample form live.
 
 ## Prior art this plan builds on — read before touching any of the three tasks
 
-- `Documentation\Employees\atlas-forms\atlas-forms-rag\agent\ragUploadDesign.md` — full design for how
+- `Knowledge\Form\atlas-forms-rag\agent\ragUploadDesign.md` — full design for how
   RAG ingestion actually works in this codebase (two real ingestion mechanisms exist: FlowRag and the
   Octopus-native Knowledge Base API/UI; the `.md` upload path in the admin UI was found broken).
-- `Documentation\Employees\atlas-forms\atlas-forms-rag\agent\octopus-agent-guidelines.md` — the
+- `Knowledge\Form\atlas-forms-rag\agent\octopus-agent-guidelines.md` — the
   behavioral spec for how an Atlas-Forms-building agent should use the RAG spec (Tier 1 always in
   context, Tier 2 retrieved on demand) and the tool-call patterns it should follow
   (`create_form`/`get_form_schema`/etc.).
-- `Documentation\Employees\agentic-coding\bizfirst-ai-mcp-servers-spec\atlas-forms-design.md` — the 8
+- `Knowledge\Form\mcp-servers\atlas-forms-design.md` — the 8
   Atlas Forms MCP tools' real design.
 - `Documentation\Employees\agentic-coding\test-plan\04-01-mcp-atlas-forms-tools.md` — the (previously
   never-executed) live test plan for those same 8 MCP tools.

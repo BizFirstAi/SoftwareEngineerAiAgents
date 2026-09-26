@@ -3,10 +3,10 @@
 Read this before running any node's test round — the mechanics below apply to every node in this
 system; each node's own `README.md`/`test-plan.md` only adds what's specific to it.
 
-Sibling system to `..\agentic-testing\` (that one drives React apps end to end through a browser;
+Sibling system to `Documentation\Employees\agentic-testing\` (that one drives React apps end to end through a browser;
 this one drives **Flow Studio / Octopus workflow execution node types** — the building blocks a
 user drags onto a workflow canvas, e.g. an Elasticsearch node, an HTTP node, a SQL node). Read
-`..\agentic-testing\globals.md` first if you have not already — the environment/screenshot/verdict
+`Documentation\Employees\agentic-testing\globals.md` first if you have not already — the environment/screenshot/verdict
 mechanics defined there (backend health check, Passport SSO login pattern, 3-viewport responsive
 convention, `results.md` shape) all still apply here. This file only adds what is specific to
 testing a **node** instead of an **app**.
@@ -115,7 +115,7 @@ around:
    Elasticsearch-specific extra — bake it into every `test-plan.md`'s Phase 1/Phase 2 cases as their
    own explicit step, not an afterthought.
 
-Every case still gets a Pass/Fail/Blocked verdict per `..\agentic-testing\globals.md`'s rules —
+Every case still gets a Pass/Fail/Blocked verdict per `Documentation\Employees\agentic-testing\globals.md`'s rules —
 "Blocked on missing credentials" is an expected, legitimate verdict for category 2/4/5/7 cases when
 real external credentials haven't been supplied yet; it is not the same as skipping the case.
 
@@ -143,7 +143,7 @@ one Chrome-driven pass before a node can be signed off, per `test-plan.md`'s cer
 1. **Preferred: Chrome-driven, through Flow Studio's actual UI** (`claude-in-chrome`) — open Flow
    Studio (confirm its dev-server port from its own `vite.config.ts` under
    `BizFirstAiStudio\src\flow-studio\apps\flow-studio\`, don't assume it's already running — start it
-   only if truly needed, this machine has ~7.7GB RAM per `..\agentic-testing\globals.md`), confirm you
+   only if truly needed, this machine has ~7.7GB RAM per `Documentation\Employees\agentic-testing\globals.md`), confirm you
    are actually logged in (a session can silently be logged out — check before assuming it works),
    create or open a test project, drag the node's palette template(s) onto the canvas, fill its
    config form with real values, wire it up (a trigger node feeding it, output ports going somewhere
@@ -187,7 +187,7 @@ internals, and you should never ask them to paste a password into chat. `elastic
 
 ## Result verdicts, screenshots, `results.md` format
 
-Identical to `..\agentic-testing\globals.md` — Pass / Fail / Blocked, same `results.md` table shape,
+Identical to `Documentation\Employees\agentic-testing\globals.md` — Pass / Fail / Blocked, same `results.md` table shape,
 same `testround\r{N}\` / `screenshots\` layout and naming convention, same "never overwrite a prior
 round" rule. Not repeated here.
 
@@ -198,8 +198,8 @@ round" rule. Not repeated here.
   explained, the credential-sourcing playbook in full.
 - `02-guidelines.md` — the concrete, zero-prior-context procedure for bootstrapping testing on a
   brand-new node type, referencing this file throughout.
-- `..\agentic-testing\globals.md` — the parent system's shared mechanics (environment startup,
+- `Documentation\Employees\agentic-testing\globals.md` — the parent system's shared mechanics (environment startup,
   screenshot convention, responsive pass, verdict definitions, `results.md` format).
-- `..\agentic-testing\features\README.md` — closest existing precedent: backend features tested at
+- `Documentation\Employees\agentic-testing\features\README.md` — closest existing precedent: backend features tested at
   the API level without a dedicated app UI. A node test plan is similar in spirit but scoped to one
   execution-node type instead of one protocol/feature.

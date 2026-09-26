@@ -7,7 +7,7 @@ handed directly to a fresh agent as its task prompt — it assumes zero prior co
 
 ## What you're refreshing, and why the discipline matters
 
-`C:\BizFirstGO_FI_AI\Documentation\Employees\atlas-forms\atlas-forms-rag\v2\` is a multi-file spec fed
+`Knowledge\Form\atlas-forms-rag\v2\` is a multi-file spec fed
 into a RAG/knowledge-base pipeline so Octopus AI agents can generate Atlas Forms schemas (JSON) from
 natural-language requests. It exists specifically because **two older spec locations went stale and
 were actively wrong** — not just outdated in tone, wrong in ways that would have produced broken form
