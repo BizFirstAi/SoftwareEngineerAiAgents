@@ -3,6 +3,16 @@
 Start here. This file lists every agent in this repository and tells an AI assistant, such as
 Claude in Chrome opened from a studio's **Build using AI** page, which agent to use.
 
+## Rules for every agent (Binoy, 2026-09-26)
+
+1. **Every create or change goes through the agent's MCP server.** Never create, save, delete or
+   publish anything by clicking or typing in a studio's UI.
+2. **The browser is read-only.** Use it to read, browse, navigate, reload and show the user the
+   result (scroll to it, highlight it). Nothing more.
+3. **The user only pastes the short prompt from the Build using AI page.** The agent's procedures
+   hold every question and step, so never ask the user to write a long prompt.
+4. **The agent creates the app, form or workflow itself** through MCP, including the project.
+
 ## How to pick an agent
 
 1. **Find the studio.** The Build using AI page names it in its heading ("Build *Flow Studio* …
