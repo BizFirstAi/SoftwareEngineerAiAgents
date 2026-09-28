@@ -15,8 +15,12 @@ the connection, how to call a tool, and which tools are missing today.
   session. Credentials sent only on later calls are ignored.
 - App Studio tools need scope `mcp:app-studio:read` (list/get) or `mcp:app-studio:write` (create,
   update, delete) for an API key. A signed-in user's own session also passes.
-- A failed tool call still returns HTTP 200. The JSON-RPC result has `isError: true` and a text
-  message, e.g. "Access denied: No valid MCP caller identity found".
+- A failed tool call still returns HTTP 200, in one of two ways:
+  - Access problems and bad arguments come back as `isError: true` with a text message, e.g.
+    "Access denied: No valid MCP caller identity found".
+  - An App Studio tool that ran but failed replies normally with
+    `{"success": false, "errors": [...]}`.
+  - The helper below turns both into a thrown error, and returns the `data` part on success.
 
 ## Step 1 — Get an API key (the user creates it)
 
@@ -24,9 +28,9 @@ Creating a key is a write, so **the user does it, not the agent**. Open the admi
 tab (navigation only) and guide them:
 
 1. Open `http://localhost:5173/api-keys` (Passport admin, **API Keys**).
-2. Ask the user to click **Create**, name the key (e.g. "App Studio agent"), tick the
-   **`mcp:app-studio:read`** and **`mcp:app-studio:write`** scopes, and create it. Or they can
-   reuse an existing key with those scopes.
+2. Ask the user to click **Create**, name the key (e.g. "App Studio agent"), tick the scopes
+   **"Read App Studio (MCP)"** (`mcp:app-studio:read`) and **"Write App Studio (MCP)"**
+   (`mcp:app-studio:write`), and create it. Or they can reuse an existing key with both scopes.
 3. Ask them to paste the key into the chat.
 4. **Keep the key only in memory for this session.** Never write it into a file, a widget, a
    page, a URL or the chat summary, and never repeat it back.
@@ -73,8 +77,11 @@ window.bfMcp = (() => {
       const r = await post({ jsonrpc: '2.0', id: ++seq, method: 'tools/call', params: { name, arguments: args } });
       if (r.error) throw new Error(JSON.stringify(r.error));
       const text = (r.result.content || []).map(c => c.text).join('\n');
-      if (r.result.isError) throw new Error(text);
-      try { return JSON.parse(text); } catch { return text; }
+      if (r.result.isError) throw new Error(text);               // access denied, bad arguments
+      let body; try { body = JSON.parse(text); } catch { return text; }
+      // App Studio tools reply {success, errors, data}; a failure is success:false, NOT isError
+      if (body && body.success === false) throw new Error(JSON.stringify(body.errors));
+      return body && 'data' in body ? body.data : body;
     },
   };
 })();
@@ -94,23 +101,39 @@ Ask for a correct key and call `connect` again.
 
 ## Calling a tool: argument rules
 
-These avoid the generic "An error occurred invoking '…'" failure
-(`site-building-lessons.md` §12):
+Checked against the tool source (`BizFirst.Ai.Mcp.Tools.AppStudio\Tools\*.cs`, 2026-09-26):
 
-1. **Send every property the tool's `inputSchema` lists**, even ones you don't need. Every
-   property is marked required. Use `0`, `false`, `""` or `null` for the ones you leave alone.
-2. **JSON-string fields** (`configuration`, `styleConfiguration`, `widgetStyle`, `theme`) take a
-   string of JSON. Use `"{}"` as "no change", never `""`. Plain-string fields (`widgetCss`,
-   `appCode`, `navPosition`) may be `""`.
-3. Build `configuration` with `JSON.stringify(obj)` so quotes inside the HTML are escaped.
+1. **Send every property the tool's `inputSchema` lists**, even ones you don't need: every
+   property is listed as required, and leaving a key out causes the generic "An error occurred
+   invoking '…'" failure (`site-building-lessons.md` §12).
+2. **Use `null` for anything you are not setting.** The update tools (`update_widget_placement`,
+   `update_page`, `update_app`) treat `null` as "leave unchanged". Any other value is written:
+   `0` moves a widget to the top (`displayOrder`), `false` turns a flag off, `""` or `"{}"`
+   replaces the stored value. Never send those as a placeholder.
+3. **`appPageID: null` means shared** (shown on every page). `0` is not shared: it ties the
+   widget to a page that doesn't exist, so it never shows.
+4. **`create_widget` does not set a display order**, so set one right after with
+   `update_widget_placement` (see [`create-website.md`](create-website.md) step 7).
+5. **JSON-string fields** (`configuration`, `styleConfiguration`, `widgetStyle`) take a string of
+   JSON. Build them with `JSON.stringify(obj)` so quotes inside HTML are escaped.
+6. `update_app` with `appCode` set changes only the code. Leave `name` and `description` null.
+   It returns an error if the code is taken.
 
-Example:
+Examples:
 ```js
-await bfMcp.call('create_widget', {
+const w = await bfMcp.call('create_widget', {
   appID, widgetType: 'content', name: 'Home - Hero', sectionName: 'main', appPageID: homePageID,
   configuration: JSON.stringify({ content: html, format: 'html', allowScripts: true }),
+});   // w = { widgetID, appWidgetID, widgetType, sectionName }
+await bfMcp.call('update_widget_placement', {
+  widgetPlacementID: w.appWidgetID, displayOrder: 10,
+  styleConfiguration: null, widgetStyle: null, widgetCss: null, showInNav: null, navPosition: null,
 });
 ```
+What `bfMcp.call` returns for the creating tools (from the source):
+`create_project_with_app` → `{projectID, appID}`; `create_page` → `{appPageID}`;
+`create_widget` → `{widgetID, appWidgetID, widgetType, sectionName}`;
+`create_section` → `{appID, sectionName, region, isPrimaryContentSection, totalSections}`.
 
 ## Known tool gaps (current build)
 
@@ -118,7 +141,7 @@ Check `bfMcp.tools()` each session. If a missing tool appears, use it and update
 
 | Missing | Effect | Workaround used by the procedures |
 |---|---|---|
-| `update_app` has no `theme` parameter | The app theme can't be set through MCP | Put the chosen palette in every `var()` fallback (`section-recipes.md`) |
+| `update_app` has no `theme` parameter | The app theme can't be set through MCP. App Player's default dark theme applies | Put the chosen palette as a local `--app-var-*` block on each widget's wrapper (`section-recipes.md`, "Picking colors") |
 | `update_widget_definition` | A widget's content can't be edited | One widget per section. Replace it and hide the old one ([`update-section.md`](update-section.md)) |
 | `update_section` (e.g. `widgetLayout`) | A section's layout can't be changed after it's created | Header widgets stack. Style them with `update_widget_placement` |
 | Any delete for a widget placement | Placements can't be removed | Hide with `display:none` (`site-building-lessons.md` §15) |

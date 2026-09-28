@@ -36,14 +36,42 @@ through MCP writes each `content` widget's HTML itself. These recipes follow eve
 
 ## How to use them
 
-- **One `content` widget per page**, holding that page's sections in order, wrapped once in
-  `<div class="{p}-page">`. Put the shared `<style>` block (base + only the recipes that page
-  uses) at the top of that widget. This is the composition the lessons recommend
-  (`site-building-lessons.md` §5).
+Every `content` widget built from these recipes has exactly this shape:
+
+```html
+<div class="{p}-page">
+  <style>/* Base CSS + the CSS of each recipe used in this widget */</style>
+  <!-- the recipe markup, filled with the user's words -->
+</div>
+```
+
+- **The `<style>` goes inside the wrapper `div`**, never first in the HTML. A leading `<style>`
+  can be dropped when the HTML is sanitized.
+- **Widget granularity.** The lessons prefer one widget per page (`site-building-lessons.md` §5).
+  But no MCP tool can edit a widget's content today, so a guided build uses **one widget per
+  section** (`Procedure/App/create-website.md`). Each widget then carries its own copy of the base
+  CSS. The rules are identical, so the copies don't conflict.
 - Replace `{p}` with the site's prefix and every `[[…]]` with the user's approved text.
 - Anchor ids (`id="{p}-hero"`) let the agent scroll the browser to a section after building it.
 
-## Base (include once at the top of every page's `<style>`)
+## Links between pages (required, or the link opens an error page)
+
+App Player needs `?tenantID=` in every URL. A plain link loads a new page without it and shows
+"Missing or invalid tenantID". No code intercepts content-widget links. So write every link to
+another page of the site as:
+
+```
+/{app}/page/{slug}?tenantID={tenantID}
+```
+
+`{app}` is the AppCode (or AppID) and `{tenantID}` is the user's tenant
+(`Procedure/App/preview-and-focus.md`). This is verified for App Player on `localhost:6130` only.
+How links behave in a published/static deployment has not been checked; say so in the final report.
+Links to other websites (`https://…`) need nothing extra.
+
+## Base (include at the top of every widget's `<style>`)
+
+Put the palette's local token block (see "Picking colors" at the end) **before** these rules.
 
 ```css
 .{p}-page{background-color:var(--app-var-bg,#0f172a);color:var(--app-var-text,#e8eef7);font-family:var(--app-var-font-family,system-ui,-apple-system,"Segoe UI",sans-serif);line-height:1.7;font-size:16px}
@@ -72,7 +100,7 @@ through MCP writes each `content` widget's HTML itself. These recipes follow eve
   <span class="{p}-eyebrow">[[eyebrow, e.g. business type]]</span>
   <h1>[[tagline]]</h1>
   <p class="{p}-lead">[[one-line subtext]]</p>
-  <div class="{p}-actions"><a class="{p}-btn" href="[[link, e.g. ./products]]">[[button label]]</a>
+  <div class="{p}-actions"><a class="{p}-btn" href="[[link, e.g. /nila-herbals/page/products?tenantID=1]]">[[button label]]</a>
   <a class="{p}-btn ghost" href="[[second link]]">[[second button label, optional]]</a></div>
 </div></section>
 ```
@@ -180,6 +208,8 @@ A real contact **form** is a separate `form` widget bound to an existing Atlas F
 
 ## Recipe 8 — Footer (shared, placed once with `appPageID` null in the footer section)
 
+Like every recipe, wrap it in `<div class="{p}-page">` with the base CSS.
+
 ```html
 <footer class="{p}-footer"><div class="{p}-wrap {p}-footrow">
   <strong>[[site name]]</strong><span>[[short line or © year + name]]</span>
@@ -193,10 +223,28 @@ A real contact **form** is a separate `form` widget bound to an existing Atlas F
 
 ## Picking colors when the theme can't be set through MCP
 
+**The `var()` fallbacks alone do not set the colors.** App Player and the designer always inject
+the default theme tokens on their root element (`app-handlers-generic\src\hooks\themeInjector.ts`,
+`ensureDefaultThemeInjected()`: `[data-theme-scope="app"] { --app-var-bg: #1a1a2e; … }`), so every
+`var(--app-var-*, fallback)` resolves to the **default dark theme** (or the tenant's theme), never
+to its fallback.
+
 The app theme (`update_app`'s `theme` parameter) is **not available** in the current MCP build (see
-`../../Procedure/App/connect-to-mcp.md`, "Known tool gaps"). Until it is, the fallback values
-inside each `var()` are what the visitor sees. Choose one palette with the user and use its values
-as the fallbacks everywhere. Three starting palettes to offer:
+`../../Procedure/App/connect-to-mcp.md`, "Known tool gaps"). Until it is, **set the chosen palette as
+local tokens on the wrapper**, as the first rule of the base CSS in every widget. Custom properties
+take the nearest definition, so these override the injected defaults inside the widget:
+
+```css
+.{p}-page{--app-var-bg:#f7faf8;--app-var-bg-panel:#ffffff;--app-var-text:#15261d;--app-var-text-muted:#5b6e63;--app-var-border:#dbe7df;--app-var-color-primary:#2f855a;--app-var-color-primary-hover:#38a169;--app-var-color-secondary:#c47f17;--app-var-button-bg:#2f855a;--app-var-button-text:#ffffff;--app-var-link:#2f855a;--app-var-radius:10px;--app-var-space-unit:8px}
+```
+
+Use the same values as the `var()` fallbacks too, so the widget also looks right outside a themed
+page. Use the same colors as literal values in the header's `widgetContainer` CSS.
+
+**When `update_app` has `theme` again**, write the palette as the app theme instead and leave this
+local block out. Otherwise the local block would override any theme the user sets later.
+
+Three starting palettes to offer:
 
 | Palette | bg | bg-panel | text | text-muted | color-primary / button-bg | color-secondary | border |
 |---|---|---|---|---|---|---|---|
