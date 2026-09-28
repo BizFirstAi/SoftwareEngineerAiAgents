@@ -69,8 +69,10 @@ Ask the user to choose a palette and show the options from
 > 3. **Warm earth**: natural and calm
 > 4. Your own colors (tell me a main color, and light or dark)
 
-Pick a short class prefix from the site name (e.g. `nh-` for "Nila Herbals"). You will use the
-chosen palette's values as the fallbacks in every `var()`, and the prefix on every class.
+Pick a short class prefix from the site name (e.g. `nh-` for "Nila Herbals"). You will put the
+chosen palette in every widget as a local token block (`section-recipes.md`, "Picking colors").
+The `var()` fallbacks alone are **not** enough: App Player always injects its default dark theme,
+which beats them. Use the prefix on every class.
 
 ## Step 5 — Pages
 
@@ -89,22 +91,30 @@ part, lowercase with hyphens). Show the final list as a table and get a yes.
 
 Call these in order (argument rules: [`connect-to-mcp.md`](connect-to-mcp.md), "Calling a tool"):
 
-1. `create_project_with_app` with the site name and the idea as the description. Keep the
-   returned **AppID** (and AppCode, if returned; otherwise read it with `get_app`).
-2. `create_section` three times, before any widget
+1. `create_project_with_app` with the site name, the idea as the description, and
+   `projectTypeID: 20` (the App Studio "app" project type, the same value the designer's Create
+   New App uses in `CreateAppModal.tsx`). Keep the returned **projectID** and **AppID**.
+2. Give the app a readable **AppCode**, used in its URL: `update_app` with `appCode` set to the
+   site name in lowercase with hyphens (e.g. `nila-herbals`), and `name` and `description` null.
+   If the code is taken, add a short suffix and try again. The new app has no code until you set
+   one.
+3. `create_section` three times, before any widget
    ([`site-building-lessons.md`](../../Knowledge/App/site-building-lessons.md) §4):
-   - `header`: region `header`, `isPrimaryContentSection` false
+   - `header`: region `header`, `isPrimaryContentSection` null
    - `main`: region `main`, `isPrimaryContentSection` **true**
-   - `footer`: region `footer`, `isPrimaryContentSection` false
-3. `create_page` once per page from step 5. Keep each **AppPageID** and slug.
-4. `update_page` on the home page with `isDefault` true.
-5. Header: `create_widget` of type `page-navigation`, config `{"orientation":"horizontal"}`, in
-   section `header`, with no page (shared). Then `update_widget_placement` on it with
-   `styleConfiguration` `{"widgetContainer":{"css":"background-color:<bg-panel>;padding:14px 32px;border-bottom:1px solid <border>;"}}`,
-   using the palette's values. Tell the user plainly that the menu text colors come from the
-   widget itself and cannot be themed through MCP yet (`site-building-lessons.md` §2).
-6. Footer: `create_widget` of type `content` in section `footer`, shared, using Recipe 8.
-7. Show the empty site: [`preview-and-focus.md`](preview-and-focus.md), opening the home page.
+   - `footer`: region `footer`, `isPrimaryContentSection` null
+4. `create_page` once per page from step 5 (`parentPageID` null). Keep each **AppPageID** and
+   slug.
+5. `update_page` on the home page with `isDefault` true and every other field null.
+6. Header: `create_widget` of type `page-navigation`, config `{"orientation":"horizontal"}`, in
+   section `header`, **`appPageID` null** (shared). Then `update_widget_placement` on it with
+   `displayOrder` 10 and `styleConfiguration`
+   `{"widgetContainer":{"css":"background-color:<bg-panel>;padding:14px 32px;border-bottom:1px solid <border>;"}}`,
+   using the palette's values (other fields null). Tell the user plainly that the menu text colors
+   come from the widget itself and can't be themed through MCP yet (`site-building-lessons.md` §2).
+7. Footer: `create_widget` of type `content` in section `footer`, **`appPageID` null**, using
+   Recipe 8. Then `update_widget_placement` with `displayOrder` 10.
+8. Show the empty site: [`preview-and-focus.md`](preview-and-focus.md), opening the home page.
 
 ## Step 7 — Build each page, one section at a time
 
@@ -126,8 +136,12 @@ Call to action) and let the user change the list. Then for **each section**:
    in a `<style>` block, the markup with the user's words, the outer `<div class="{p}-page">`
    wrapper, and **`"allowScripts": true`**. One widget per section, so the user can later change
    one section without touching the others ([`update-section.md`](update-section.md)).
-   Sections appear in creation order. Only set `displayOrder` with `update_widget_placement` when
-   inserting a section between existing ones.
+   Then **set its order**: `update_widget_placement` with `displayOrder` = 10 × its position on
+   the page (10, 20, 30…), other fields null. `create_widget` leaves every placement at the same
+   order, so skipping this leaves the section order undefined. The gaps of 10 leave room to
+   insert a section later.
+   Links to other pages of the site must follow the "Links between pages" rule in
+   [`section-recipes.md`](../../Knowledge/App/section-recipes.md), or they open an error page.
 5. **Show it**: [`preview-and-focus.md`](preview-and-focus.md), reload the page and scroll to
    the new section. Ask where they want to see it: the App Studio designer *(default)* or App
    Player.
