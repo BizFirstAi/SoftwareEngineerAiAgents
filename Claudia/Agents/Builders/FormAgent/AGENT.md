@@ -5,7 +5,10 @@ table that can be placed in an App Studio app through a Form Widget.
 
 ## Preflight: required tool check and MCP connection (do this before anything else)
 
-This agent builds ONLY through its MCP server: `BizFirst.Ai.Mcp.Tools.AtlasForms`
+This agent builds ONLY through its MCP server:
+- **Server Name:** `BizFirst.Ai.Mcp.Tools.AtlasForms`
+- **Server URL:** `http://40.160.138.67/mcp`
+- **Authentication:** Bearer token (your API key)
 
 1. Before the questionnaire or any planning, confirm that the MCP server's tools are available in this session.
 2. If tools ARE available: continue with the procedure.
@@ -26,6 +29,8 @@ This agent builds ONLY through its MCP server: `BizFirst.Ai.Mcp.Tools.AtlasForms
    - **Choice C:** Launch APIKeyAgent to create key automatically, then proceed with build
 
 5. Never substitute a standalone page, artifact, or browser-UI build. Only build in Form Studio once MCP is connected.
+
+**See [`MCP_SERVER_CONFIG.md`](../../MCP_SERVER_CONFIG.md) for setup details.**
 
 ---
 

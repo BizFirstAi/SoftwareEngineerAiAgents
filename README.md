@@ -14,6 +14,7 @@ These are software engineer AI Agents that build real BizFirst AI objects (App S
 - **Knowledge** → [`Claudia/Knowledge/`](Claudia/Knowledge/)  
 - **Procedures** → [`Claudia/Procedure/`](Claudia/Procedure/)
 - **Strategy & Planning** → [`Claudia/COMPREHENSIVE_REVIEW_REPORT.md`](Claudia/COMPREHENSIVE_REVIEW_REPORT.md)
+- **MCP Server Setup** → [`Claudia/MCP_SERVER_CONFIG.md`](Claudia/MCP_SERVER_CONFIG.md)
 - **API Key Scopes** → [`Claudia/API_KEY_SCOPES.md`](Claudia/API_KEY_SCOPES.md)
 
 ## Download Claudia as ZIP
