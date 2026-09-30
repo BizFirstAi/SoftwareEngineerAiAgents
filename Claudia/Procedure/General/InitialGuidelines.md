@@ -4,6 +4,36 @@
 
 ---
 
+## Step 0 — Preflight Tool Checks (Required for All Agents)
+
+Before any agent begins work, it must verify that its required MCP server tools are available in this session:
+
+1. **Check tool availability:**
+   - Look for tools whose names start with the agent's MCP server name (listed in the agent's AGENT.md file)
+   - Or call the server's list/health tool if available
+   
+2. **If tools ARE available:**
+   - Continue with the agent's procedure
+
+3. **If tools are NOT available:**
+   - STOP immediately
+   - Do not build a substitute deliverable (artifact, HTML page, standalone file, browser-UI build)
+   - Tell the user in plain words: "The required [MCP Server Name] is not available in this session"
+   - Ask: "(a) connect the MCP server and retry, or (b) explicitly approve a named fallback"
+   
+4. **Fallback approval:**
+   - Only proceed with a fallback if the user explicitly approves in chat
+   - Label the result clearly as a draft, not built through the required studio
+   - Approval for one fallback does not carry over to later tasks
+   
+5. **Report findings:**
+   - Say which tools you checked and what you found
+   - Never assume tools exist without verification
+
+**This is mandatory for all builder agents (AppAgent, FormAgent, WorkflowAgent, APIKeyAgent, CredentialAgent, ServerAgent).**
+
+---
+
 ## Part 1: Repository Structure & Learning Path
 
 ### Two-Repo System

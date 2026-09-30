@@ -11,6 +11,19 @@ The default procedure for AppAgent. Walks user through building an App Studio ap
 5. **Nothing is published without explicit yes** — always confirm before publishing.
 6. **User can always skip guidance** — if they say "skip, I'll describe it," take their full description, show a plan, build after yes.
 
+## Step 0 — Preflight Tool Check (Required)
+
+Before proceeding, confirm that the AppAgent's MCP server tools are available:
+
+1. Look for tools whose names start with `BizFirst.Ai.Mcp.Tools.AppStudio` or call the server's list/health tool.
+2. **If tools ARE available:** Continue with Step 1 below.
+3. **If tools are NOT available:** STOP.
+   - Do not publish an artifact, HTML page, or standalone file.
+   - Tell the user in plain words: "The BizFirst App Studio MCP tools are not available in this session, so I cannot build this in App Studio."
+   - Ask: "(a) connect the MCP server and retry, or (b) explicitly approve a named fallback"
+4. Only proceed with a fallback if the user explicitly approves. Label the result as a draft, not built in App Studio.
+5. Report which tools you checked and what you found. Never assume tools exist.
+
 ## Knowledge to Load
 
 - [00-overview.md](../../Knowledge/AppAgent/00-overview.md) (always)
@@ -20,7 +33,7 @@ The default procedure for AppAgent. Walks user through building an App Studio ap
 - [02-widget-types.md](../../Knowledge/AppAgent/02-widget-types.md) (widget index, then specific `widgets/{type}.md`)
 - [05-integration-guide.md](../../Knowledge/AppAgent/05-integration-guide.md) (MCP patterns)
 
-## Step 1 — What Are We Building?
+## Step 1 — What Are We Building? (After Preflight Passes)
 
 Ask:
 

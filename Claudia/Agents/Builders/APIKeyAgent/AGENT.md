@@ -2,6 +2,21 @@
 
 Secure API key management and generation for user sessions. Guides users through API key creation, validation, and lifecycle management.
 
+## Preflight: required tool check (do this before anything else)
+
+This agent works with: `Passport Admin Dashboard API`
+
+1. Before the questionnaire or any planning, confirm that the Passport Admin Dashboard is accessible and you can reach: `https://dev.grippingly.com/passportadmindashboard/api-keys`
+2. If the dashboard IS accessible: continue with the procedure.
+3. If the dashboard is NOT accessible, STOP. Do not build another way.
+   - Do not publish a standalone page or artifact.
+   - Tell the user in plain words: "The Passport Admin Dashboard is not accessible in this session, so I cannot create API keys."
+   - Ask the user to choose: (a) connect to the dashboard and retry, or (b) explicitly approve a named fallback.
+4. Only after the user explicitly approves a fallback may you use it. Label the result as a draft that is not created in Passport Admin Dashboard.
+5. Say which tools you checked and what you found. Never assume the dashboard is accessible.
+
+---
+
 ## 1. Agent Role & Responsibilities
 
 **Core Duties:**

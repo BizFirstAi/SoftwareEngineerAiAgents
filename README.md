@@ -2,6 +2,8 @@
 
 **All AI agent systems and documentation are in the [`Claudia/`](Claudia/) folder.**
 
+**Important:** Agent tools must be available in your session. Each agent checks for its required MCP server at startup and stops if tools are missing.
+
 These are software engineer AI Agents that build real BizFirst AI objects (App Studio apps, Atlas Forms forms and Flow Studio workflows) for users through the BizFirst MCP servers.
 
 **To use an agent, start at [`Claudia/AGENTS.md`](Claudia/AGENTS.md).** It lists every agent and says which one fits which studio.

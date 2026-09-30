@@ -2,6 +2,14 @@
 
 Welcome to Claudia, a comprehensive AI agent system for building BizFirst applications. This index lists all files and guides navigation for humans, AI tools, and crawlers.
 
+## Key Rules
+
+### Hard rule: no silent substitution
+
+Every agent MUST run its Preflight check before starting. If the required MCP tools are missing, the agent stops and asks the user. It never produces a substitute deliverable (standalone page, artifact, file, or browser-UI build) without explicit user approval in chat. Approval for one fallback does not carry over to later tasks.
+
+---
+
 ## Quick Start
 
 - **New to Claudia?** Start with [Claudia/AGENTS.md](Claudia/AGENTS.md)

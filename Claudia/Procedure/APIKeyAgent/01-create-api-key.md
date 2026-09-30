@@ -8,6 +8,19 @@ Guide to creating a new API key via Passport Admin Dashboard.
 - Passport credentials (username/password)
 - Completion of APIKeyQuestionnaire.md (know your needs)
 
+## Step 0 — Preflight Tool Check (Required)
+
+Before proceeding, confirm that the Passport Admin Dashboard is accessible:
+
+1. Verify you can reach: `https://dev.grippingly.com/passportadmindashboard/api-keys`
+2. **If dashboard IS accessible:** Continue with Step 1 below.
+3. **If dashboard is NOT accessible:** STOP.
+   - Do not publish an artifact, HTML page, or standalone file.
+   - Tell the user in plain words: "The Passport Admin Dashboard is not accessible in this session, so I cannot create API keys."
+   - Ask: "(a) connect to the dashboard and retry, or (b) explicitly approve a named fallback"
+4. Only proceed with a fallback if the user explicitly approves. Label the result as a draft, not created in Passport Admin Dashboard.
+5. Report which tools you checked and what you found. Never assume the dashboard is accessible.
+
 ## Step 1: Navigate to Passport Admin Dashboard
 
 ```
