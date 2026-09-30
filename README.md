@@ -65,3 +65,17 @@ This content was copied on 2026-09-25 from
 `Documentation\Employees\agentic-development-engineers` (see
 [`Knowledge/shared/engineers-overview.md`](Knowledge/shared/engineers-overview.md) for that
 folder's original README). The Documentation copy was left in place.
+
+## Host Online
+
+This documentation is designed for public hosting. To serve these files:
+
+1. See [SITE_SETUP.md](SITE_SETUP.md) for hosting options
+2. Files are plain markdown - no special server needed
+3. Check [Claudia/index.md](Claudia/index.md) for complete file listing
+4. Use [sitemap.txt](sitemap.txt) for crawler navigation
+5. [robots.txt](robots.txt) permits all crawlers
+
+Popular hosting: GitHub Pages, Cloudflare Pages, Vercel, or self-hosted.
+
+Once hosted, AI tools can read the index and fetch files as needed without GitHub's rate limits.

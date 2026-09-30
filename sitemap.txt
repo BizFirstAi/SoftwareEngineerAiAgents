@@ -1,0 +1,31 @@
+# Claudia Documentation Sitemap
+
+## Index
+/Claudia/index.md - Complete file listing and navigation
+
+## Key Files
+/README.md - Repository overview
+/llms.txt - AI tool access guide
+/Claudia/AGENTS.md - Agent specifications
+/Claudia/COMPREHENSIVE_REVIEW_REPORT.md - Analysis
+/Claudia/Recommendations_ForPublicUX.md - UX recommendations
+/Claudia/Implementation_Plan.md - Execution roadmap
+
+## Agents (10+ specifications)
+/Claudia/Agents/Builders/AppDeveloper/AGENT.md
+/Claudia/Agents/Builders/WorkflowDeveloper/AGENT.md
+/Claudia/Agents/Builders/FormDeveloper/AGENT.md
+/Claudia/Agents/Builders/APIKeyAgent/AGENT.md
+/Claudia/Agents/Testers/AppTester/AGENT.md
+/Claudia/Agents/Testers/FormTester/AGENT.md
+/Claudia/Agents/Testers/WorkflowTester/AGENT.md
+
+## Knowledge (50+ files organized by topic)
+See Claudia/Knowledge/APIKeys/, Knowledge/App/, Knowledge/Credentials/, 
+Knowledge/Notes/, Knowledge/Servers/, Knowledge/Workflow/
+
+## Procedures (40+ step-by-step guides)
+See Claudia/Procedure/AppAgent/, Procedure/APIKeyAgent/, Procedure/Credentials/,
+Procedure/Servers/, Procedure/Workflow/, Procedure/General/
+
+All files are plain markdown and can be fetched directly.

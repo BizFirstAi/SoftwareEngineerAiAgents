@@ -1,65 +1,50 @@
-﻿# SoftwareEngineerAiAgents — Index
+# Claudia AI Agent Repository — Complete Index
 
-**AI-driven knowledge + agent-spec system for building BizFirst studios** (App, Form, Workflow).
+Welcome to the Claudia documentation. This index lists all files with descriptions and links.
 
-## Quick Navigation
+## Quick Start
+1. New to Claudia? Start with AGENTS.md
+2. Want to build? Browse Agents/ section below
+3. Need reference? Check Knowledge/
+4. Step-by-step? See Procedure/
 
-### 📋 **Core Reference**
-- [AGENTS.md](AGENTS.md) — All agent specs (AppDeveloper, FormDeveloper, WorkflowDeveloper, Testers)
-- [../README.md](../README.md) — Project overview and setup
-- [../llms.txt](../llms.txt) — AI tool navigation guide
+## Files by Category
 
-### 🤖 **Agents**
-- **Builders**
-  - [AppDeveloper](Agents/Builders/AppDeveloper/AGENT.md) — Creates apps, sites, pages, widgets
-  - [FormDeveloper](Agents/Builders/FormDeveloper/AGENT.md) — Creates forms and search+edit forms
-  - [WorkflowDeveloper](Agents/Builders/WorkflowDeveloper/AGENT.md) — Creates workflows and nodes
-- **Testers**
-  - [AppTester](Agents/Testers/AppTester/AGENT.md) — Tests app studio features and widgets
-  - [FormTester](Agents/Testers/FormTester/AGENT.md) — Tests form controls and validation
-  - [WorkflowTester](Agents/Testers/WorkflowTester/AGENT.md) — Tests workflow nodes and integrations
+### Agents (10+ specifications)
+- Agents/Builders/AppDeveloper/AGENT.md - Build web apps, sites, pages, widgets
+- Agents/Builders/WorkflowDeveloper/AGENT.md - Create automation workflows
+- Agents/Builders/FormDeveloper/AGENT.md - Build forms and search+edit interfaces
+- Agents/Builders/APIKeyAgent/AGENT.md - Generate and manage API keys
+- Agents/Testers/AppTester/AGENT.md - Test app studio features
+- Agents/Testers/FormTester/AGENT.md - Test form controls
+- Agents/Testers/WorkflowTester/AGENT.md - Test workflow nodes
 
-### 📚 **Knowledge Bases**
-- [App Studio](Knowledge/App/00-overview.md) — App data model, widgets, architecture, design
-- [Form Studio](Knowledge/Form/) — Form controls (65+ types), validation, design patterns
-- [Workflow Studio](Knowledge/Workflow/) — Workflow nodes, execution patterns, integrations
-- [Shared](Knowledge/Shared/) — Common patterns, architecture, standards
+### Knowledge (50+ reference documents)
+- Knowledge/APIKeys/ - API key concepts, types, lifecycle, integration
+- Knowledge/App/ - App Studio overview, model, architecture, styling
+- Knowledge/Credentials/ - Credential types, security, API reference
+- Knowledge/Notes/ - Agent memory system (Semantic/Episodic/Procedural)
+- Knowledge/Servers/ - Server types, architecture, deployment, API
+- Knowledge/Workflow/ - Workflow architecture, nodes, execution, testing
 
-### 📖 **Procedures**
-- [App Creation](Procedure/App/) — Step-by-step guides for building apps
-- [Form Creation](Procedure/Form/) — Step-by-step guides for building forms
-- [Workflow Creation](Procedure/Workflow/) — Step-by-step guides for building workflows
-- [General](Procedure/General/) — Rouge Notes memory system, common utilities
+### Procedure (40+ step-by-step guides)
+- Procedure/AppAgent/ - Create apps, add pages, widgets, styling
+- Procedure/APIKeyAgent/ - Setup API keys, validate, retrieve, revoke
+- Procedure/Credentials/ - Create, validate, rotate, troubleshoot credentials
+- Procedure/Servers/ - Provision, configure, deploy, monitor servers
+- Procedure/Workflow/ - Create workflows, add nodes, integrate, test, deploy
+- Procedure/General/ - Guidelines, examples, multi-agent orchestration
 
-## Architecture
+### Strategic Documents
+- AGENTS.md - Agent index and specifications
+- COMPREHENSIVE_REVIEW_REPORT.md - Full analysis
+- Recommendations_ForPublicUX.md - UX optimization guide
+- Implementation_Plan.md - Execution roadmap
 
-**Two-Repo System:**
-- **SoftwareEngineerAiAgents** (this repo) — Agent specs, knowledge, procedures
-- **BizFirstPayrollV3** — Backend (.NET 9.0, 70+ microservices, SQL Server)
+## How to Use
+1. Read this index to find files
+2. Click links or fetch files you need
+3. All files are plain markdown - no JavaScript needed
+4. Download and cache files for offline use
 
-**Three Studios:**
-1. **App Studio** — Web apps, sites, pages, widgets (17 widget types)
-2. **Form Studio** — Forms and search+edit forms (65+ control types)
-3. **Workflow Studio** — Workflows and workflow nodes (18+ documented node types)
-
-**Agent Teams:**
-- Builders create features via MCP servers (never UI)
-- Testers validate end-to-end functionality
-- Knowledge feeds agents source-grounded reference
-
-## Key Rules
-✓ All creation through MCP servers, never UI  
-✓ Browser read-only for display/validation  
-✓ Agents self-contain questions and steps  
-✓ Use Rouge_Notes for persistent agent memory (Semantic/Episodic/Procedural)
-
-## Recent Updates
-- **Procedure/General/Rouge_Notes.md** — Redesigned memory system (Semantic/Episodic/Procedural types)
-- **Knowledge/App/DevelopmentHistoryLog.md** — Tracks App Studio changes and decisions
-- **Knowledge/Workflow/testing/** — Elasticsearch and Odoo integration test results
-
-## See Also
-- [Development History](Knowledge/App/DevelopmentHistoryLog.md)
-- [Architecture Overview](Knowledge/App/architecture.md)
-- [Widget Reference](Knowledge/App/widgets/)
-- [Workflow Node Types](Knowledge/Workflow/nodes/)
+Last updated: 2026-09-29
