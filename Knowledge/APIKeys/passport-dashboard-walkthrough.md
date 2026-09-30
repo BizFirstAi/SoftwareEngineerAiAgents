@@ -168,7 +168,7 @@ Can ignore these for now:
 ├─────────────────────────────────────────────────┤
 │                                                 │
 │ Your API Key:                                   │
-│ ... │
+│ [Your unique API key will appear here]  │
 │                                                 │
 │           [Copy Button - looks like 📋]         │
 │                                                 │
@@ -230,8 +230,8 @@ API Keys
 ```
 Agent: "Please provide your API key:"
 
-You: 
-     (Paste the key)
+You: [Paste your API key here]
+     (Copy from the dashboard modal)
 
 Agent: "✓ Key received and validated!
         Your session is authenticated.
@@ -283,7 +283,7 @@ Your API key is now created and being used by the session.
 ├─────────────────────────────────────────────┤
 │ Your API Key:                               │
 │ ┌─────────────────────────────────────────┐ │
-│ │ ... │ │
+│ │ [Your unique API key appears here]      │ │
 │ │ [Copy Icon ← Click to Copy]             │ │
 │ └─────────────────────────────────────────┘ │
 │                                             │
