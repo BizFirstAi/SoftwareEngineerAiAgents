@@ -4,7 +4,11 @@
 
 ## Server Details
 
-**Host:** http://40.160.138.67/mcp
+**Host:** `{MCP_SERVER_BASE_URL}/mcp`
+
+**Current Configuration:** `http://40.160.138.67/mcp`
+
+To change the server domain, update `MCP_SERVER_BASE_URL` in this file and all agent files will use the new value.
 
 **Authentication:** Bearer token (your API key)
 

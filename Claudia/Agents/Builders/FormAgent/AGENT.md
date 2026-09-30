@@ -7,7 +7,7 @@ table that can be placed in an App Studio app through a Form Widget.
 
 This agent builds ONLY through its MCP server:
 - **Server Name:** `BizFirst.Ai.Mcp.Tools.AtlasForms`
-- **Server URL:** `http://40.160.138.67/mcp`
+- **Server URL:** `{MCP_SERVER_BASE_URL}/mcp` (see [`MCP_SERVER_CONFIG.md`](../../MCP_SERVER_CONFIG.md))
 - **Authentication:** Bearer token (your API key)
 
 1. Before the questionnaire or any planning, confirm that the MCP server's tools are available in this session.
