@@ -13,6 +13,29 @@ These are software engineer AI Agents that build real BizFirst AI objects (App S
 - **Procedures** → [`Claudia/Procedure/`](Claudia/Procedure/)
 - **Strategy & Planning** → [`Claudia/COMPREHENSIVE_REVIEW_REPORT.md`](Claudia/COMPREHENSIVE_REVIEW_REPORT.md)
 
+## Download Claudia as ZIP
+
+If you cannot access GitHub files directly (Chrome extension permission issues, offline use, etc.):
+
+📥 **[Download claudia.V1.zip](ClaudiaAsRepo/claudia.V1.zip)** (1.86 MB)
+
+This ZIP contains the complete Claudia folder with:
+- All 10+ agent specifications
+- 50+ knowledge base files
+- 40+ step-by-step procedures
+- Implementation plans and recommendations
+
+**To use:**
+1. Download claudia.V1.zip
+2. Extract to a local folder
+3. Use offline with Chrome extension or local tools
+4. All documentation fully self-contained
+
+To regenerate the ZIP with latest content, run:
+```powershell
+.\ClaudiaAsRepo\CompressRepoNow.ps1
+```
+
 ## Documentation Structure
 
 See [`Claudia/`](Claudia/) for:
