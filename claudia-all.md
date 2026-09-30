@@ -45475,3 +45475,16497 @@ public async Task<string> GetActiveApiKeyAsync(int userId)
 
 ## Claudia/Procedure/APIKeyAgent/revoke-apikey.md
 
+# Revoke API Key
+
+**Purpose:** Procedure to revoke (disable) an API key via Passport Admin Dashboard.
+
+---
+
+## When to Revoke
+
+✅ **You should revoke when:**
+- Key is no longer needed
+- Key has been compromised or leaked
+- Rotating to a new key
+- Ending a project or decommissioning service
+- Employee leaving organization
+- Reducing attack surface area
+
+---
+
+## Step 1: Navigate to API Keys Page
+
+**URL:** https://dev.grippingly.com/passportadmindashboard/api-keys
+
+**Actions:**
+1. Open URL in browser
+2. Log in if prompted
+3. You should see list of your API keys:
+
+```
+┌──────────────────────────────────────────────┐
+│ API Keys                                     │
+├──────────────────────────────────────────────┤
+│ Name                  Created    Expires   Status │
+│ ChatBot-Dev-2026      Today      12/28/26  ✓ Active │
+│ OldProject-Prod       2 months   10/15/25  ✓ Active │
+│ TestKey-2026-Aug      5 days     11/01/26  ✓ Active │
+└──────────────────────────────────────────────┘
+```
+
+---
+
+## Step 2: Find the Key to Revoke
+
+**Identify the key:**
+- Look for key by **Name**
+- Check **Created** date (when was it created)
+- Check **Expires** date (when it expires)
+- Verify **Status** is "Active"
+
+**Example:**
+- Want to revoke: "OldProject-Prod"
+- Created: 2 months ago
+- Expires: 10/15/25 (in future, but no longer used)
+- Status: Active (currently working)
+
+---
+
+## Step 3: Click Revoke/Delete Button
+
+**Location:** Right side of the key row
+
+**Buttons present:**
+- 🔄 **Details/View** — Show key details
+- 🗑️ **Revoke** — Disable the key
+- ❌ **Delete** — Permanently remove
+
+**Action:** Click **Revoke** button (or Delete if removing completely)
+
+---
+
+## Step 4: Confirm Revocation
+
+**Confirmation dialog appears:**
+
+```
+┌─────────────────────────────────────────┐
+│ Revoke API Key?                         │
+├─────────────────────────────────────────┤
+│                                         │
+│ You are about to revoke:                │
+│ "OldProject-Prod"                       │
+│                                         │
+│ This action will:                       │
+│ ✓ Disable the key immediately          │
+│ ✓ Prevent further API calls            │
+│ ✓ NOT delete historical data            │
+│ ✓ NOT delete logs/audit trail           │
+│                                         │
+│ You can re-activate the key later if    │
+│ you change your mind.                   │
+│                                         │
+│ ⚠️  WARNING:                            │
+│ Any services using this key will fail   │
+│ with 401 Unauthorized errors.           │
+│                                         │
+│ Are you sure?                           │
+│            [Cancel]  [Revoke]           │
+└─────────────────────────────────────────┘
+```
+
+**Agent:** "This will immediately disable the key. All API calls with this key will fail. Continue?"
+
+**Options:**
+- ✅ **[Revoke]** — Proceed with revocation
+- ❌ **[Cancel]** — Keep key active
+
+---
+
+## Step 5: Revocation Complete
+
+**Success message:**
+
+```
+✅ API Key Revoked Successfully
+
+Name:        OldProject-Prod
+Status:      REVOKED
+Revoked at:  Today 2:45 PM
+```
+
+**Key status changes:**
+- From: ✓ Active (green)
+- To: ✗ Revoked (red/grayed out)
+
+---
+
+## Step 6: Verify Revocation
+
+**In API Keys list:**
+- Key now shows **Status: Revoked** (red indicator)
+- Key is still visible in list (for audit trail)
+- Key cannot be reactivated (must create new one if needed)
+
+**Verify via API:**
+```csharp
+var response = await client.GetAsync(
+    "https://dev.grippingly.com/api/v1/data",
+    new { Authorization = "Bearer sk_dev_OldProject..." }
+);
+
+// Response: 401 Unauthorized
+// Error: "This API key has been revoked"
+```
+
+---
+
+## Step 7: Notify Services/Users
+
+**After revoking, notify:**
+
+| Stakeholder | Action |
+|-------------|--------|
+| **Developers** | Update code to use new key (if needed) |
+| **DevOps** | Update environment variables |
+| **Services** | Restart services using new key |
+| **Users** | Inform of maintenance if user-facing |
+| **Team** | Document reason for revocation |
+
+**Example notification:**
+```
+Subject: API Key "OldProject-Prod" Revoked
+
+The API key "OldProject-Prod" has been revoked as of 2026-09-30.
+
+If you were using this key, please:
+1. Create a new API key
+2. Update your configuration
+3. Redeploy your application
+
+New key should be stored securely in:
+- Password manager
+- Environment variables (.env)
+- Cloud secrets vault
+
+Contact [admin] if you have questions.
+```
+
+---
+
+## Special Cases
+
+### Case 1: Key Compromised/Leaked
+
+**Immediate action:**
+1. Revoke key immediately (do not wait)
+2. Create new key with different scope restrictions
+3. Audit API calls made with compromised key
+4. Check for unauthorized access in logs
+
+**Audit query:**
+```sql
+SELECT * FROM APICallLogs
+WHERE ApiKeyLastFourChars = 'xxxx'  -- Last 4 chars of compromised key
+  AND CreatedAt > @CompromiseTime
+ORDER BY CreatedAt DESC;
+```
+
+### Case 2: Bulk Revocation (Multiple Keys)
+
+If revoking many keys:
+1. Create new keys first with same scopes
+2. Update services to use new keys
+3. Verify new keys working
+4. Revoke old keys in batches
+5. Monitor for failures
+
+### Case 3: User/Employee Leaving
+
+**Revocation checklist:**
+- [ ] Revoke all of user's API keys
+- [ ] Check key usage in last 30 days
+- [ ] Audit API calls (ensure no unusual activity)
+- [ ] Offboard user from system
+- [ ] Archive documentation
+
+---
+
+## Auditing Revoked Keys
+
+**View revocation history:**
+```
+API Key Activity Log
+
+Key Name:              OldProject-Prod
+Status:                REVOKED
+Created:               2026-07-30
+Revoked:               2026-09-30
+Revoked by:            admin@company.com
+Reason:                Project decommissioned
+
+Last activity:         2026-09-29 14:32:00 (1 day ago)
+Total API calls:       1,247 calls
+Success rate:          99.8%
+```
+
+---
+
+## Recovery Options
+
+### If Key Revoked by Mistake
+
+**Option 1: Create New Key (Recommended)**
+- Cannot reactivate revoked key
+- Create new key with same settings
+- Use [APIKeyQuestionnaire.md](APIKeyQuestionnaire.md)
+
+**Option 2: Request Re-activation**
+- Contact admin (within 24 hours of revocation)
+- Admin can re-activate key (if not deleted)
+- Not guaranteed — depends on policy
+
+---
+
+## Best Practices
+
+✅ **DO:**
+- Revoke keys when no longer needed
+- Document reason for revocation
+- Notify teams affected by revocation
+- Audit key usage before revoking
+- Keep revoked keys in audit log (for compliance)
+
+❌ **DON'T:**
+- Revoke another user's key without permission
+- Revoke key without warning (unless compromised)
+- Delete key immediately (keep audit trail)
+- Forget to update systems using the key
+
+---
+
+## Troubleshooting
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Can't find key to revoke | Key already revoked | Check "Revoked" filter in list |
+| "Permission denied" error | No admin access | Contact admin to revoke for you |
+| Key still works after revoke | Cache not updated | Wait 1-2 minutes, clear cache, retry |
+| Need to re-activate key | Key was revoked | Create new key instead |
+| Audit trail missing | Very old key | Check archived logs database |
+
+---
+
+## Related Procedures
+
+- [APIKeyQuestionnaire.md](APIKeyQuestionnaire.md) — Create new API key
+- [check-existing-apikey.md](check-existing-apikey.md) — Verify existing key
+- [use-apikey-in-session.md](use-apikey-in-session.md) — Use key in session
+- [troubleshoot.md](troubleshoot.md) — Debug API key issues
+
+---
+
+## Claudia/Procedure/APIKeyAgent/troubleshoot.md
+
+# Troubleshoot API Key Issues
+
+**Purpose:** Diagnose and resolve API key problems.
+
+---
+
+## Quick Diagnostics
+
+**Step 1: Identify the error**
+
+| Error Message | Likely Cause | Go to Section |
+|---------------|--------------|---------------|
+| "401 Unauthorized" | Invalid/revoked/expired key | [Key Validation Failed](#key-validation-failed) |
+| "403 Forbidden" | Insufficient scopes | [Insufficient Scopes](#insufficient-scopes) |
+| "429 Too Many Requests" | Rate limited | [Rate Limited](#rate-limited) |
+| "Key not found" | No API key set up | [No Key Created](#no-key-created) |
+| "Form validation error" | Invalid form input | [Creation Failed](#creation-failed) |
+| "Key already exists" | Name is duplicate | [Duplicate Key Name](#duplicate-key-name) |
+
+---
+
+## No Key Created
+
+**Problem:** User doesn't have an API key yet.
+
+**Symptoms:**
+- Seeing "No API keys found" on Passport Admin Dashboard
+- Error: "API key required but not configured"
+- Session can't authenticate
+
+**Solution:**
+
+Follow [APIKeyQuestionnaire.md](APIKeyQuestionnaire.md) to create first key:
+1. Answer questionnaire questions
+2. Follow browser steps in [create-apikey-guided.md](create-apikey-guided.md)
+3. Copy key and store securely
+4. Return key to session
+
+**Code check:**
+```csharp
+var apiKey = session.GetApiKey();
+if (string.IsNullOrEmpty(apiKey))
+{
+    // No key configured - redirect to create
+    logger.LogWarning("API key not configured");
+    return RedirectTo(CreateKeyPage);
+}
+```
+
+---
+
+## Creation Failed
+
+**Problem:** API key creation failed with error.
+
+**Symptoms:**
+- Form won't submit
+- Error message on Passport Admin Dashboard
+- Browser shows validation error
+
+### Sub-case: Form Validation Errors
+
+**Common errors:**
+
+#### "Name is required"
+- **Cause:** Key Name field is empty
+- **Fix:** Enter a key name (e.g., "ChatBot-Dev-2026")
+- **Format:** Alphanumeric + hyphens, 1-100 chars
+
+#### "Invalid date"
+- **Cause:** Expiration date is in the past
+- **Fix:** Select a future date (use date picker)
+- **Example:** Today is 9/30/2026, select 12/28/2026
+
+#### "At least one scope required"
+- **Cause:** No scopes checked
+- **Fix:** Check at least Read or Write
+- **Recommendation:** Start with Read, add Write if needed
+
+#### "Invalid IP format"
+- **Cause:** IP restriction format is wrong
+- **Fix:** Use format X.X.X.X (e.g., 192.168.1.100)
+- **Multiple IPs:** Comma-separated, e.g., "192.168.1.100, 10.0.0.50"
+
+### Sub-case: Server-side Creation Error
+
+**Error: "Name already exists"**
+- **Cause:** API key with this name already created
+- **Fix:** Use different name (add date/ID)
+- **Example:** Instead of "ChatBot-Dev", use "ChatBot-Dev-2026-09"
+
+**Error: "Too many active keys"**
+- **Cause:** User has reached key limit
+- **Fix:** Revoke unused keys first using [revoke-apikey.md](revoke-apikey.md)
+- **Limit:** Typically 10-20 keys per user
+
+**Error: "Database error" or "500 Internal Server Error"**
+- **Cause:** Server-side issue
+- **Fix:** 
+  1. Wait 1 minute
+  2. Try again
+  3. If persists, contact admin
+
+---
+
+## Duplicate Key Name
+
+**Problem:** Can't create key because name already exists.
+
+**Symptoms:**
+- Error: "API key name 'ChatBot-Dev' already exists"
+- Form won't submit
+
+**Check existing keys:**
+1. Go to Passport Admin Dashboard API Keys page
+2. Look for key with same name
+3. Decide: revoke old one or use different name?
+
+**Solutions:**
+
+### Option 1: Use Different Name
+```
+Old name: ChatBot-Dev
+New name: ChatBot-Dev-Session-2026-09
+```
+- Go back in form
+- Change name
+- Submit again
+
+### Option 2: Revoke Old Key
+```
+1. Find old key in list: "ChatBot-Dev"
+2. Click Revoke button
+3. Confirm revocation
+4. Try creating new key with same name
+```
+
+See [revoke-apikey.md](revoke-apikey.md) for detailed steps.
+
+---
+
+## Key Validation Failed
+
+**Problem:** API key exists but won't authenticate.
+
+**Symptoms:**
+- Error: "401 Unauthorized"
+- API calls fail with "Invalid authentication"
+- Response: `{"error": "Invalid or expired API key"}`
+
+### Check Key Status
+
+**Run validation:**
+```bash
+# Test API key
+curl -H "Authorization: Bearer sk_dev_xxxxx" \
+  https://dev.grippingly.com/api/v1/auth/validate
+```
+
+**Expected success response:**
+```json
+{
+  "valid": true,
+  "name": "ChatBot-Dev-2026-09",
+  "status": "active"
+}
+```
+
+**Expected error response:**
+```json
+{
+  "valid": false,
+  "reason": "revoked",
+  "message": "This API key has been revoked"
+}
+```
+
+### Sub-case: Key Expired
+
+**Symptoms:**
+- Error: "API key has expired"
+- In dashboard: Expiration date is past
+
+**Check expiration:**
+```sql
+SELECT Name, ExpiresAt, Status
+FROM APIKeys
+WHERE Name = 'ChatBot-Dev-2026-09';
+
+-- Result: ExpiresAt = 2026-09-01 (today is 2026-09-30)
+-- Key is expired!
+```
+
+**Fix:**
+1. Create new key with longer expiration
+2. Use [APIKeyQuestionnaire.md](APIKeyQuestionnaire.md)
+3. Select "90 days" or "Never expire"
+4. Update session with new key
+5. Revoke old key
+
+### Sub-case: Key Revoked
+
+**Symptoms:**
+- Error: "API key has been revoked"
+- In dashboard: Status shows "Revoked"
+
+**Check status:**
+```csharp
+var key = await database.GetApiKeyAsync("ChatBot-Dev-2026-09");
+if (key.Status == "Revoked")
+{
+    logger.LogError("API key has been revoked");
+    // Must create new key
+}
+```
+
+**Fix:**
+1. Create new key using [APIKeyQuestionnaire.md](APIKeyQuestionnaire.md)
+2. Cannot reactivate revoked key
+3. Update all systems with new key
+4. Verify new key works
+
+### Sub-case: Wrong Key Format
+
+**Symptoms:**
+- Error: "Invalid API key format"
+- Key doesn't match expected pattern
+
+**Valid format:**
+```
+sk_{environment}_{32-char-alphanumeric}
+
+Examples:
+✓ sk_dev_1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p
+✓ sk_prod_9z8y7x6w5v4u3t2s1r0q9p8o7n6m5l4k
+✗ my_api_key (wrong prefix)
+✗ sk_dev_short (too short)
+```
+
+**Fix:**
+1. Check you're using the correct key
+2. Verify key was copied completely (no truncation)
+3. Check for extra spaces
+4. If key is lost, create new one
+
+---
+
+## Insufficient Scopes
+
+**Problem:** API key doesn't have permission for requested operation.
+
+**Symptoms:**
+- Error: "403 Forbidden"
+- Error: "API key lacks 'write' scope"
+- Operation fails even though key is valid
+
+**Check key scopes:**
+
+```csharp
+var response = await client.GetAsync(
+    "https://dev.grippingly.com/api/v1/auth/validate",
+    new { Authorization = "Bearer " + apiKey }
+);
+
+var json = JsonConvert.DeserializeObject<dynamic>(response);
+var scopes = json.scopes; // ["read", "write"]
+```
+
+**Current scopes vs. needed scopes:**
+
+| Operation | Scope Needed | Error If Missing |
+|-----------|--------------|------------------|
+| Read data | read | 403 Forbidden |
+| Create resource | write | 403 Forbidden |
+| Delete resource | delete | 403 Forbidden |
+| Manage keys | admin | 403 Forbidden |
+
+**Fix:**
+
+1. **Option 1: Revoke and create new key with more scopes**
+   - Go to [revoke-apikey.md](revoke-apikey.md)
+   - Revoke old key
+   - Use [APIKeyQuestionnaire.md](APIKeyQuestionnaire.md)
+   - Select needed scopes (Read + Write + Delete)
+   - Use new key
+
+2. **Option 2: Use different key with needed scopes**
+   - Check if another key has needed scopes
+   - Use that key instead
+   - Keep old key for other operations
+
+---
+
+## Rate Limited
+
+**Problem:** Too many API calls in short time.
+
+**Symptoms:**
+- Error: "429 Too Many Requests"
+- Response: `{"error": "Rate limit exceeded", "retry_after": 60}`
+
+**Rate limits:**
+```
+Default: 1000 requests per minute per API key
+Premium: 5000 requests per minute
+```
+
+**Check usage:**
+```sql
+SELECT COUNT(*) as CallCount, MAX(CreatedAt) as LastCall
+FROM APICallLogs
+WHERE ApiKeyLastFourChars = 'xxxx'
+  AND CreatedAt > DATEADD(minute, -1, GETDATE());
+
+-- Result: 1050 calls in last minute (exceeds 1000 limit)
+```
+
+**Fix:**
+
+### Immediate:
+1. Stop making API calls for 1-2 minutes
+2. Wait for rate limit to reset
+3. Retry request
+
+### Short-term:
+1. Implement exponential backoff:
+```csharp
+public async Task<T> CallWithRetryAsync<T>(Func<Task<T>> apiCall)
+{
+    int attempts = 0;
+    while (attempts < 5)
+    {
+        try
+        {
+            return await apiCall();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == 429)
+        {
+            var delayMs = (int)Math.Pow(2, attempts) * 1000; // 1s, 2s, 4s, 8s, 16s
+            await Task.Delay(delayMs);
+            attempts++;
+        }
+    }
+    throw new Exception("Rate limit exceeded after retries");
+}
+```
+
+2. Batch API calls (combine into fewer requests)
+3. Distribute calls across longer time period
+
+### Long-term:
+1. Upgrade to Premium rate limit (if available)
+2. Optimize code to make fewer API calls
+3. Cache frequently accessed data
+
+---
+
+## Key Not in Session
+
+**Problem:** Session can't find API key when needed.
+
+**Symptoms:**
+- Error: "API key not configured"
+- Error: "GetApiKey() returned null"
+- Session won't authenticate
+
+**Check session initialization:**
+
+```csharp
+var session = app.ServiceProvider.GetService<ISessionManager>();
+var apiKey = session.GetApiKey();
+
+if (apiKey == null)
+{
+    logger.LogError("API key not set in session");
+    // Retrieve from storage
+}
+```
+
+**Solutions:**
+
+1. **Key not stored in session:**
+```csharp
+// Set key in session
+session.SetApiKey(apiKey);
+session.SetApiKeyExpiry(expiresAt);
+```
+
+2. **Key expired from session:**
+```csharp
+// Refresh key
+await session.RefreshApiKeyAsync();
+```
+
+3. **Key not retrieved from storage:**
+```csharp
+// Retrieve from environment/database
+var key = await RetrieveApiKeyAsync(userId);
+session.SetApiKey(key);
+```
+
+---
+
+## API Call Timeout
+
+**Problem:** API request takes too long or hangs.
+
+**Symptoms:**
+- Error: "Request timeout after 30 seconds"
+- API endpoint not responding
+- Partial response received
+
+**Causes:**
+- Network connectivity issue
+- API server overloaded
+- Large data response
+
+**Fix:**
+
+1. **Check network:**
+```bash
+ping dev.grippingly.com
+tracert dev.grippingly.com
+```
+
+2. **Check API status:**
+- Visit https://status.grippingly.com
+- Check if API is operational
+
+3. **Increase timeout (temporary):**
+```csharp
+var client = new HttpClient();
+client.Timeout = TimeSpan.FromSeconds(60); // Default is 30s
+```
+
+4. **Retry with backoff:**
+```csharp
+for (int i = 0; i < 3; i++)
+{
+    try
+    {
+        return await apiCall.WithTimeout(30);
+    }
+    catch (TimeoutException)
+    {
+        await Task.Delay(1000 * (i + 1));
+    }
+}
+```
+
+---
+
+## Contact Support
+
+If issue persists:
+
+1. **Gather information:**
+   - API key last 4 characters (e.g., ...7a9b)
+   - Error message (exact text)
+   - Timestamp when error occurred
+   - What operation failed
+   - Any recent changes
+
+2. **Contact admin/support:**
+   - Email: support@company.com
+   - Ticket system: [link]
+   - Slack: #api-support
+   - Include gathered information above
+
+3. **Don't share:**
+   - ❌ Full API key
+   - ❌ Bearer token
+   - ❌ Session credentials
+   - ✅ Only last 4 chars of key
+
+---
+
+## Related Procedures
+
+- [APIKeyQuestionnaire.md](APIKeyQuestionnaire.md) — Create key
+- [check-existing-apikey.md](check-existing-apikey.md) — Validate key
+- [create-apikey-guided.md](create-apikey-guided.md) — Step-by-step creation
+- [revoke-apikey.md](revoke-apikey.md) — Revoke/disable key
+- [use-apikey-in-session.md](use-apikey-in-session.md) — Use key
+
+---
+
+## Claudia/Procedure/APIKeyAgent/use-apikey-in-session.md
+
+# Use API Key in Session
+
+**Purpose:** How to pass API key to session manager and use it for authentication.
+
+---
+
+## Overview
+
+Once you have an API key (from [check-existing-apikey.md](check-existing-apikey.md) or [create-apikey-guided.md](create-apikey-guided.md)), integrate it into your session.
+
+---
+
+## Step 1: Pass Key to Session Manager
+
+### Session Manager Initialization
+
+```csharp
+// Initialize session with API key
+var session = new SessionManager(
+    apiKey: "sk_dev_1a2b3c4d5e6f7g8h9i0j...",
+    environment: "development"
+);
+
+// Or via dependency injection
+services.AddScoped<ISessionManager>(provider =>
+    new SessionManager(
+        apiKey: configuration["API_KEY"],
+        environment: configuration["ENVIRONMENT"]
+    )
+);
+```
+
+### Store in Secure Context
+
+```csharp
+public class SessionContext
+{
+    public string UserId { get; set; }
+    public string SessionId { get; set; }
+    [SensitiveData] // Marked for encryption in memory
+    public string ApiKey { get; set; }
+    public string[] Scopes { get; set; }
+    public DateTime ExpiresAt { get; set; }
+    
+    public bool IsApiKeyValid => 
+        !string.IsNullOrEmpty(ApiKey) && 
+        DateTime.UtcNow < ExpiresAt;
+}
+```
+
+---
+
+## Step 2: Add to HTTP Headers
+
+### For HTTP Requests
+
+**Standard pattern:**
+```
+Authorization: Bearer {apikey}
+```
+
+### C# Example (HttpClient)
+
+```csharp
+public class ApiClient
+{
+    private readonly HttpClient _client;
+    private readonly string _apiKey;
+
+    public ApiClient(ISessionManager session)
+    {
+        _apiKey = session.GetApiKey();
+        _client = new HttpClient();
+    }
+
+    public async Task<T> GetAsync<T>(string endpoint)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
+        request.Headers.Authorization = 
+            new AuthenticationHeaderValue("Bearer", _apiKey);
+
+        var response = await _client.SendAsync(request);
+        // Handle response...
+        return await response.Content.ReadAsAsync<T>();
+    }
+
+    public async Task<T> PostAsync<T>(string endpoint, object data)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
+        {
+            Content = new StringContent(
+                JsonConvert.SerializeObject(data),
+                Encoding.UTF8,
+                "application/json"
+            )
+        };
+        request.Headers.Authorization = 
+            new AuthenticationHeaderValue("Bearer", _apiKey);
+
+        var response = await _client.SendAsync(request);
+        return await response.Content.ReadAsAsync<T>();
+    }
+}
+```
+
+### JavaScript Example (Fetch)
+
+```javascript
+const apiKey = sessionStorage.getItem('API_KEY'); // Or from env
+
+const headers = {
+    'Authorization': `Bearer ${apiKey}`,
+    'Content-Type': 'application/json'
+};
+
+const response = await fetch('https://dev.grippingly.com/api/v1/data', {
+    method: 'GET',
+    headers: headers
+});
+
+const data = await response.json();
+```
+
+### Python Example (Requests)
+
+```python
+import requests
+
+api_key = os.getenv('API_KEY')
+
+headers = {
+    'Authorization': f'Bearer {api_key}',
+    'Content-Type': 'application/json'
+}
+
+response = requests.get(
+    'https://dev.grippingly.com/api/v1/data',
+    headers=headers
+)
+
+data = response.json()
+```
+
+---
+
+## Step 3: Error Handling
+
+### Handle Authentication Errors
+
+```csharp
+public async Task<ApiResponse> SafeApiCallAsync(Func<Task<ApiResponse>> apiCall)
+{
+    try
+    {
+        return await apiCall();
+    }
+    catch (HttpRequestException ex) when (ex.StatusCode == 401)
+    {
+        // 401 Unauthorized - Invalid or expired key
+        logger.LogError("API Key is invalid or expired");
+        
+        // Strategy 1: Refresh from database
+        var newKey = await session.RefreshApiKeyAsync();
+        if (newKey != null)
+        {
+            logger.LogInfo("API key refreshed, retrying...");
+            return await apiCall();
+        }
+
+        // Strategy 2: Prompt user to create new key
+        throw new ApiAuthenticationException(
+            "API key expired. Please create a new one.",
+            needsNewKey: true
+        );
+    }
+    catch (HttpRequestException ex) when (ex.StatusCode == 403)
+    {
+        // 403 Forbidden - Insufficient scopes
+        logger.LogError("API key lacks required scopes");
+        throw new ApiAuthorizationException(
+            "Your API key doesn't have permission for this operation"
+        );
+    }
+    catch (HttpRequestException ex) when (ex.StatusCode == 429)
+    {
+        // 429 Too Many Requests - Rate limited
+        logger.LogWarning("API rate limit exceeded");
+        throw new ApiRateLimitException("Too many requests. Please wait.");
+    }
+}
+```
+
+---
+
+## Step 4: Logging (Security)
+
+### DO Log
+```csharp
+logger.LogInfo($"API call: {method} {endpoint}");
+logger.LogInfo($"API key scopes: {string.Join(",", scopes)}");
+logger.LogInfo($"API key expires: {expiresAt}");
+logger.LogInfo($"Using API key: ...{apiKey.Substring(apiKey.Length - 4)}"); // Last 4 chars only
+logger.LogInfo($"Response status: {response.StatusCode}");
+```
+
+### DON'T Log
+```csharp
+// ❌ NEVER log full key
+logger.LogInfo($"API key: {apiKey}");
+
+// ❌ NEVER log in error messages visible to user
+throw new Exception($"Auth failed with key {apiKey}");
+
+// ❌ NEVER log request bodies containing secrets
+logger.LogInfo($"Request: {request.Body}");
+```
+
+---
+
+## Step 5: Monitor Key Usage
+
+### Track Usage
+
+```csharp
+public class ApiKeyUsageTracker
+{
+    public async Task LogApiCallAsync(
+        string apiKey,
+        string method,
+        string endpoint,
+        HttpStatusCode statusCode,
+        long durationMs)
+    {
+        await database.InsertAsync(new ApiCallLog
+        {
+            ApiKeyLastFourChars = apiKey.Substring(apiKey.Length - 4),
+            Method = method,
+            Endpoint = endpoint,
+            StatusCode = statusCode,
+            DurationMs = durationMs,
+            TimestampUtc = DateTime.UtcNow
+        });
+    }
+}
+```
+
+### Set Alerts
+
+Alert if:
+- ❌ 401 errors exceed 5 in 5 minutes (key may be invalid)
+- ❌ 403 errors indicate insufficient scopes
+- ❌ 429 errors indicate rate limiting
+- ⚠️ API calls spike suddenly (unusual activity)
+- ⏰ Key expiring in 7 days (rotation reminder)
+
+---
+
+## Step 6: Handle Expiration
+
+### Pre-expiration Refresh
+
+```csharp
+public async Task<bool> RefreshExpiredKeyAsync(string userId)
+{
+    var key = await database.GetApiKeyAsync(userId);
+    
+    // If expiring in < 7 days, suggest refresh
+    var daysUntilExpiry = (key.ExpiresAt - DateTime.UtcNow).TotalDays;
+    
+    if (daysUntilExpiry < 7)
+    {
+        logger.LogWarning($"API key expiring in {daysUntilExpiry} days");
+        await notifications.SendAsync(
+            userId,
+            "Your API key expires soon. Please create a new one."
+        );
+        return false; // Don't auto-refresh, user should create new
+    }
+    
+    return true; // Key still valid
+}
+```
+
+### Rotation Schedule
+
+**Recommended rotation:**
+- Development keys: 30 days
+- Production keys: 90 days
+- High-security: 14 days
+
+**Process:**
+1. Create new key (using [APIKeyQuestionnaire.md](APIKeyQuestionnaire.md))
+2. Update session/config with new key
+3. Test new key works
+4. Revoke old key (using [revoke-apikey.md](revoke-apikey.md))
+
+---
+
+## Step 7: Graceful Fallback
+
+### If Key is Missing
+
+```csharp
+public async Task<IActionResult> ExecuteWithFallbackAsync(
+    Func<Task<IActionResult>> apiOperation)
+{
+    try
+    {
+        return await apiOperation();
+    }
+    catch (InvalidOperationException ex) when (ex.Message.Contains("API key"))
+    {
+        // Redirect to create key
+        return RedirectToAction("CreateApiKey");
+    }
+    catch (HttpRequestException ex) when (ex.StatusCode == 401)
+    {
+        // Key invalid - prompt to create new
+        return Unauthorized(new { 
+            message = "API key invalid. Please create a new one.",
+            redirectUrl = "/api-key/create"
+        });
+    }
+}
+```
+
+---
+
+## Step 8: Session Cleanup
+
+### On Session End
+
+```csharp
+public void OnSessionEnd(SessionContext session)
+{
+    // Clear API key from memory
+    Array.Clear(session.ApiKey.ToCharArray(), 0, session.ApiKey.Length);
+    session.ApiKey = null;
+    
+    // Log session end (without key details)
+    logger.LogInfo($"Session {session.SessionId} ended");
+    
+    // Close resources
+    session.Dispose();
+}
+```
+
+---
+
+## Complete Example: Authenticated Session
+
+```csharp
+public class AuthenticatedSession : IDisposable
+{
+    private readonly string _apiKey;
+    private readonly DateTime _expiresAt;
+    private readonly HttpClient _client;
+    private readonly ILogger _logger;
+
+    public AuthenticatedSession(string apiKey, DateTime expiresAt)
+    {
+        _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey));
+        _expiresAt = expiresAt;
+        _client = new HttpClient();
+        _logger = LoggerFactory.CreateLogger<AuthenticatedSession>();
+        
+        ValidateKey();
+    }
+
+    private void ValidateKey()
+    {
+        if (!_apiKey.StartsWith("sk_"))
+            throw new ArgumentException("Invalid API key format");
+
+        if (DateTime.UtcNow > _expiresAt)
+            throw new InvalidOperationException("API key is expired");
+    }
+
+    public async Task<T> GetAsync<T>(string endpoint)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
+        request.Headers.Authorization = 
+            new AuthenticationHeaderValue("Bearer", _apiKey);
+
+        try
+        {
+            var response = await _client.SendAsync(request);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError($"API call failed: {response.StatusCode}");
+                response.EnsureSuccessStatusCode();
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<T>(content);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == 401)
+        {
+            throw new ApiAuthenticationException("API key invalid or expired", ex);
+        }
+    }
+
+    public void Dispose()
+    {
+        _client?.Dispose();
+        _logger?.LogInfo("Session disposed");
+    }
+}
+```
+
+---
+
+## Troubleshooting
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| 401 Unauthorized | Invalid/revoked key | Check [check-existing-apikey.md](check-existing-apikey.md) |
+| 403 Forbidden | Insufficient scopes | Create new key with required scopes |
+| 429 Too Many Requests | Rate limited | Wait 1 minute, implement backoff |
+| Connection timeout | Network issue | Retry with exponential backoff |
+| Key not in session | Key wasn't set | Call [retrieve-apikey.md](retrieve-apikey.md) first |
+
+---
+
+## Claudia/Procedure/App/01.generic.md
+
+Always build apps using MCP Servers of BizFirst platforms.
+
+---
+
+## Claudia/Procedure/App/add-new-widget-type.md
+
+# Add a New Widget Type to `app-studio-rag`
+
+Use this runbook whenever a widget type needs a Tier 1 doc — a new `WidgetType` was added to the
+codebase, or an existing one's config changed. Written to be handed directly to a fresh agent with
+zero prior context. Mirrors the discipline `..\Workflow\add-new-node-type.md` established for its own doc set — same two-tier
+shape, same "ground truth is the code" rule, adapted for App Studio widgets.
+
+## The one non-negotiable rule
+
+**Read the real `*WidgetConfig.ts` interface first.** Read the widget's `*WidgetHandler.ts`/
+`*WidgetRenderer.tsx` for behavior. Read `AIExt_WidgetTypes`'s DB description columns only
+afterward, if at all, as a factual comparison — never as a template for what the doc should say.
+The DB description is display metadata for a UI label, not a config contract.
+
+## Step 1 — find the real source
+
+1. Locate the widget package: `BizFirstAiStudio\src\app-studio\packages\widget-handlers-{type}-
+   widget\src\`.
+2. Read `*WidgetConfig.ts` — the real TypeScript interface. Every field, its type, whether it's
+   required (no `?`), and its real default (from the renderer's fallback logic, not guessed).
+3. Read `*WidgetHandler.ts` for `render()`'s behavior and whether `resolveConfig()`/`load()` does
+   anything non-trivial.
+4. Check `app-handlers-core\src\types\WidgetTypeRegistry.ts` for the real label/description already
+   used by the creation UI, and `WidgetRecord.ts`'s `WidgetType` union doc comment for any dated
+   context on why/when the type was added.
+5. If the widget shares config with siblings (e.g. the four gallery widgets share
+   `GalleryWidgetConfig`), find and read the shared base type too — document the shared shape once,
+   in the base type's own doc, and have sibling docs reference it (see `widgets\image-gallery.md` /
+   `video-gallery.md`/`audio-gallery.md`/`pdf-gallery.md` for the worked example).
+
+## Step 2 — write the Tier 1 doc
+
+Default to one flat `widgets\{type}.md` file — App Studio widget configs are consistently flat
+property lists (no config type here has qualified for the split-doc pattern
+`workflow-nodes-rag` uses for `ai-agent`/`flow-ai-agent` yet; if a future widget type's config grows
+several genuinely independent sub-objects, apply that same split pattern and note it in
+`00-overview.md`'s index).
+
+```
+# `{widget-type-code}` — {Label}
+
+One paragraph: what it does, whether it's safe-default (drag-to-place) or modal-required
+(click-to-configure — check `addWidgetActions.ts`'s `SAFE_DEFAULT_WIDGET_TYPES`), what package it's in.
+
+## Config
+
+| Field (JSON key) | Type | Required | Default | Notes |
+|---|---|---|---|---|
+... every real field ...
+
+## Example
+
+```json
+{ ...a realistic Configuration for typical use... }
+```
+
+## Gotchas
+- anything a config-authoring agent would get wrong by guessing instead of reading this doc
+- known limitations (e.g. no server-side thumbnails, a field that exists but isn't consumed yet)
+```
+
+## Step 3 — update the index
+
+In `00-overview.md`: add one row to the widget type table (code / label / what it does / config?
+yes-no / doc path). Do not add per-field detail there — Tier 0 stays lean, same rule the workflow
+node RAG set enforces for itself.
+
+## Step 4 — independent review
+
+Don't treat your own doc as verified just because you read the source carefully. A second pass
+(fresh agent, or a careful self-review after a break) re-reading the real source independently and
+checking the field list/types/gotchas against it is the same discipline `refreshFromCodeToDoc@agent.md`
+requires for Atlas Forms and `add-new-node-type.md` requires for workflow nodes.
+
+## Constraints
+
+- Documentation only — do not modify any widget-handler code as part of writing a Tier 1 doc.
+- Do not commit or push anything without being explicitly asked in that specific request.
+- Ground every claim in real, currently-read source — not in a prior doc, not in
+  `AIExt_WidgetTypes`, not in this runbook's own examples.
+
+---
+
+## Claudia/Procedure/App/connect-to-mcp.md
+
+# Connect to the App Studio MCP server from the browser
+
+Every create or change an App agent makes goes through the BizFirst MCP server
+(rules in [`AGENTS.md`](../../AGENTS.md)). The agent runs in Claude in Chrome with no MCP connector,
+so it calls the server from the studio tab with JavaScript `fetch`. This file covers the API key,
+the connection, how to call a tool, and which tools are missing today.
+
+## Facts this relies on (checked in the code, 2026-09-26)
+
+- Endpoint: `https://localhost:10001/mcp` (Streamable HTTP, JSON-RPC), on the Consolidated WebApi.
+- CORS allows any `http://localhost:1000-20000` page (so App Studio on 6109 and App Player on
+  6130), any header, and exposes the `Mcp-Session-Id` response header. That last part was added
+  2026-09-26 and needs a WebApi build that includes it.
+- The caller's identity is captured **once, on the `initialize` call**, and used for the whole
+  session. Credentials sent only on later calls are ignored.
+- App Studio tools need scope `mcp:app-studio:read` (list/get) or `mcp:app-studio:write` (create,
+  update, delete) for an API key. A signed-in user's own session also passes.
+- A failed tool call still returns HTTP 200, in one of two ways:
+  - Access problems and bad arguments come back as `isError: true` with a text message, e.g.
+    "Access denied: No valid MCP caller identity found".
+  - An App Studio tool that ran but failed replies normally with
+    `{"success": false, "errors": [...]}`.
+  - The helper below turns both into a thrown error, and returns the `data` part on success.
+
+## Step 1 — Get an API key (the user creates it)
+
+Creating a key is a write, so **the user does it, not the agent**. Open the admin app on a new
+tab (navigation only) and guide them:
+
+1. Open `http://localhost:5173/api-keys` (Passport admin, **API Keys**).
+2. Ask the user to click **Create**, name the key (e.g. "App Studio agent"), tick the scopes
+   **"Read App Studio (MCP)"** (`mcp:app-studio:read`) and **"Write App Studio (MCP)"**
+   (`mcp:app-studio:write`), and create it. Or they can reuse an existing key with both scopes.
+3. Ask them to paste the key into the chat.
+4. **Keep the key only in memory for this session.** Never write it into a file, a widget, a
+   page, a URL or the chat summary, and never repeat it back.
+
+If the user can't open API Keys (the page may need an admin account), ask them to have their
+tenant admin create a key with those two scopes.
+
+*Alternative, not yet tested:* the user's own sign-in token (`Authorization: Bearer …`) is also
+accepted by the MCP guard. Use it only if the user explicitly asks, never by copying a token out
+of a URL, and test one read call first. It is not known yet whether every write tool gets a user
+id this way.
+
+## Step 2 — Connect (in the Build using AI tab)
+
+Run this once in the App Studio tab where the user pasted the prompt. **Keep that tab as the
+agent's working tab and don't navigate it away**: reloading it drops the connection. Show previews
+in a second tab ([`preview-and-focus.md`](preview-and-focus.md)).
+
+```js
+window.bfMcp = (() => {
+  const URL = 'https://localhost:10001/mcp';
+  let sid = null, key = null, seq = 0;
+  async function post(body) {
+    const h = { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' };
+    if (sid) h['Mcp-Session-Id'] = sid;
+    if (key) h['X-Api-Key'] = key;
+    const r = await fetch(URL, { method: 'POST', headers: h, body: JSON.stringify(body) });
+    const s = r.headers.get('mcp-session-id'); if (s) sid = s;
+    const t = await r.text(); if (!t) return null;
+    const data = t.split('\n').filter(l => l.startsWith('data:')).pop();   // SSE-framed reply
+    return JSON.parse(data ? data.slice(5) : t);
+  }
+  return {
+    async connect(apiKey) {
+      key = apiKey; sid = null;
+      const r = await post({ jsonrpc: '2.0', id: ++seq, method: 'initialize', params: {
+        protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'bizfirst-app-agent', version: '1' } } });
+      await post({ jsonrpc: '2.0', method: 'notifications/initialized' });
+      if (!sid) throw new Error('No Mcp-Session-Id readable: the WebApi needs the 2026-09-26 CORS build (restart it)');
+      return r.result.serverInfo;
+    },
+    async tools() { return (await post({ jsonrpc: '2.0', id: ++seq, method: 'tools/list', params: {} })).result.tools; },
+    async call(name, args) {
+      const r = await post({ jsonrpc: '2.0', id: ++seq, method: 'tools/call', params: { name, arguments: args } });
+      if (r.error) throw new Error(JSON.stringify(r.error));
+      const text = (r.result.content || []).map(c => c.text).join('\n');
+      if (r.result.isError) throw new Error(text);               // access denied, bad arguments
+      let body; try { body = JSON.parse(text); } catch { return text; }
+      // App Studio tools reply {success, errors, data}; a failure is success:false, NOT isError
+      if (body && body.success === false) throw new Error(JSON.stringify(body.errors));
+      return body && 'data' in body ? body.data : body;
+    },
+  };
+})();
+await bfMcp.connect('<the key the user pasted>');
+```
+
+Then check it with read-only calls before any write:
+
+1. `bfMcp.tools()`. Keep the list: it tells you which optional tools exist (see "Known tool
+   gaps" below).
+2. `bfMcp.call('list_widget_types', {})`. It should return the 18 widget types.
+
+If `connect` throws about `Mcp-Session-Id`, the running WebApi is older than the CORS fix. Ask the
+user to restart it; after a restart they must sign in to the studio again
+(`site-building-lessons.md` §6). If a call says "Access denied", the key is wrong or lacks a scope.
+Ask for a correct key and call `connect` again.
+
+## Calling a tool: argument rules
+
+Checked against the tool source (`BizFirst.Ai.Mcp.Tools.AppStudio\Tools\*.cs`, 2026-09-26):
+
+1. **Send every property the tool's `inputSchema` lists**, even ones you don't need: every
+   property is listed as required, and leaving a key out causes the generic "An error occurred
+   invoking '…'" failure (`site-building-lessons.md` §12).
+2. **Use `null` for anything you are not setting.** The update tools (`update_widget_placement`,
+   `update_page`, `update_app`) treat `null` as "leave unchanged". Any other value is written:
+   `0` moves a widget to the top (`displayOrder`), `false` turns a flag off, `""` or `"{}"`
+   replaces the stored value. Never send those as a placeholder.
+3. **`appPageID: null` means shared** (shown on every page). `0` is not shared: it ties the
+   widget to a page that doesn't exist, so it never shows.
+4. **`create_widget` does not set a display order**, so set one right after with
+   `update_widget_placement` (see [`create-website.md`](create-website.md) step 7).
+5. **JSON-string fields** (`configuration`, `styleConfiguration`, `widgetStyle`) take a string of
+   JSON. Build them with `JSON.stringify(obj)` so quotes inside HTML are escaped.
+6. `update_app` with `appCode` set changes only the code. Leave `name` and `description` null.
+   It returns an error if the code is taken.
+
+Examples:
+```js
+const w = await bfMcp.call('create_widget', {
+  appID, widgetType: 'content', name: 'Home - Hero', sectionName: 'main', appPageID: homePageID,
+  configuration: JSON.stringify({ content: html, format: 'html', allowScripts: true }),
+});   // w = { widgetID, appWidgetID, widgetType, sectionName }
+await bfMcp.call('update_widget_placement', {
+  widgetPlacementID: w.appWidgetID, displayOrder: 10,
+  styleConfiguration: null, widgetStyle: null, widgetCss: null, showInNav: null, navPosition: null,
+});
+```
+What `bfMcp.call` returns for the creating tools (from the source):
+`create_project_with_app` → `{projectID, appID}`; `create_page` → `{appPageID}`;
+`create_widget` → `{widgetID, appWidgetID, widgetType, sectionName}`;
+`create_section` → `{appID, sectionName, region, isPrimaryContentSection, totalSections}`.
+
+## Known tool gaps (current build)
+
+Check `bfMcp.tools()` each session. If a missing tool appears, use it and update the procedures.
+
+| Missing | Effect | Workaround used by the procedures |
+|---|---|---|
+| `update_app` has no `theme` parameter | The app theme can't be set through MCP. App Player's default dark theme applies | Put the chosen palette as a local `--app-var-*` block on each widget's wrapper (`section-recipes.md`, "Picking colors") |
+| `update_widget_definition` | A widget's content can't be edited | One widget per section. Replace it and hide the old one ([`update-section.md`](update-section.md)) |
+| `update_section` (e.g. `widgetLayout`) | A section's layout can't be changed after it's created | Header widgets stack. Style them with `update_widget_placement` |
+| Any delete for a widget placement | Placements can't be removed | Hide with `display:none` (`site-building-lessons.md` §15) |
+| A publish tool | Can't release through MCP | The user publishes ([`publish-app.md`](publish-app.md)) |
+| Image/document upload | Can't add photos | The user uploads images in the app's media library, or gives public image URLs |
+
+The first two (and `delete_project`, plus the Documents and Knowledge MCP modules) existed on
+2026-09-14 and were removed by the revert commit `345703c7a` in BizFirstPayrollV3 on 2026-09-17.
+Branch `origin/archive/pre-revert-2026-09-17` still has them.
+
+---
+
+## Claudia/Procedure/App/create-app-from-description@agent.md
+
+# @agent: Create App From Description
+
+Takes a plain-language description of an app a user wants, gathers the specific information needed,
+and builds a real, working App Studio app end-to-end — either from an existing template or from
+scratch — using the real widgets/pages/API surface documented in
+`..\..\Knowledge\App\`. Read `..\..\Knowledge\App\00-overview.md`,
+`app-model.md`, and `app-creation-flow.md` before starting — this agent is a consumer of that RAG
+set, not a replacement for it.
+
+## How to Use This Agent
+
+Ask the user these questions before building anything — don't guess at answers a user should give:
+
+1. **App Name** and a one-line **Description**.
+2. **Empty app, or start from a template?** If template: show the real template gallery (query
+   `Template_DataTemplates` for `DataTemplateTypeID=50` rows, per `app-creation-flow.md`) and let
+   the user pick, or confirm none fit and proceed empty.
+3. **Industry** and **Category** (optional, but ask — these attach a real `Taxonomy_Records` row per
+   `app-creation-flow.md`; don't skip asking just because they're optional).
+4. **What should this app actually let a user do?** Get a real feature list, not just a vibe — e.g.
+   "browse a photo gallery," "fill out a request form," "chat with a support agent," "see my
+   pending approvals." Map each real feature to a real widget type from the 17 in
+   `00-overview.md`'s index — don't invent a widget type or a capability that doesn't exist.
+5. **How many pages, and what's on each?** At minimum, confirm a home/landing page and what widgets
+   belong on it vs. shared across every page (header/nav/footer-style placements with
+   `appPageID: null`, per `app-model.md`).
+6. For any widget requiring a real ID (Form Widget's `formId`, Workflow Agent's
+   `executionTemplateID`, Chat Panel's `processID`) — confirm the user has (or can point you to) the
+   real target, or explicitly agree to defer that widget's real binding for later. Never fabricate a
+   plausible-looking ID.
+
+## Agent Prompt
+
+```
+Build an App Studio app named "[APP_NAME]" — [DESCRIPTION].
+
+Starting point: [Empty app | Template: TEMPLATE_NAME]
+Industry: [INDUSTRY or "skip"]
+Category: [CATEGORY or "skip"]
+
+Pages:
+1. [PAGE_NAME] ([slug]) — widgets: [WIDGET_TYPE: purpose, WIDGET_TYPE: purpose, ...]
+2. ...
+
+Shared (every page): [WIDGET_TYPE: purpose, ...]
+```
+
+## What To Do
+
+1. **Create the Project + App** via the real unified flow (`app-creation-flow.md`) — Project auto-
+   creates the App; this is the ONLY real creation path, don't call `AppsApiClient.create()`
+   directly without a Project.
+2. **If starting from a template**: call the real create-from-template endpoint. Report every
+   `warnings` entry the response returns to the user plainly — these mean a widget's config
+   reference (a Document, execution template, etc.) couldn't be safely cloned and needs
+   reconfiguring; don't silently swallow them.
+3. **Create each page** the user specified, setting `parentPageId` for any nested pages.
+4. **For each widget the user specified**: confirm the widget type's real config shape from its
+   `widgets\{type}.md` doc before creating it — don't guess field names. Create the shared Widget
+   definition, then place it (`AppWidget`) in the right section/page. Widgets shared across every
+   page get `appPageID: null`.
+5. **For any widget needing a real ID you don't have** (a Form/ExecutionTemplate/Process): create
+   the widget with a placeholder note in its `name` (e.g. "Form Widget — NEEDS formId") rather than
+   fabricating a number, and list these clearly in your final report as follow-up items.
+6. **Live-verify**: open the app in App Player, confirm every page loads and every widget renders
+   without error. Screenshot the result.
+7. **Report back**: what was built, the real App/Project ID, any template-clone warnings, any
+   widgets left needing a real ID binding, and the live-verification screenshot.
+
+## Gotchas
+
+- Never use the standalone "Create App" bypass — it was removed (`app-creation-flow.md`); Project
+  creation IS App creation now.
+- `Industry`/`Category` are NOT new columns on the App — they resolve to a `Taxonomy_Records` row.
+  Don't invent a different storage shape.
+- Template-cloned widgets get FRESH IDs — never assume a cloned widget's ID matches the original
+  template's. Some references (Form Widget's `formId`) are intentionally KEPT as-is (shared library
+  resource); others are intentionally cleared (tenant-private data) — see `app-creation-flow.md`'s
+  classification table before assuming either behavior for a reference type not covered there.
+- No server-side thumbnail generation exists for any media widget — don't promise "the gallery will
+  load fast" as a feature; it serves original files.
+- Gallery widgets and the Media Source picker only ever surface `IsPublicAsset === true` assets —
+  if the user wants to show a specific private asset in a gallery, that's not possible today; say so.
+
+---
+
+## Claudia/Procedure/App/create-website.md
+
+# Create a web site, web application or content site (guided)
+
+The default procedure for the App Developer. It walks the user through building an App Studio
+app step by step: choices with a marked default, worked examples, the user's own content, and a
+look at every section as soon as it is built. The user only pastes the short prompt from the
+studio's Build using AI page. Everything below is the agent's job.
+
+## Hard rules (read before step 1)
+
+1. **Every create or change goes through MCP.** Never click Create, Save, Publish or any other
+   control that writes data, and never type into the studio's forms. The browser is only for
+   reading, navigating, refreshing and showing results. How to call MCP from the browser:
+   [`connect-to-mcp.md`](connect-to-mcp.md).
+2. **One question at a time.** Ask, wait for the answer, then move on. Every question offers
+   choices, marks one as the default, and gives an example.
+3. **Never invent the user's business facts**: names, products, prices, claims, testimonials,
+   addresses, phone numbers, emails. Offer examples of *style and structure*. If the user says
+   "use your suggestion" for marketing copy (a tagline, a benefit line), you may write it, but
+   show it and get a yes before building it. Facts such as prices or contact details must come
+   from the user.
+4. **Never make up an ID.** Use the IDs the MCP responses return.
+5. **Nothing is published without an explicit yes** ([`publish-app.md`](publish-app.md)).
+6. **The user can always leave the guided path.** At any step they may say "skip guidance, I'll
+   describe it". Then take their whole description, show a plan, and build after their yes,
+   following the same design rules.
+
+Knowledge used by this procedure (load when you reach the step that needs it):
+[`00-overview.md`](../../Knowledge/App/00-overview.md) (always),
+[`section-recipes.md`](../../Knowledge/App/section-recipes.md) (design),
+[`site-building-lessons.md`](../../Knowledge/App/site-building-lessons.md) (MCP build gotchas),
+[`widgets/{type}.md`](../../Knowledge/App/widgets/) (only for widget types you use).
+
+## Step 1 — What are we building?
+
+Ask:
+
+> What would you like to create?
+> 1. **Web site** *(default)*: pages people read, such as a business or product site.
+> 2. **Web application**: pages where signed-in people do things, such as forms, approvals or chat.
+> 3. **Content site**: mostly articles, media or documents.
+>
+> You can also say "skip guidance" and describe everything at once.
+
+The three types differ only in the pages suggested in step 4 and the widget types used. The
+choice does not change how anything is built.
+
+## Step 2 — The overall idea
+
+Ask for the idea in the user's own words: what the site is for, who visits it, and what a visitor
+should do. Give one example answer, e.g. *"An herbal products shop. Visitors are health-minded
+families. I want them to browse products and contact us to order."*
+
+Then ask for the **site name** (used for the Project, the App and the header). Never guess it.
+
+## Step 3 — Connect to BizFirst (MCP)
+
+Follow [`connect-to-mcp.md`](connect-to-mcp.md). It opens the admin app's API Keys page so the
+user can create a key (or points them at an existing one), then checks the connection with a
+read-only call. Do not go on until the check passes.
+
+## Step 4 — Look and feel
+
+Ask the user to choose a palette and show the options from
+[`section-recipes.md`](../../Knowledge/App/section-recipes.md) ("Picking colors"):
+
+> Which look fits your site?
+> 1. **Deep night**: dark, modern *(default for web applications)*
+> 2. **Fresh light**: clean and bright *(default for web sites)*
+> 3. **Warm earth**: natural and calm
+> 4. Your own colors (tell me a main color, and light or dark)
+
+Pick a short class prefix from the site name (e.g. `nh-` for "Nila Herbals"). You will put the
+chosen palette in every widget as a local token block (`section-recipes.md`, "Picking colors").
+The `var()` fallbacks alone are **not** enough: App Player always injects its default dark theme,
+which beats them. Use the prefix on every class.
+
+## Step 5 — Pages
+
+Suggest pages that fit the idea and the type from step 1, and let the user add, remove or rename:
+
+| Type | Suggested pages |
+|---|---|
+| Web site | Home, About, Products or Services, Why us / Benefits, Contact |
+| Web application | Home (what the app does), one page per task (e.g. Requests, Approvals), Help |
+| Content site | Home, Articles or Library, Topics, About, Contact |
+
+For each page confirm the **name** (menu label), **title** (shown on the page) and **slug** (URL
+part, lowercase with hyphens). Show the final list as a table and get a yes.
+
+## Step 6 — Create the app and its structure (MCP)
+
+Call these in order (argument rules: [`connect-to-mcp.md`](connect-to-mcp.md), "Calling a tool"):
+
+1. `create_project_with_app` with the site name, the idea as the description, and
+   `projectTypeID: 20` (the App Studio "app" project type, the same value the designer's Create
+   New App uses in `CreateAppModal.tsx`). Keep the returned **projectID** and **AppID**.
+2. Give the app a readable **AppCode**, used in its URL: `update_app` with `appCode` set to the
+   site name in lowercase with hyphens (e.g. `nila-herbals`), and `name` and `description` null.
+   If the code is taken, add a short suffix and try again. The new app has no code until you set
+   one.
+3. `create_section` three times, before any widget
+   ([`site-building-lessons.md`](../../Knowledge/App/site-building-lessons.md) §4):
+   - `header`: region `header`, `isPrimaryContentSection` null
+   - `main`: region `main`, `isPrimaryContentSection` **true**
+   - `footer`: region `footer`, `isPrimaryContentSection` null
+4. `create_page` once per page from step 5 (`parentPageID` null). Keep each **AppPageID** and
+   slug.
+5. `update_page` on the home page with `isDefault` true and every other field null.
+6. Header: `create_widget` of type `page-navigation`, config `{"orientation":"horizontal"}`, in
+   section `header`, **`appPageID` null** (shared). Then `update_widget_placement` on it with
+   `displayOrder` 10 and `styleConfiguration`
+   `{"widgetContainer":{"css":"background-color:<bg-panel>;padding:14px 32px;border-bottom:1px solid <border>;"}}`,
+   using the palette's values (other fields null). Tell the user plainly that the menu text colors
+   come from the widget itself and can't be themed through MCP yet (`site-building-lessons.md` §2).
+7. Footer: `create_widget` of type `content` in section `footer`, **`appPageID` null**, using
+   Recipe 8. Then `update_widget_placement` with `displayOrder` 10.
+8. Show the empty site: [`preview-and-focus.md`](preview-and-focus.md), opening the home page.
+
+## Step 7 — Build each page, one section at a time
+
+For each page in order, first suggest its sections (e.g. Home: Hero, Benefits, Featured products,
+Call to action) and let the user change the list. Then for **each section**:
+
+1. **Ask what it should contain**, with two example directions to pick from or edit. Example for
+   a hero:
+   > Section 1 of Home, the hero, is the first thing visitors see. Pick a style or describe your own:
+   > 1. **Tagline + button**: a short bold line, one line under it, a "Shop now" button
+   > 2. **Welcome + intro**: a warm heading, 2–3 sentences about you, a "Learn more" button
+2. **Get the real words**: the heading, the text, button labels and where each button goes.
+   Remind the user of rule 3 when facts are needed.
+3. **Show the draft** as plain text (not code) and ask: *"Do you like this? Keep it, change the
+   words, or try the other style."* Repeat until they say yes.
+4. **Build it**: `create_widget` of type `content` in section `main`, with that page's
+   `appPageID`. Its HTML is the matching recipe from
+   [`section-recipes.md`](../../Knowledge/App/section-recipes.md): base CSS plus the recipe's CSS
+   in a `<style>` block, the markup with the user's words, the outer `<div class="{p}-page">`
+   wrapper, and **`"allowScripts": true`**. One widget per section, so the user can later change
+   one section without touching the others ([`update-section.md`](update-section.md)).
+   Then **set its order**: `update_widget_placement` with `displayOrder` = 10 × its position on
+   the page (10, 20, 30…), other fields null. `create_widget` leaves every placement at the same
+   order, so skipping this leaves the section order undefined. The gaps of 10 leave room to
+   insert a section later.
+   Links to other pages of the site must follow the "Links between pages" rule in
+   [`section-recipes.md`](../../Knowledge/App/section-recipes.md), or they open an error page.
+5. **Show it**: [`preview-and-focus.md`](preview-and-focus.md), reload the page and scroll to
+   the new section. Ask where they want to see it: the App Studio designer *(default)* or App
+   Player.
+6. **Ask**: *"Happy with this section, or change something?"* A change goes through
+   [`update-section.md`](update-section.md).
+
+After the last section of a page, show the whole page in App Player and ask whether the page is
+done.
+
+## Step 8 — Review the whole site
+
+Walk the user through every page in App Player ([`preview-and-focus.md`](preview-and-focus.md)).
+Check each page yourself as well: no section without padding, no default blue links, no text
+touching the page edge, buttons look like buttons, and no placeholder text such as `[[` left over.
+List anything the user still needs to provide (for example real photos: images must be
+uploaded by a signed-in person in the app's media library, which no MCP tool can do today).
+
+## Step 9 — Release
+
+Ask whether to publish. Follow [`publish-app.md`](publish-app.md).
+
+## Step 10 — Report
+
+Tell the user: the AppID and AppCode, the App Player link for each page, what was built, what is
+still missing, and any MCP gaps you hit (from [`connect-to-mcp.md`](connect-to-mcp.md), "Known
+tool gaps").
+
+---
+
+## Claudia/Procedure/App/preview-and-focus.md
+
+# Preview and focus: show the user what was just built
+
+Used after every MCP write in [`create-website.md`](create-website.md) and
+[`update-section.md`](update-section.md). This is the **only** thing the agent does in the
+browser UI: navigate, reload, scroll and highlight so the user can see the result. It never
+clicks a control that saves, creates, deletes or publishes, and never types into the studio.
+
+## Where to show it (ask the user once, then remember)
+
+| View | URL | Default port |
+|---|---|---|
+| **App Studio designer** *(default)* | `http://localhost:6109/{app}/page/{slug}` | 6109 |
+| **App Player** (what visitors see) | `http://localhost:6130/{app}/page/{slug}?tenantID={tenantID}` | 6130 |
+
+- `{app}` is the AppCode if the app has one, otherwise the numeric AppID. Both work.
+- `{slug}` is the page's slug. Leave `/page/{slug}` off to open the app's default page.
+- `{tenantID}` is required by App Player. On the designer tab, read it with
+  `localStorage.getItem('x-tenant-id')`. If that is empty, ask the user.
+- App Player reads the user's sign-in from their existing session. **Never put a token in the
+  URL yourself**, and never copy one from another URL.
+
+## Use a second tab for previews
+
+The Build using AI tab holds the MCP connection ([`connect-to-mcp.md`](connect-to-mcp.md)), and
+navigating it would drop that connection. Open a **second tab** for previews the first time, and
+reuse it after that.
+
+## Steps
+
+1. **Reload the preview tab.** Neither the designer nor App Player picks up server changes on its
+   own, so after every MCP write navigate the preview tab to the URL above (or reload it if it's
+   already there).
+2. **Wait for the page to load**, then find the section:
+   - A section built from a recipe has its own id, so use `document.getElementById('{p}-hero')`.
+   - A whole App Studio section (header, main, footer):
+     `document.querySelector('[data-section="' + CSS.escape(name) + '"]')`.
+   - One widget placement: `document.querySelector('[data-widget="' + appWidgetID + '"]')`.
+3. **Scroll and highlight** (display only, nothing is saved):
+   ```js
+   const el = document.getElementById('nh-hero');
+   el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+   const old = el.style.outline;
+   el.style.outline = '3px solid #f5a623'; el.style.outlineOffset = '4px';
+   setTimeout(() => { el.style.outline = old; }, 2500);
+   ```
+   In the designer the canvas scrolls inside its own panel. `scrollIntoView` handles that. The
+   canvas is not an iframe, so `document` reaches it.
+4. **Take a screenshot** and look at it before asking the user. If the section looks unstyled
+   (default blue links, text against the edge), check that its widget config has
+   `"allowScripts": true` and a `<style>` block (`site-building-lessons.md` §1) before telling the
+   user it is done.
+
+## If the page asks the user to sign in
+
+The session has expired, for example after the WebApi restarted (`site-building-lessons.md` §6).
+Stop and ask the user to sign in again. **Never fill in a sign-in form yourself.**
+
+---
+
+## Claudia/Procedure/App/publish-app.md
+
+# Publish the app
+
+Publishing makes the current version of the app live. Do it only after the user has reviewed every
+page ([`create-website.md`](create-website.md) step 8) and says **yes** to publishing.
+
+## Current state: no MCP tool publishes an app
+
+The App Studio MCP tools (checked with `tools/list`) have no publish tool. The module's own history
+log deferred publishing to a later version and classed it as a human-only action. Publishing
+exists only as the REST endpoint `POST /api/v1/app-studio/apps/{id}/publish` behind the designer's
+**Publish** button, which requires a **TenantAdmin or Admin** account. A normal user gets a 403. Under the rules in [`create-website.md`](create-website.md), the agent never clicks that
+button and never calls REST endpoints for writes.
+
+So, until a publish tool is added:
+
+1. Tell the user the site is ready and that publishing is their own step.
+2. Say where it is: the **Publish** button in the App Studio designer toolbar, with the app open.
+   If they aren't a tenant admin, they need one to publish it.
+3. After they say they've published, reload App Player
+   ([`preview-and-focus.md`](preview-and-focus.md)) and confirm the live site shows the latest
+   content.
+
+When a publish tool appears in `tools/list`, call it after the user's explicit yes instead, and
+update this file.
+
+---
+
+## Claudia/Procedure/App/update-section.md
+
+# Update a section
+
+Used when the user wants to change a section that already exists: new words, the other style,
+or a section removed. Every change goes through MCP ([`connect-to-mcp.md`](connect-to-mcp.md)).
+
+## 1. Find the section
+
+Call `list_widgets_in_app` with the AppID. Each placement gives its `appWidgetID`, `widgetID`,
+`sectionName`, `appPageID` and `displayOrder` (no name and no style, so identify sections by
+their order). **A `displayOrder` of 9000 or more means the placement was hidden** by an earlier
+update (step 3 below), so skip it. On a page built by
+[`create-website.md`](create-website.md), each section of the page is one `content` widget in
+section `main` for that `appPageID`. Its order on the page matches `displayOrder`.
+If unsure which one the user means, show the section list for that page and ask.
+
+## 2. Agree the change
+
+Show the current text and the new text side by side as plain text, and get a yes.
+
+## 3. Apply it
+
+**If `update_widget_definition` is available** (check `tools/list`, see
+[`connect-to-mcp.md`](connect-to-mcp.md), "Known tool gaps"): call it with the widget's
+`widgetID` and the new configuration (read its `inputSchema` for the exact parameter names).
+Keep `"allowScripts": true`.
+
+**If it is not available** (the current build), replace the section:
+
+1. `create_widget`: a new `content` widget with the new HTML, same section `main`, same
+   `appPageID`.
+2. `update_widget_placement` on the **new** placement: `displayOrder` = the old placement's
+   value, every other field null.
+3. `update_widget_placement` on the **old** placement: `styleConfiguration` =
+   `{"widgetContainer":{"css":"display:none"}}`, `displayOrder` = 9000 + its old value (the
+   marker step 1 relies on), every other field **null** (null leaves a field
+   unchanged; see [`connect-to-mcp.md`](connect-to-mcp.md), "Calling a tool"). No MCP tool can
+   delete a widget placement yet, so the hidden placement stays in the database
+   (`site-building-lessons.md` §15).
+
+To **remove** a section, do only step 3.
+
+To **add** a section between two others, create it and give it a `displayOrder` between theirs
+(e.g. 15 between 10 and 20).
+
+## 4. Show it
+
+[`preview-and-focus.md`](preview-and-focus.md): reload and scroll to the changed section, then
+ask whether it is right. Also re-read neighbouring sections: if another section's text refers to
+what changed, point that out (`site-building-lessons.md` §15).
+
+---
+
+## Claudia/Procedure/AppAgent/01-create-empty-app.md
+
+# Procedure: Create a Web Site, Web Application or Content Site (Guided)
+
+The default procedure for AppAgent. Walks user through building an App Studio app step-by-step: guided choices with marked defaults, worked examples, user's own content, and preview of each section as built.
+
+## Hard Rules (Read First)
+
+1. **Every create or change goes through MCP** — never click Create, Save, Publish or any writing control. Browser is read-only.
+2. **One question at a time** — ask, wait for answer, then move on. Every question offers choices, marks a default, gives examples.
+3. **Never invent business facts** — names, products, prices, claims, testimonials, addresses, phones, emails come from user. Offer style/structure examples only.
+4. **Never make up IDs** — use IDs that MCP responses return.
+5. **Nothing is published without explicit yes** — always confirm before publishing.
+6. **User can always skip guidance** — if they say "skip, I'll describe it," take their full description, show a plan, build after yes.
+
+## Knowledge to Load
+
+- [00-overview.md](../../Knowledge/AppAgent/00-overview.md) (always)
+- [03-app-creation-flow.md](../../Knowledge/AppAgent/03-app-creation-flow.md) (app creation wizard)
+- [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md) (when choosing look/feel)
+- [01-app-model.md](../../Knowledge/AppAgent/01-app-model.md) (when creating structure)
+- [02-widget-types.md](../../Knowledge/AppAgent/02-widget-types.md) (widget index, then specific `widgets/{type}.md`)
+- [05-integration-guide.md](../../Knowledge/AppAgent/05-integration-guide.md) (MCP patterns)
+
+## Step 1 — What Are We Building?
+
+Ask:
+
+> **What would you like to create?**
+> 1. **Web site** *(default)* — pages people read (business site, product site, portfolio)
+> 2. **Web application** — pages where signed-in people do things (forms, approvals, chat)
+> 3. **Content site** — mostly articles, media, documents
+>
+> You can also say "skip guidance" and describe everything at once.
+
+**The three types differ only in suggested pages and widget types.** The creation process is identical.
+
+## Step 2 — The Overall Idea
+
+Ask for the idea in user's own words: what the site is for, who visits it, what should a visitor do?
+
+Example answer: *"An herbal products shop. Visitors are health-minded families. I want them to browse products and contact us to order."*
+
+Then ask for the **site name** (used in Project, App, and header). Never guess it.
+
+## Step 3 — Connect to BizFirst (MCP)
+
+**Load:** [05-integration-guide.md](../../Knowledge/AppAgent/05-integration-guide.md)
+
+1. Get user's **API endpoint** (usually `{admin-app-url}/api/v1/...`)
+2. Get or create **API key** (in admin app's API Keys page)
+3. Get **TenantID** (from admin context)
+4. Make a test read-only call via MCP: `GET {endpoint}/apps/list`
+5. Confirm success
+
+Do NOT go on until the check passes.
+
+## Step 4 — Look and Feel (Styling)
+
+**Load:** [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md)
+
+Ask:
+
+> **Which look fits your site?**
+> 1. **Deep night** — dark, modern *(default for apps)*
+> 2. **Fresh light** — clean, bright *(default for websites)*
+> 3. **Warm earth** — natural, calm
+> 4. Your own colors — tell me a main color and light or dark
+
+Pick a short class prefix from the site name (e.g., `nh-` for "Nila Herbals"). Show the palette in examples. You will put this palette in every widget as a local token block. The `var()` fallbacks alone aren't enough — App Player always injects default dark theme, which beats them. Use the prefix on every class.
+
+## Step 5 — Pages
+
+Suggest pages fitting the idea + type from Step 1, let user add/remove/rename:
+
+| Type | Suggested Pages |
+|------|---|
+| Web site | Home, About, Products or Services, Why Us / Benefits, Contact |
+| Web application | Home (what it does), one per task (e.g., Requests, Approvals), Help |
+| Content site | Home, Articles or Library, Topics, About, Contact |
+
+For each page, confirm:
+- **Name** — menu label
+- **Title** — shown on page
+- **Slug** — URL part (lowercase with hyphens)
+
+Show final list as table, get yes.
+
+## Step 6 — Create the App and Structure (MCP)
+
+**Load:** [03-app-creation-flow.md](../../Knowledge/AppAgent/03-app-creation-flow.md)
+
+Call these in order (argument rules: [05-integration-guide.md](../../Knowledge/AppAgent/05-integration-guide.md), "Calling a Tool"):
+
+1. **`create_project_with_app`**
+   - Name: site name
+   - Description: the idea from Step 2
+   - `projectTypeID: 20` (App Studio app type)
+   - Keep returned **projectID** and **appID**
+
+2. **`update_app`** — set readable app code
+   - `appID`: from step 1
+   - `appCode`: site name in lowercase with hyphens (e.g., `nila-herbals`)
+   - If taken, try with short suffix
+   - `name: null`, `description: null`
+
+3. **`create_pages`** (bulk or per-page)
+   - For each page from Step 5, call `create_page`
+   - Name, slug, `appID`
+
+4. **`create_section`**
+   - Create one section per page-area (header, nav, footer, main-content)
+   - Mark primary content section with `isPrimaryContentSection: true`
+   - Keep returned section IDs and names
+
+5. **`create_widget`** (or use Designer for first pass)
+   - Populate each section/page with widgets
+   - See Step 7
+
+## Step 7 — Add Widgets (MCP)
+
+**Load:** [02-widget-types.md](../../Knowledge/AppAgent/02-widget-types.md), then specific widget docs as needed.
+
+For each widget type you use:
+
+1. Check [02-widget-types.md](../../Knowledge/AppAgent/02-widget-types.md) for overview
+2. Load the widget's Tier 1 doc (e.g., `widgets/form.md`) for configuration
+3. Call `create_widget` via MCP with correct config
+
+**Common first widgets:**
+- `site-branding` (logo + name in header)
+- `page-navigation` (menu of pages)
+- `content` (static text/HTML per page)
+- `form` (contact form, signup, etc.)
+- `image`, `video` (media on pages)
+
+Never make up field values — ask user for content.
+
+## Step 8 — Preview and Look (MCP + Browser)
+
+After each page or section is built:
+
+1. Call `publish_app` (as draft, if supported)
+2. Show user the app in App Player
+3. Scroll, highlight sections, test nav
+4. Ask: "Does this match what you wanted?"
+5. If not, follow [04-add-widgets.md](04-add-widgets.md) or [05-style-and-theme.md](05-style-and-theme.md) to adjust
+
+## Step 9 — Final Review & Publish
+
+1. Ask user to review the complete app
+2. Test all pages, all widgets, all navigation
+3. Check styling/theme on different page widths (responsive test)
+4. When user says yes: **call `publish_app` via MCP with explicit user confirmation**
+
+5. Show final URL and success message
+
+## If User Skips Guidance
+
+If at any step user says "skip, I'll describe it":
+
+1. Take their complete description
+2. Show a step-by-step plan extracted from it
+3. Get yes/no on the plan
+4. Execute all steps (project → app → pages → sections → widgets → styling → preview → publish)
+
+---
+
+**See Also:** [Add Pages](03-add-pages.md) | [Add Widgets](04-add-widgets.md) | [Style & Theme](05-style-and-theme.md) | [Validate App](06-validate-app.md)
+
+---
+
+## Claudia/Procedure/AppAgent/02-create-from-template.md
+
+# Procedure: Create App from Template
+
+Clone an existing template and customize it for a new app.
+
+## When to Use
+
+- User says "create an app like [existing app]" or "clone a template"
+- User wants to start from a pre-built template instead of from scratch
+- Faster than [Create Empty App](01-create-empty-app.md) when structure is known
+
+## Steps
+
+1. **Get template choice** — ask user which template to clone
+   - Can be fetched via `list_templates` MCP call
+   - Templates are pre-built, reusable app definitions
+
+2. **Gather customization details**
+   - New app name
+   - New app description
+   - Any content changes (copy, images, links)
+   - Any pages to remove or add
+
+3. **Create app from template (MCP)**
+   - Call `create_app_from_template`
+   - Pass: `templateID`, new app `name`, `description`
+   - Returns: new `appID`, `projectID`
+
+4. **Customize as needed**
+   - Update pages, widgets, styling via [Add Widgets](04-add-widgets.md) and [Style & Theme](05-style-and-theme.md)
+   - Replace placeholder content with user's own content
+
+5. **Preview and publish**
+   - Follow preview steps from [Create Empty App](01-create-empty-app.md) Step 8
+   - Publish when ready (explicit yes required)
+
+## Key Points
+
+- **Every structural entity gets a fresh ID** — nothing is truly copied, all are cloned with new IDs
+- **Config field classification:**
+  - **Kept as-is:** Form Widget's `formId` (points at original form definition)
+  - **Cleared with placeholder:** Workflow Template's `executionTemplateID`, all media widget URLs
+  - **New widget types:** Must be explicitly classified; unclassified ones are flagged as warnings
+- **Test thoroughly** — cloned apps sometimes have stale data; always verify in real Player
+
+## Knowledge
+
+- [03-app-creation-flow.md](../../Knowledge/AppAgent/03-app-creation-flow.md) — Template semantics and cloning
+- [05-integration-guide.md](../../Knowledge/AppAgent/05-integration-guide.md) — MCP patterns
+
+---
+
+**See Also:** [Create Empty App](01-create-empty-app.md) | [Add Widgets](04-add-widgets.md)
+
+---
+
+## Claudia/Procedure/AppAgent/03-add-pages.md
+
+# Procedure: Add Pages to an Existing App
+
+Add new pages to an app that's already created.
+
+## When to Use
+
+- User says "add a new page to this app" (mid-session or separate task)
+- Expanding app after initial creation
+- Don't use for initial page setup — see [Create Empty App](01-create-empty-app.md) Step 5
+
+## Steps
+
+1. **Get page details from user**
+   - Page name (menu label)
+   - Page title (shown on page)
+   - Page slug (URL part, lowercase with hyphens)
+   - Should this be default page? (only one per app)
+   - Is this nested under another page? (for tree navigation)
+
+2. **Create page (MCP)**
+   - Call `create_page` with:
+     - `appID`: the existing app
+     - `name`, `title`, `slug`
+     - `parentPageID`: (if nested under another page)
+     - `isDefault`: true/false
+   - Keep returned `pageID`
+
+3. **Create sections for this page**
+   - Determine what layout sections this page needs (header, nav, footer, main content)
+   - Call `create_section` for each
+   - Mark one as `isPrimaryContentSection: true` for the main content area
+   - Keep returned section IDs
+
+4. **Add widgets to the page**
+   - Follow [Add Widgets](04-add-widgets.md)
+   - Make sure `appPageID` is set to this new page's ID
+
+5. **Preview**
+   - Show page in App Player
+   - Test navigation to/from this page
+   - Verify it appears in page-navigation widget menu
+
+## Knowledge
+
+- [01-app-model.md](../../Knowledge/AppAgent/01-app-model.md) — Page structure, nesting, defaults
+- [05-integration-guide.md](../../Knowledge/AppAgent/05-integration-guide.md) — MCP patterns
+
+---
+
+**See Also:** [Add Widgets](04-add-widgets.md) | [Create Empty App](01-create-empty-app.md)
+
+---
+
+## Claudia/Procedure/AppAgent/04-add-widgets.md
+
+# Procedure: Add and Configure Widgets
+
+Add specific widgets to an existing app/page/section and configure them.
+
+## When to Use
+
+- User says "add a [widget type] to this page"
+- Populating a page with content
+- Called by all other procedures that build app content
+
+## Steps
+
+1. **Determine widget type needed**
+   - Load [02-widget-types.md](../../Knowledge/AppAgent/02-widget-types.md) for overview
+   - Ask user what kind of content/interaction they want
+   - Map to one of the 17 real widget types
+
+2. **Load widget's configuration docs**
+   - Look up the widget in [02-widget-types.md](../../Knowledge/AppAgent/02-widget-types.md)
+   - Load its Tier 1 doc (e.g., `widgets/form.md`)
+   - Review required fields, config shape, examples
+
+3. **Gather widget configuration from user**
+   - Required fields must come from user (IDs, URLs, form references)
+   - Optional fields: ask user or use sensible defaults
+   - Never make up field values
+   - For content: ask user for their text/copy, don't generate it
+
+4. **Check if widget requires creation modal**
+   - Some widgets: `form`, `image`, `video`, `audio`, `pdf`, `chat-panel`, `workflow-template`, `workflow-template-category` — go through modal, have required fields
+   - Others: safe-default drag-to-place (e.g., `content`, `page-navigation`, `signin`)
+
+5. **Create widget (MCP)**
+   - Call `create_widget` with:
+     - `appID`
+     - `appPageID` (if page-scoped; `null` for shared/default)
+     - `sectionName`: the section this goes in
+     - `widgetType`
+     - `configuration`: the widget-specific config object
+     - `displayOrder`
+   - Keep returned `appWidgetID`
+
+6. **Verify section exists**
+   - **CRITICAL:** `AppSection` must exist before widget can render
+   - If section doesn't exist, the widget will be created but orphaned
+   - Use `create_section` first if needed
+
+7. **Configure styling (optional)**
+   - Load [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md) for Style Builder system
+   - Call `update_widget_placement` with `styleConfiguration` if needed
+   - Apply theme tokens, spacing, sizing, etc.
+
+8. **Preview**
+   - Refresh app in App Player
+   - Check widget renders correctly
+   - Test any interactive features
+
+## Widget Type Checklist
+
+| Widget | Required Config | Can Skip? |
+|--------|---|---|
+| `form` | `formId` | No |
+| `content` | `content`, `format` | No |
+| `workflow-template` | `executionTemplateID` | No |
+| `workflow-template-category` | `executionTemplateCategoryID` | No |
+| `chat-panel` | `processID` | No |
+| `image` | `imageUrl` | No |
+| `video` | `videoUrl` | No |
+| `audio` | `audioUrl` | No |
+| `pdf` | `pdfUrl` | No |
+| `page-navigation` | Layout config | Yes (defaults ok) |
+| `site-branding` | Logo URL | Yes (placeholder ok) |
+| `signin` | Config | Yes (auth-only ok) |
+| `notifications` | Config | Yes (minimal ok) |
+| `hil-inbox` | None | Yes (auth/tenant only) |
+| Galleries | Filter options | Yes (defaults ok) |
+
+## Common Gotchas
+
+- **Section must exist first** — widgets silently orphan if section doesn't exist
+- **AppSection vs. sectionName** — `sectionName` is string; section object must be created separately
+- **Config shape matters** — Invalid JSON config will fail validation. Check widget doc for exact shape.
+- **Media widget URLs** — Must be public (IsPublicAsset=true); private URLs fail silently at render time
+- **Form widget requires real form** — `formId` must point at existing Atlas Form definition
+
+## Knowledge
+
+- [02-widget-types.md](../../Knowledge/AppAgent/02-widget-types.md) — Widget index and quick reference
+- [01-app-model.md](../../Knowledge/AppAgent/01-app-model.md) — Widget vs. AppWidget, section scoping
+- [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md) — Styling and theming
+- `widgets/{type}.md` — Full configuration reference for specific widget type
+
+---
+
+**See Also:** [Style & Theme](05-style-and-theme.md) | [Add Pages](03-add-pages.md) | [Create Empty App](01-create-empty-app.md)
+
+---
+
+## Claudia/Procedure/AppAgent/05-style-and-theme.md
+
+# Procedure: Style and Theme an App
+
+Apply styling, colors, responsive design, and theming to an app.
+
+## When to Use
+
+- User says "make it look like [color/style description]"
+- App exists but looks unstyled/plain
+- Applying consistent theme across pages
+- Adjusting layout, spacing, fonts, colors
+
+## Key Concepts (Load First)
+
+**Load:** [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md)
+
+- **Theme tokens** (`--app-var-*`) — CSS custom properties for colors, fonts, spacing
+- **Style Builder system** — Structured style slots (component level, section level, app level)
+- **AppSection.style** — Layout, spacing, background per section
+- **Widget.styleConfiguration** — Placement-level overrides (two placements of same widget can look different)
+- **Style escape hatch** (`css` field) — Raw CSS with hard sanitizer rules
+
+## Steps
+
+1. **Choose color palette**
+   - Ask user: what colors/mood? (modern dark, clean light, warm earth, custom?)
+   - Load palette examples from [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md)
+   - Define main color, accent colors, background, text color
+   - Create CSS class prefix (e.g., `nh-` for "Nila Herbals")
+
+2. **Apply section-level styling (MCP)**
+   - For each page section, call `update_section_style`:
+     - Background color/image
+     - Padding/margin (spacing)
+     - Max-width, alignment
+     - Use theme tokens with prefix: `background: var(--app-var-primary, #123456)`
+
+3. **Apply widget-level styling (MCP)**
+   - For each widget, call `update_widget_placement` with `styleConfiguration`:
+     - Widget container style (padding, margin, max-width)
+     - Content styling (text color, font-size, line-height)
+     - Responsive breakpoints (if needed)
+
+4. **Theme variables (optional)**
+   - If app uses multiple color schemes, define `--app-var-*` tokens
+   - Document in `AppStudioTheme` preset
+   - All widgets reference these tokens for consistency
+
+5. **Test responsive design**
+   - Resize browser to test mobile, tablet, desktop widths
+   - Check that layout doesn't break
+   - Adjust responsive breakpoints if needed
+
+6. **Validate theming**
+   - Preview in App Player (not just Designer — Player injects default theme)
+   - Hard reload (F5) to clear any cached styles
+   - Test on different devices/widths
+   - Check that `allowScripts` bug doesn't strip styles (see [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md))
+
+## Style Builder System
+
+**Three levels** (from most general to most specific):
+
+1. **App level** — Global theme tokens, default fonts
+2. **Section level** — AppSection.style (layout, spacing, background per section)
+3. **Placement level** — AppWidget.styleConfiguration (widget-specific overrides)
+
+**Each level can override the one above it.**
+
+## Common Style Fields
+
+| Field | Values | Example |
+|-------|--------|---------|
+| `background` | Color, gradient, image URL | `"#ffffff"` or `"var(--app-var-primary)"` |
+| `color` | Text color | `"#333333"` |
+| `padding` | CSS spacing | `"16px"` or `"16px 8px"` |
+| `margin` | CSS spacing | `"0"` |
+| `max-width` | Width constraint | `"1200px"` |
+| `font-family` | Font stack | `"'Segoe UI', sans-serif"` |
+| `font-size` | Size | `"16px"` |
+| `line-height` | Spacing | `"1.5"` |
+
+## Know Issues & Workarounds
+
+1. **`allowScripts` bug** — Setting `allowScripts: true` on content widgets silently strips entire `<style>` block. If styles disappear, check this flag.
+2. **Layout widget theming** — `site-branding` and `page-navigation` don't fully participate in `--app-var-*` theme cascade. Test explicitly and override if needed.
+3. **Player theme injection** — App Player always injects default dark theme. Use explicit prefixed classes (`nh-main`, etc.) to override it.
+4. **Client-side caching** — Hard reload (F5) required after style changes; refresh alone may not clear cached CSS.
+
+## Styling Best Practices
+
+- ✓ **Use theme tokens** — consistency and easy brand changes
+- ✓ **Test in real Player** — Designer canvas theming can differ
+- ✓ **Test responsive** — resize and check mobile/tablet widths
+- ✓ **Don't over-style** — keep it clean; let typography and spacing do the work
+- ✓ **Use Safe defaults** — if theming seems complex, stick to simple color + font choices
+- ✓ **Hard reload after changes** — CSS caching can hide your work
+
+## Knowledge
+
+- [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md) — Full theming system, tokens, Style Builder, examples
+- [01-app-model.md](../../Knowledge/AppAgent/01-app-model.md) — styleConfiguration field details
+- [02-widget-types.md](../../Knowledge/AppAgent/02-widget-types.md) → specific widget docs for widget-specific style options
+
+---
+
+**See Also:** [Add Widgets](04-add-widgets.md) | [Validate App](06-validate-app.md)
+
+---
+
+## Claudia/Procedure/AppAgent/06-validate-app.md
+
+# Procedure: Validate and Test App Before Publishing
+
+Final verification that the app works correctly before publishing.
+
+## When to Use
+
+- Before publishing (required step)
+- After major changes (pages, widgets, styling, content)
+- When user reports issues rendering or navigating
+
+## Test Checklist
+
+### 1. Navigation & Structure
+
+- [ ] All pages appear in page menu (`page-navigation` widget)
+- [ ] Clicking page links navigates to correct page
+- [ ] Default page loads when app first opens
+- [ ] Back button works between pages
+- [ ] Nested pages (if any) show correctly in tree menu
+
+### 2. Widget Rendering
+
+- [ ] All widgets render (not blank/missing)
+- [ ] Content widgets show user's content
+- [ ] Form widgets load their forms
+- [ ] Media widgets (image, video, audio, pdf) show their content
+- [ ] Galleries show items (live query working)
+- [ ] Chat/workflow widgets have Execute/Chat buttons
+- [ ] Auth widgets show sign-in when logged out, user menu when in
+
+### 3. Styling & Theme
+
+- [ ] Colors match chosen palette
+- [ ] Fonts are readable (size, weight, spacing)
+- [ ] Layout is clean (not cramped or too spread out)
+- [ ] Sections have proper spacing (padding/margin)
+- [ ] Background images/colors show correctly
+
+### 4. Responsive Design
+
+- [ ] Test on mobile width (320px)
+- [ ] Test on tablet width (768px)
+- [ ] Test on desktop width (1024px+)
+- [ ] Layout doesn't break at any width
+- [ ] Touch targets are large enough (mobile)
+- [ ] Text doesn't overflow its container
+
+### 5. Interactions (if applicable)
+
+- [ ] Forms can be submitted
+- [ ] Workflows can be triggered
+- [ ] Chat can send messages
+- [ ] All buttons/links work
+- [ ] No JavaScript errors in console
+
+### 6. Performance
+
+- [ ] App loads quickly
+- [ ] No memory/CPU warnings
+- [ ] Images are optimized (not huge files)
+- [ ] No network errors in Dev Tools
+
+## Test Steps
+
+1. **Open app in App Player** (not Designer canvas)
+   - Use real Player URL: `/{appID}?tenantID=...`
+   - OR via explicit page: `/​{appID}/page/{slug}`
+   - NOT the Designer preview (different rendering path)
+
+2. **Hard reload** (F5, not just refresh)
+   - Clears cached CSS/JS
+   - Ensures you're testing actual live data
+
+3. **Check console** (DevTools)
+   - Any errors? Fix them before publishing
+   - Any warnings? Evaluate if they matter
+
+4. **Test on different devices**
+   - Use DevTools device emulation
+   - Or test on actual phone/tablet if possible
+
+5. **Ask user to review**
+   - Show them the live app
+   - Does it match what they wanted?
+   - Any changes needed before publish?
+
+## Common Issues & Fixes
+
+| Issue | Likely Cause | Fix |
+|-------|---|---|
+| Widgets don't appear | Section doesn't exist | Create section before widgets |
+| Content is blank | Config shape is wrong | Check widget config doc, verify `content`/`format` fields match |
+| No page content on Player | Widget in non-primary section | Check `layout.appSections` for `isPrimaryContentSection: true`, move widget to that section |
+| Styles missing | `allowScripts: true` flag stripping CSS | Remove flag or move `<style>` outside script block |
+| Page doesn't load from menu | Page not set as default or menu widget not linked | Check `isDefault` flag, verify `page-navigation` widget config |
+| Media doesn't show | URL is wrong or asset not public | Verify `IsPublicAsset: true`, check URL is accessible |
+
+## Publishing Checklist
+
+Before calling `publish_app`:
+
+- [ ] All pages tested and working
+- [ ] All widgets rendering correctly
+- [ ] Styling looks good on mobile, tablet, desktop
+- [ ] No console errors
+- [ ] User has reviewed and approved
+- [ ] User gave explicit yes to publish
+
+## Knowledge
+
+- [01-app-model.md](../../Knowledge/AppAgent/01-app-model.md) — Section scoping, page defaults, primary content
+- [02-widget-types.md](../../Knowledge/AppAgent/02-widget-types.md) → specific widget docs for widget-specific testing
+- [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md) — Style issues, theme testing
+- [05-integration-guide.md](../../Knowledge/AppAgent/05-integration-guide.md) — API patterns
+
+## After Publishing
+
+1. Confirm `publish_app` call succeeded
+2. Show user final published URL
+3. Celebrate! 🎉
+
+---
+
+**See Also:** [Create Empty App](01-create-empty-app.md) | [Add Widgets](04-add-widgets.md) | [Style & Theme](05-style-and-theme.md)
+
+---
+
+## Claudia/Procedure/AppAgent/AppQuestionnaire.md
+
+# App Creation Questionnaire
+
+Welcome! This questionnaire will guide you through creating a web application with AppDeveloper. Answer each section, and we'll build your app step-by-step. You can always go back and revise your answers.
+
+---
+
+## **Section 1: Project & App Basics**
+
+### 1.1 Project Name
+**Question:** What is the name of your project?
+- **Validation:** Alphanumeric + hyphens, 3-50 characters, unique
+- **Example:** "customer-portal-2024", "internal-analytics"
+- **Helper:** This organizes your project in the system. You can have multiple apps within one project.
+
+### 1.2 App Name & Description
+**Question:** What would you like to name this app?
+- **Validation:** 2-100 characters
+- **Example:** "Customer Dashboard", "Employee Directory"
+- **Helper:** This is the title users see when they access your app.
+
+**Question:** What is this app for? (Brief description)
+- **Helper:** 1-2 sentences describing the main purpose. Example: "Allows customers to view their orders, invoices, and support tickets in one place."
+
+### 1.3 Target Audience
+**Question:** Who will use this app?
+- **Options:**
+  - Internal employees (company staff only)
+  - External customers/partners (public or authenticated)
+  - Mixed audience (both internal and external)
+- **Helper:** This affects security, authentication, and design decisions.
+
+**Question:** What industry/domain does this app serve?
+- **Options:** Finance, Healthcare, E-commerce, Manufacturing, Education, Real Estate, HR/Payroll, Logistics, Media, Other
+- **Recommendation:** Based on selection, we'll suggest relevant widgets and patterns.
+
+### 1.4 App Type
+**Question:** What type of app are you building?
+- **Dashboard** — Visualize data, KPIs, metrics, reports
+  - Recommended widgets: Charts, Data tables, Cards, Filters
+  - Pages: 1-3 (Overview, Detailed reports, Settings)
+  
+- **Portal** — Self-service access to information and forms
+  - Recommended widgets: Forms, Data tables, Status displays, Notifications
+  - Pages: 3-7 (Home, Multiple sections, Account)
+  
+- **CMS** — Content management and publishing
+  - Recommended widgets: Forms, Content editors, Media galleries, Publishing controls
+  - Pages: 3+ (Dashboard, Content management, Preview)
+  
+- **E-Commerce** — Product browsing, cart, checkout
+  - Recommended widgets: Product galleries, Search/filters, Shopping cart, Payment forms
+  - Pages: 5-10 (Catalog, Product detail, Cart, Checkout, Orders)
+  
+- **Internal Tool** — Workflow management, data entry, team collaboration
+  - Recommended widgets: Forms, Chat, Task lists, File upload, Notifications
+  - Pages: 4-8 (Dashboard, Workflows, Team, Settings)
+  
+- **Custom** — Something else
+  - Helper: Describe your specific needs
+
+### 1.5 Template Preference
+**Question:** How would you like to start?
+- **Empty App** — Start from scratch (recommended for unique designs)
+- **Use a Template** — Start from a pre-built template
+  - Available templates:
+    - "Corporate Dashboard" — Professional KPI dashboard
+    - "Customer Portal" — Self-service customer access
+    - "Team Collaboration" — Internal team workspace
+    - "E-Commerce Store" — Product catalog and shopping
+    - "Project Management" — Task/project tracking
+- **Clone Existing App** — Start from an existing app in your project (if available)
+
+**Recommendation:** If you're unsure, we recommend starting with "Empty App" and we'll guide you through adding pages and widgets.
+
+---
+
+## **Section 2: Information Architecture**
+
+### 2.1 Page Structure
+**Question:** How many pages will your app need?
+- **Typical ranges:**
+  - Simple app: 1-3 pages (Single page, home + settings)
+  - Standard app: 3-7 pages (Home, multiple sections, account)
+  - Complex app: 8-15+ pages (Multiple departments, admin areas)
+- **Helper:** You can always add or remove pages later.
+
+### 2.2 Define Each Page
+**For each page, answer:**
+- **Page Name:** (e.g., "Dashboard", "Orders", "Settings")
+- **Purpose:** What does this page do? (e.g., "Shows user's active orders and status")
+- **Parent Page:** (if this is a sub-page, which page is it under?)
+
+**Example:**
+```
+Page 1: Dashboard
+  Purpose: Overview of key information
+  Parent: None (top-level)
+
+Page 2: Orders
+  Purpose: List and manage customer orders
+  Parent: None (top-level)
+
+Page 2.1: Order Details
+  Purpose: View details of a specific order
+  Parent: Orders
+```
+
+### 2.3 Navigation Structure
+**Question:** How should users navigate between pages?
+- **Flat Navigation** — All pages at same level (top menu bar)
+  - Best for: Simple apps, 3-5 pages
+  
+- **Hierarchical** — Pages organized by section/department
+  - Best for: Complex apps, 8+ pages
+  - Example: Main sections (Admin, Reporting, Settings) with sub-pages
+  
+- **Tab-Based** — Related pages as tabs
+  - Best for: Comparing similar data
+  - Example: Orders, Invoices, Shipments as tabs
+
+**Recommendation:** [Based on page count and type]
+
+### 2.4 Common Layout Patterns
+**Question:** Which layout pattern matches your app?
+- **Two-Column** — Sidebar + main content (typical for portals)
+- **Three-Column** — Sidebar + main + right panel (dashboards, admin tools)
+- **Full-Width** — Single column, full width (simple content apps)
+- **Card-Based Grid** — Dashboard with multiple cards
+
+**Preview:** [Show visual mockup]
+
+---
+
+## **Section 3: Content & Features**
+
+### 3.1 Widgets per Page
+**For each page, select widgets needed:**
+
+**Available Widgets (friendly names):**
+- **Content** — Text, images, rich content display
+- **Data Table** — Browse and filter data records
+- **Form** — Collect user input (contact form, search, filters)
+- **Chart/Graph** — Visualize data (bar, line, pie charts)
+- **Image Gallery** — Show multiple images with lightbox
+- **Video Player** — Embed and play videos
+- **PDF Viewer** — Display PDF documents
+- **Chat Panel** — Live chat or messaging interface
+- **Workflow Trigger** — Launch a workflow/automation
+- **Notifications** — Alert messages and updates
+- **File Upload** — Allow users to upload files
+- **Cards** — Summary cards with key metrics
+- **Search & Filter** — Help users find data
+- **Pagination** — Navigate through large datasets
+
+**Example:**
+```
+Page: Dashboard
+  - Cards (top metrics)
+  - Charts (revenue, users, activity)
+  - Data Table (recent activity)
+
+Page: Orders
+  - Search & Filter (find orders)
+  - Data Table (list orders)
+  - Workflow Trigger (export, refund)
+```
+
+### 3.2 Feature Prioritization
+**Question:** Which features are essential (MVP) vs. nice-to-have?
+- **MVP (Launch)** — Must have for initial release
+- **Phase 2** — Add after launch
+- **Future** — Future enhancements
+
+**Example:**
+```
+MVP:
+  - View orders (Data Table)
+  - Search orders (Filter)
+  - Basic reporting (Charts)
+
+Phase 2:
+  - Export to Excel
+  - Customer notes
+  
+Future:
+  - Advanced analytics
+  - Predictive recommendations
+```
+
+---
+
+## **Section 4: Design & Branding**
+
+### 4.1 Color Scheme
+**Question:** What colors represent your brand?
+- **Option 1:** Use existing brand colors (provide hex codes)
+- **Option 2:** Choose from preset palettes
+  - Professional Blue
+  - Modern Green
+  - Bold Orange
+  - Minimalist Gray
+- **Option 3:** Choose a theme (Light, Dark, Auto-detect)
+
+**Helper:** Colors are used for buttons, headers, highlights, and accents throughout the app.
+
+### 4.2 Logo & Branding Assets
+**Question:** Do you have a logo?
+- **Yes** — Upload logo file
+  - Recommended: PNG/SVG, 200x200px minimum
+  - Placement: Top-left or centered header
+- **No** — We can use a text-based header or placeholder
+
+### 4.3 Typography
+**Question:** What tone does your app convey?
+- **Professional** — Formal, business-focused
+- **Modern** — Clean, contemporary, minimalist
+- **Friendly** — Approachable, warm, conversational
+- **Technical** — Detail-oriented, precise
+
+**Recommendation:** [Based on industry + audience, suggest font pairing]
+
+### 4.4 Responsive Design
+**Question:** What devices will users access from?
+- **Desktop only** — Optimized for desktop/laptop
+- **Responsive** — Works on desktop, tablet, mobile
+- **Mobile-first** — Optimized for mobile, then tablet/desktop
+
+**Helper:** Responsive design (recommended) ensures your app looks good on all screens. No extra work required—we handle it automatically.
+
+### 4.5 Dark Mode Support
+**Question:** Should your app support dark mode?
+- **Yes** — Users can toggle between light/dark
+- **No** — Light mode only
+- **Auto** — Follow system preference (Windows/Mac dark mode setting)
+
+### 4.6 Accessibility
+**Question:** What accessibility level is required?
+- **Basic** — WCAG AA (covers most users)
+- **Full** — WCAG AAA (highest standard)
+- **None** — Not required
+
+**Helper:** Accessibility ensures users with vision/hearing impairments can use your app. Recommended for public apps.
+
+---
+
+## **Section 5: Integration & Data**
+
+### 5.1 Data Sources
+**Question:** Where is your data stored?
+- **Database tables** — From BizFirst database (list available tables)
+- **External API** — Third-party service (provide API endpoint)
+- **Multiple sources** — Mix of database + APIs
+- **Static content** — No dynamic data (static website)
+
+**For each data source:**
+- Name/description
+- Fields to display
+- Filters/search criteria
+- Update frequency
+
+### 5.2 Authentication & Access Control
+**Question:** Who can access this app?
+- **Public** — No login required (everyone can access)
+- **Login required** — All users must sign in
+- **Role-based** — Different access levels (Admin, User, Guest)
+
+**For role-based access:**
+- Define roles (Admin, Manager, User, Guest, etc.)
+- Specify what each role can see/do
+- Example: "Users see only their own data; Admins see all data"
+
+### 5.3 Multi-Language Support
+**Question:** Does your app need multiple languages?
+- **Single language** — English only
+- **Multiple languages** — Specify languages (English, Spanish, French, German, etc.)
+
+**Helper:** Multi-language support adds minimal overhead. If you might need it later, it's easier to add now.
+
+### 5.4 API Integrations
+**Question:** Does your app integrate with external services?
+- **No external integrations**
+- **Email notifications** — Send emails from your app
+- **Payment gateway** — Accept payments (Stripe, PayPal, etc.)
+- **Calendar/scheduling** — Google Calendar, Outlook, etc.
+- **File storage** — Google Drive, OneDrive, Dropbox
+- **Third-party APIs** — Custom integrations (specify details)
+
+---
+
+## **Section 6: Deployment & Timeline**
+
+### 6.1 Deployment Target
+**Question:** Where will this app run?
+- **Development** — Internal testing only, not visible to end users
+- **Staging** — Preview environment for approval before production
+- **Production** — Live app, available to real users
+- **All environments** — Start in dev, move through staging to production
+
+**Recommendation:** Start with Development or Staging; move to Production after testing.
+
+### 6.2 Timeline & Urgency
+**Question:** When do you need this app?
+- **ASAP** — This week
+- **Soon** — Within 2-3 weeks
+- **Flexible** — 1-3 months
+- **No rush** — Whenever it's ready
+
+**Recommendation:** [Suggest realistic timeline based on complexity]
+
+### 6.3 Performance Requirements
+**Question:** How many concurrent users will access the app?
+- **Low** — 1-100 users
+- **Medium** — 100-1,000 users
+- **High** — 1,000-10,000+ users
+
+**Helper:** This helps us optimize performance and scale accordingly.
+
+### 6.4 Security & Compliance
+**Question:** Are there security or compliance requirements?
+- **Standard** — Basic security (SSL, secure login)
+- **Enhanced** — Data encryption, audit logs, access controls
+- **Compliance** — HIPAA (healthcare), PCI-DSS (payments), GDPR (EU data), SOC 2
+
+**Helper:** Specify any industry-specific requirements (healthcare, financial, legal, etc.)
+
+---
+
+## **Section 7: Review & Confirmation**
+
+### 7.1 Summary
+**Display:**
+- Project name, app name, type
+- Number of pages and widgets
+- Key features (MVP + Phase 2)
+- Design choices (colors, theme, responsive)
+- Data sources and integrations
+- Timeline and deployment target
+
+### 7.2 Review & Modify
+**Question:** Does everything look correct?
+- **Yes, proceed** → Move to next step
+- **Modify** → Which section? (Select section, edit, return to review)
+- **Cancel** → Go back to main menu
+
+### 7.3 Confirmation
+**Final confirmation:**
+"You're about to create a [App Type] app with [# pages] pages. Ready to build?"
+- **Yes, let's build!** → Start app creation with AppDeveloper
+- **Save for later** → Save questionnaire, come back later
+- **Cancel** → Return to main menu
+
+---
+
+## **Section 8: Helper Prompts & Recommendations**
+
+### 8.1 Intelligent Recommendations
+**Based on user selections, suggest:**
+- "For a customer portal with 5+ pages, we recommend hierarchical navigation with a sidebar."
+- "Your app handles payments—we recommend role-based access (Customer vs. Admin) and audit logging."
+- "You're building a dashboard. Consider these widgets: Cards for KPIs, Charts for trends, Tables for details."
+
+### 8.2 Validation & Error Messages
+- **Project name exists** → "This project name is already taken. Try: 'customer-portal-v2'"
+- **No data source selected** → "Select at least one data source for your app to display data."
+- **Too many pages** → "Consider breaking this into multiple apps or simplifying the design."
+
+### 8.3 Tips & Best Practices
+- "💡 **Tip:** Start with 3-5 pages for MVP. Add more later."
+- "✓ **Best Practice:** Use role-based access to keep data secure and users focused on their tasks."
+- "⚡ **Performance:** Limit charts to 1,000 data points for best performance."
+
+---
+
+## **Next Steps After Questionnaire**
+
+Once questionnaire is complete:
+1. **Review Summary** — Confirm all choices
+2. **AppDeveloper Creates Project** → Initializes project and app
+3. **Page Creation** → Adds pages in specified order
+4. **Widget Configuration** → Adds widgets to each page with settings
+5. **Design Application** → Applies colors, theme, responsive breakpoints
+6. **Data Binding** → Connects data sources and APIs
+7. **Testing Preview** → Show progress in browser, iterate based on feedback
+8. **Deployment** → Push to target environment
+
+---
+
+## **Notes for AppDeveloper Agent**
+
+- **Progress Tracking:** After each major step, refresh the browser and show user the result
+- **Feedback Loop:** After pages are created, ask: "Does this match your vision? Any changes?"
+- **Widget Configuration:** For each widget, provide a preview and ask for confirmation before moving to next
+- **Document Decisions:** Store user choices in Rouge_Notes (Semantic type) for future reference
+- **Graceful Decline:** At any step, user can decline and return to this menu or main menu
+
+---
+
+## Claudia/Procedure/AppAgent/README.md
+
+# AppAgent Procedures — Step-by-Step Guides
+
+Complete procedures for AppAgent to build apps using MCP.
+
+## Quick Links
+
+1. [Create Empty App](01-create-empty-app.md) — **Default.** Guided build of web site, app, or content site
+2. [Create from Template](02-create-from-template.md) — Clone a template and customize
+3. [Add Pages](03-add-pages.md) — Add new pages to existing app
+4. [Add Widgets](04-add-widgets.md) — Add and configure widgets
+5. [Style & Theme](05-style-and-theme.md) — Apply styling, theming, responsive design
+6. [Validate App](06-validate-app.md) — Testing, preview, readiness check
+
+## Hard Rules (All Procedures)
+
+1. ✓ **Every create or change goes through MCP** — never click UI buttons
+2. ✓ **Browser is read-only** — navigate, refresh, show results only
+3. ✓ **One question at a time** — ask, wait, move on
+4. ✓ **Never invent business facts** — user provides names, products, prices, claims
+5. ✓ **Never make up IDs** — use IDs returned by MCP responses
+6. ✓ **Nothing published without explicit yes** — always confirm
+7. ✓ **User can skip guidance** — accept full description, build after yes
+
+## When to Use Each Procedure
+
+| Procedure | When |
+|-----------|------|
+| [Create Empty App](01-create-empty-app.md) | Default for "build me a site/app" requests with guided experience |
+| [Create from Template](02-create-from-template.md) | User wants to clone an existing template and customize |
+| [Add Pages](03-add-pages.md) | Extending existing app with new pages (mid-session or separate task) |
+| [Add Widgets](04-add-widgets.md) | Adding specific widgets to a page (reference for all widget types) |
+| [Style & Theme](05-style-and-theme.md) | Applying look-and-feel, colors, responsive design |
+| [Validate App](06-validate-app.md) | Before publishing — test rendering, nav, layout, widgets |
+
+## MCP Connection
+
+**Before any procedure:** Follow the MCP connection setup in [Create Empty App](01-create-empty-app.md) Step 3.
+
+You'll need:
+- API endpoint (usually `{admin-app-url}/api/v1/...`)
+- API key (generated or existing)
+- TenantID (from admin context)
+- Successful test call confirming connection
+
+## Knowledge Requirements
+
+Each procedure references knowledge docs. Load them as directed:
+
+- **Always:** [Knowledge/AppAgent/00-overview.md](../../Knowledge/AppAgent/00-overview.md)
+- **When creating/structuring:** [01-app-model.md](../../Knowledge/AppAgent/01-app-model.md)
+- **When configuring widgets:** [02-widget-types.md](../../Knowledge/AppAgent/02-widget-types.md) → specific `widgets/{type}.md`
+- **When styling:** [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md)
+- **For MCP patterns:** [05-integration-guide.md](../../Knowledge/AppAgent/05-integration-guide.md)
+
+## Recommended Path (Complete App Build)
+
+1. **Start:** [Create Empty App](01-create-empty-app.md) — walks guided build, creates Project + App
+2. **Expand:** [Add Pages](03-add-pages.md) — if more pages needed mid-session
+3. **Populate:** [Add Widgets](04-add-widgets.md) — configure each page's content
+4. **Polish:** [Style & Theme](05-style-and-theme.md) — apply colors, fonts, layout
+5. **Verify:** [Validate App](06-validate-app.md) — test before publishing
+6. **Ship:** Publish (explicit yes required)
+
+## Common Gotchas
+
+- **AppSection must exist first** — sections are separate objects, not auto-created. Create via Designer UI or MCP `create_section` tool before widgets will display.
+- **Player rendering differs from Designer** — always preview in real Player, not just Designer canvas
+- **Configuration shapes must match renderer** — when validators and renderers disagree, trust the renderer
+- **Hard reload may be needed** — after mid-session changes to widgets/pages
+- **Soft deletes are default** — deleted items keep `Deleted` flag, not permanently removed
+
+## Need Help?
+
+- **Widget configuration questions?** → Load [02-widget-types.md](../../Knowledge/AppAgent/02-widget-types.md), then specific widget doc
+- **MCP call failing?** → Check [05-integration-guide.md](../../Knowledge/AppAgent/05-integration-guide.md)
+- **App not rendering?** → See gotchas above, check [01-app-model.md](../../Knowledge/AppAgent/01-app-model.md) for section/page scoping rules
+- **Styling not working?** → Check [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md), especially Style Builder and theme tokens
+
+---
+
+**Start with:** [Create Empty App](01-create-empty-app.md)  
+**Knowledge Base:** [AppAgent Knowledge](../../Knowledge/AppAgent/README.md)
+
+---
+
+## Claudia/Procedure/Credentials/create-credential.md
+
+# Procedure: Create Credential
+
+Step-by-step guide for CredentialDeveloper agent to create credentials.
+
+## Overview
+Creating a credential stores an encrypted secret that can be used by workflows, apps, and agents.
+
+## Prerequisites
+- CredentialDeveloper role or higher
+- Valid JWT Bearer token
+- Target system credentials (password, API key, etc.)
+- Understand the credential type needed
+
+## Steps
+
+### Step 1: Identify Credential Type
+Determine what kind of credential you need to store:
+
+| If you need... | Use type... | Details |
+|---|---|---|
+| SMTP/email password | EmailCredential | Username + password for email service |
+| API token (Salesforce, HubSpot, etc.) | ApiKeyCredential | API key ± secret from third-party service |
+| Database credentials | DatabaseCredential | Host, port, user, password |
+| OAuth2 tokens | OAuth2Credential | Client ID, secret, refresh token |
+| SSH private key | SshKeyCredential | PEM-format private key |
+| Custom secrets | CustomCredential | Free-form key-value pairs |
+
+**Example:** Storing SendGrid SMTP credentials → Use EmailCredential
+
+### Step 2: Gather Credential Data
+Collect all required fields for the credential type:
+
+**Email Credential example:**
+- Email: `noreply@sendgrid.com`
+- Password: `SG.xxxxxxxxxxxxxxxxxxxx` (SendGrid API key)
+- SMTP Server: `smtp.sendgrid.net`
+- SMTP Port: `587`
+
+**API Key Credential example:**
+- Service Name: `Salesforce`
+- API Key: `0Dxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` (OAuth token)
+- Base URL: `https://instance.my.salesforce.com`
+
+### Step 3: Prepare Request
+Build the REST request:
+
+```http
+POST https://api.bizfirst.com/api/credentials
+Authorization: Bearer <your-jwt-token>
+Content-Type: application/json
+
+{
+  "credentialType": "EmailCredential",
+  "name": "SendGrid SMTP",
+  "data": {
+    "email": "noreply@sendgrid.com",
+    "password": "SG.xxxxxxxxxxxxxxxxxxxx",
+    "smtpServer": "smtp.sendgrid.net",
+    "smtpPort": 587
+  },
+  "description": "SendGrid SMTP for production transactional emails",
+  "expiresAt": "2027-09-29T23:59:59Z"
+}
+```
+
+**Field explanation:**
+- `credentialType` — One of: EmailCredential, ApiKeyCredential, DatabaseCredential, OAuth2Credential, SshKeyCredential, CustomCredential
+- `name` — Unique identifier within your tenant
+- `data` — Type-specific fields (see Knowledge/Credentials/01-credential-types.md)
+- `description` — Optional; for documentation
+- `expiresAt` — Optional; after which credential cannot be used
+
+### Step 4: Send Request
+Call the Credentials API:
+
+```bash
+curl -X POST https://api.bizfirst.com/api/credentials \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d @credential-request.json
+```
+
+### Step 5: Validate Response
+If successful, receive (201 Created):
+
+```json
+{
+  "credentialID": 42,
+  "credentialType": "EmailCredential",
+  "name": "SendGrid SMTP",
+  "vaultProviderID": 1,
+  "encryptionKeyVersion": 5,
+  "createdOn": "2026-09-29T10:00:00Z",
+  "createdBy": 1
+}
+```
+
+**Save the credentialID** — You'll use this to reference the credential in workflows.
+
+### Step 6: Document for Workflow Use
+Record the credential ID and its purpose:
+
+```markdown
+## SendGrid SMTP Credential
+- **Credential ID:** 42
+- **Type:** EmailCredential
+- **Created:** 2026-09-29
+- **Expires:** 2027-09-29
+- **Use in workflows:** SendEmail node, production emails
+- **Maintained by:** DevOps team
+```
+
+## Error Handling
+
+### 400 Bad Request - Invalid Type
+**Problem:** Credential type not recognized
+```json
+{
+  "errorCode": "INVALID_CREDENTIAL_TYPE",
+  "message": "Credential type 'WrongType' not supported"
+}
+```
+**Solution:** Use correct type from Knowledge/Credentials/01-credential-types.md
+
+### 400 Bad Request - Missing Required Field
+**Problem:** Missing required field in `data`
+```json
+{
+  "errorCode": "VALIDATION_FAILED",
+  "message": "Field 'email' is required for EmailCredential"
+}
+```
+**Solution:** Review credential type schema, add missing field
+
+### 401 Unauthorized
+**Problem:** JWT token invalid or expired
+**Solution:** Request new JWT token, ensure Authorization header format is `Bearer <token>`
+
+### 403 Forbidden
+**Problem:** User doesn't have CredentialDeveloper role
+**Solution:** Request elevated permissions from admin
+
+### 409 Conflict
+**Problem:** Name already exists in tenant
+**Solution:** Use unique name (add timestamp, service identifier, etc.)
+
+## Validation Checklist
+
+Before creating a credential:
+
+- [ ] Credential type correctly identified
+- [ ] All required fields for type provided
+- [ ] Passwords/secrets are current (not expired, rotated)
+- [ ] Name is unique within tenant
+- [ ] Expiration date (if set) is in future
+- [ ] Email fields are valid email format (if EmailCredential)
+- [ ] Database port is 1-65535 (if DatabaseCredential)
+- [ ] SSH private key is valid PEM format (if SshKeyCredential)
+- [ ] JWT token is valid and has CredentialDeveloper role
+- [ ] Vault provider is enabled and reachable
+
+## Testing Credential
+
+After creation, verify the credential works:
+
+### For Email Credentials:
+```
+1. Create credential
+2. In workflow, add SendEmail node
+3. Reference credentialID
+4. Send test email
+5. Verify delivery
+```
+
+### For API Credentials:
+```
+1. Create credential
+2. In workflow, add CallApi node
+3. Reference credentialID
+4. Make test API call
+5. Check response in logs
+```
+
+### For Database Credentials:
+```
+1. Create credential
+2. In workflow, add DatabaseQuery node
+3. Reference credentialID
+4. Execute test query
+5. Verify results
+```
+
+## Troubleshooting
+
+**Q: "Vault provider not responding"**
+A: Vault provider may be down. Wait and retry, or contact admin.
+
+**Q: "Encryption failed"**
+A: Encryption service issue. Contact support with trace ID.
+
+**Q: "Invalid JWT token"**
+A: Token expired or malformed. Regenerate token, check Authorization header.
+
+**Q: "Credential already exists"**
+A: Name not unique. Rename credential (append version, timestamp, environment).
+
+## Next Steps
+
+After creating a credential:
+
+1. **Use in workflow** — Reference credentialID in workflow nodes
+2. **Rotate if needed** — See Procedure/Credentials/rotate-credential.md
+3. **Monitor usage** — Check AccessLogs for unauthorized access
+4. **Plan expiration** — Set reminders before ExpiresAt date
+
+## Related Procedures
+- [Validate Credential](validate-credential.md) — Verify credential works
+- [Rotate Credential](rotate-credential.md) — Change encryption key
+- [Troubleshoot](troubleshoot.md) — Common issues and fixes
+
+## See Also
+- [Credential Types](../../Knowledge/Credentials/01-credential-types.md) — All supported types
+- [API Reference](../../Knowledge/Credentials/03-api-reference.md) — Exact API format
+- [Security Architecture](../../Knowledge/Credentials/02-security-architecture.md) — How credentials are encrypted
+
+---
+
+## Claudia/Procedure/Credentials/CredentialQuestionnaire.md
+
+# Credential Setup Questionnaire
+
+**This questionnaire captures all information needed to securely create and manage credentials.**
+
+## 1. What Are You Protecting? (Credential Purpose)
+
+**Question:** What system or resource does this credential grant access to?
+
+Examples:
+- Database server (PostgreSQL, SQL Server, MySQL)
+- External API (Stripe, Twilio, SendGrid)
+- Cloud service (AWS, Azure, Google Cloud)
+- Internal service (microservice, webhook, file storage)
+- SSH/remote access (Linux server, Git repository)
+
+**Your answer:** ________________
+
+**Recommendation:** Be specific. "Customer database" is better than "database."
+
+---
+
+## 2. What Type of Credential? (Credential Type)
+
+**Choose one:**
+
+- **API Key** — Simple key-based authentication (REST APIs, webhooks)
+  - *Easiest to set up. Use for public APIs with limited scope.*
+  
+- **OAuth2** — Modern token-based authentication (Google, Microsoft, GitHub)
+  - *Most secure for user-facing integrations. Supports token refresh.*
+  
+- **Database Connection** — Username + password for database servers
+  - *Standard for data access. Supports encryption and rotation.*
+  
+- **SSH Key** — Public/private key pair for remote access
+  - *Secure for server access. Can't be guessed, only stolen.*
+  
+- **Custom** — Proprietary or multi-part credentials (API key + secret, certificates, etc.)
+  - *For specialized systems. Requires manual configuration.*
+
+**Your answer:** ________________
+
+---
+
+## 3. Type-Specific Details
+
+**If API Key:**
+- API endpoint URL: ________________
+- Where to get the key: ________________
+- Key format (alphanumeric, JWT, etc.): ________________
+- Header name it goes in: ________________
+
+**If OAuth2:**
+- Provider (Google, Microsoft, GitHub, custom): ________________
+- Client ID: ________________
+- Client Secret: ________________
+- Authorization URL: ________________
+- Token endpoint: ________________
+
+**If Database:**
+- Server address: ________________
+- Database name: ________________
+- Username: ________________
+- Password: ________________ (will be encrypted)
+- Port (default 5432 PostgreSQL, 1433 SQL Server): ________________
+
+**If SSH:**
+- Private key content or file path: ________________
+- Key passphrase (if protected): ________________
+- Server host: ________________
+- Username for SSH: ________________
+
+---
+
+## 4. Scope & Permissions
+
+**Question:** What can this credential do?
+
+Examples:
+- **Read-only:** View data, list resources, download files
+- **Read-write:** Create, update, delete data; modify configurations
+- **Admin:** All permissions, plus user/role management
+- **Limited scope:** Only specific resources (e.g., one S3 bucket, one API endpoint)
+
+**Your answer:** ________________
+
+**Recommendation:** Follow the **Principle of Least Privilege** — give only what's needed. An app API key should *not* have admin access.
+
+---
+
+## 5. Security & Lifecycle
+
+**Rotation Policy:** How often should this credential be refreshed?
+- [ ] Never rotate (static key)
+- [ ] Every 30 days
+- [ ] Every 90 days
+- [ ] Every 1 year
+- [ ] On-demand only
+
+**Expiration:** Should this credential auto-expire?
+- [ ] No expiration
+- [ ] Expires in _______ days/months/years
+
+**Encryption:** How should this be stored?
+- [ ] AES-256 encryption (recommended, default)
+- [ ] Encrypted with HSM (hardware security module)
+- [ ] Plaintext (NOT recommended—only for non-sensitive cases)
+
+**Backup & Recovery:**
+- Do you need a backup copy? [ ] Yes [ ] No
+- Where will backups be stored? ________________
+- Who has access to backups? ________________
+
+---
+
+## 6. Access Control
+
+**Who can use this credential?**
+- [ ] Single user
+- [ ] Specific team (list names): ________________
+- [ ] Application/service (list app names): ________________
+- [ ] Role-based (list roles, e.g., "Admin", "Developer"): ________________
+
+**Multi-tenant:** Is this credential:
+- [ ] Single-tenant (used by one customer only)
+- [ ] Shared/multi-tenant (used by multiple customers)
+
+---
+
+## 7. Testing & Validation
+
+**How will you test this works?**
+
+Example tests:
+- Call API endpoint with the key
+- Connect to database with username/password
+- SSH into server using the key
+- Verify permissions are correctly scoped
+
+**Your test plan:** ________________
+
+**Expected result:** ________________
+
+---
+
+## 8. Deployment Target
+
+**Where will this credential be used?**
+- [ ] Development (local, test environment)
+- [ ] Staging (pre-production, testing environment)
+- [ ] Production (live, customer-facing)
+- [ ] All environments
+
+**Recommendation:** Use *different* credentials per environment. Never use production creds in dev.
+
+---
+
+## 9. Summary & Next Steps
+
+**Credential Summary:**
+- **Purpose:** What system this protects
+- **Type:** [API Key / OAuth2 / Database / SSH / Custom]
+- **Scope:** [Read-only / Read-write / Admin / Limited]
+- **Rotation:** [Never / 30 days / 90 days / 1 year / On-demand]
+- **Access:** [Single user / Team / Application / Role-based]
+- **Environment:** [Dev / Staging / Prod / All]
+
+**Next Steps:**
+1. ✅ Review questionnaire answers for completeness
+2. ✅ Validate credential details (URLs, usernames, etc. are correct)
+3. ✅ Test the credential in target system (verify access works)
+4. ✅ Submit to CredentialAgent for creation
+5. ✅ Store backup copy securely (if needed)
+6. ✅ Add rotation reminder to calendar (if applicable)
+
+**Questions?** Refer to [Credentials Knowledge Base](../../Knowledge/Credentials/) or ask your team lead.
+
+---
+
+## Claudia/Procedure/Credentials/rotate-credential.md
+
+# Procedure: Rotate Credential
+
+Step-by-step guide to rotate a credential's encryption key or vault provider.
+
+## Overview
+Credential rotation re-encrypts a secret under a new vault provider or key version, without changing the credential ID or requiring workflow updates.
+
+## When to Rotate
+
+- **Key expiration** — Current encryption key approaching end-of-life
+- **Provider migration** — Moving from one vault provider to another
+- **Compliance** — Policy requires periodic key rotation
+- **Security incident** — Vault provider compromised, need new key ASAP
+- **Performance** — Migrate to higher-performance vault provider
+
+## Prerequisites
+- Credential created and working
+- Admin or SystemAdmin role (rotation requires elevated permissions)
+- Target vault provider is available and enabled
+- Target key version exists in vault provider
+
+## Steps
+
+### Step 1: Check Current Encryption
+Retrieve the credential to see current encryption:
+
+```http
+GET https://api.bizfirst.com/api/credentials/{credentialID}
+Authorization: Bearer <jwt-admin-token>
+```
+
+**Response:**
+```json
+{
+  "credentialID": 42,
+  "credentialType": "EmailCredential",
+  "vaultProviderID": 1,
+  "encryptionKeyVersion": 5
+}
+```
+
+**Note:**
+- Current vault: VaultProviderID = 1 (Local HSM)
+- Current key: EncryptionKeyVersion = 5
+
+### Step 2: Choose New Vault Provider
+List available vault providers:
+
+```http
+GET https://api.bizfirst.com/api/vault-providers
+Authorization: Bearer <jwt-admin-token>
+```
+
+**Response:**
+```json
+{
+  "items": [
+    {
+      "vaultProviderID": 1,
+      "name": "Local HSM",
+      "code": "LOCAL_HSM",
+      "enabled": true
+    },
+    {
+      "vaultProviderID": 2,
+      "name": "Azure Key Vault",
+      "code": "AZURE_KV",
+      "enabled": true
+    },
+    {
+      "vaultProviderID": 3,
+      "name": "AWS KMS",
+      "code": "AWS_KMS",
+      "enabled": true
+    }
+  ]
+}
+```
+
+**Requirements:**
+- Provider must be enabled (enabled = true)
+- Provider must have target key version available
+- Provider should be healthy and responding
+
+### Step 3: Get New Key Version
+Contact vault admin to provision a new encryption key:
+
+```
+Request:
+  Provider: Azure Key Vault
+  Algorithm: AES-256-GCM
+  Status: Active
+  Rotation frequency: Annual
+
+Response:
+  Key Version: 6
+  Created: 2026-09-29
+  Expiration: 2027-09-29
+```
+
+### Step 4: Initiate Rotation
+Start the rotation process:
+
+```http
+POST https://api.bizfirst.com/api/credentials/{credentialID}/rotate
+Authorization: Bearer <jwt-admin-token>
+Content-Type: application/json
+
+{
+  "newVaultProviderID": 2,
+  "newKeyVersion": 6
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "keyRotationID": 99,
+  "credentialID": 42,
+  "oldVaultProviderID": 1,
+  "oldKeyVersion": 5,
+  "newVaultProviderID": 2,
+  "newKeyVersion": 6,
+  "status": "Pending",
+  "startedAt": "2026-09-29T12:00:00Z",
+  "completedAt": null
+}
+```
+
+**Save the keyRotationID** — Use to check status.
+
+### Step 5: Monitor Rotation Progress
+Poll the rotation status:
+
+```http
+GET https://api.bizfirst.com/api/credentials/rotations/{keyRotationID}
+Authorization: Bearer <jwt-admin-token>
+```
+
+**Response (in progress):**
+```json
+{
+  "keyRotationID": 99,
+  "status": "Pending",
+  "completedAt": null
+}
+```
+
+**Response (completed):**
+```json
+{
+  "keyRotationID": 99,
+  "status": "Completed",
+  "completedAt": "2026-09-29T12:02:00Z"
+}
+```
+
+**Timeline:**
+- Typically takes seconds to minutes
+- May take longer if credential is large
+- Check every 30 seconds until Completed or Failed
+
+### Step 6: Verify Rotation Success
+Retrieve the credential to confirm:
+
+```http
+GET https://api.bizfirst.com/api/credentials/{credentialID}
+Authorization: Bearer <jwt-admin-token>
+```
+
+**Response should show:**
+```json
+{
+  "credentialID": 42,
+  "vaultProviderID": 2,        ← New provider
+  "encryptionKeyVersion": 6     ← New key version
+}
+```
+
+**Verification:**
+- ✓ VaultProviderID changed to 2 (Azure)
+- ✓ EncryptionKeyVersion changed to 6
+- ✓ credentialID unchanged (42)
+- ✓ Data still decrypts correctly
+
+### Step 7: Test After Rotation
+Ensure credential still works in workflows:
+
+```
+Workflow: Test Rotated Credential
+  ├─ Input: credentialID = 42
+  ├─ SendEmail node
+  │  ├─ Credential: 42
+  │  └─ Send test email
+  └─ Verify: Email sent successfully
+```
+
+**Checks:**
+- ✓ Workflow can retrieve credential
+- ✓ Credential decrypts under new key
+- ✓ Actual operation succeeds (email sent, API called, etc.)
+- ✓ AccessLog shows successful Read
+
+### Step 8: Decommission Old Key (Optional)
+After rotation is verified, old encryption key can be retired:
+
+```
+Contact vault admin:
+  "Key version 5 in Local HSM (provider 1) can be archived.
+   All credentials using this key have been rotated to Azure KMS (provider 2).
+   Safe to retire on 2026-10-29."
+```
+
+**Note:** Keep old keys for minimum 30-90 days in case rollback needed.
+
+## Rotation Checklist
+
+```
+[ ] Current encryption status checked (old provider/key noted)
+[ ] New vault provider identified and enabled
+[ ] New key version provisioned in vault
+[ ] Rotation initiated (keyRotationID obtained)
+[ ] Rotation status monitored (waited for Completed)
+[ ] Credential retrieved and verified new provider/key
+[ ] Test workflow run successfully
+[ ] AccessLog shows successful credential access
+[ ] Stakeholders notified (if needed)
+[ ] Old key archival scheduled (optional)
+```
+
+## Error Handling
+
+### "Vault Provider Not Found"
+```
+Problem: New VaultProviderID doesn't exist
+Response: 404 Not Found
+Solution:
+  - Verify vault provider ID is correct
+  - List providers: GET /vault-providers
+  - Choose existing provider
+```
+
+### "Key Version Not Available"
+```
+Problem: New key version doesn't exist in vault
+Response: 400 Bad Request
+Solution:
+  - Contact vault admin to provision key version
+  - Verify key version number is correct
+  - Check new provider has the version available
+```
+
+### "Rotation Failed"
+```
+Problem: Rotation initiated but failed partway
+Response: GET /rotations/{rotationID} → status: "Failed"
+Solution:
+  1. Check failureReason field
+  2. Verify both providers are healthy
+  3. Check network connectivity to vault providers
+  4. May need to retry rotation
+  5. Contact support if persistent
+```
+
+### "Credential Decryption Fails After Rotation"
+```
+Problem: New key decrypts but returns garbage
+Causes:
+  1. Key version mismatch (new key v6 but data says v5)
+  2. Old key still in use (rotation didn't complete)
+Solution:
+  - Retry rotation if status is Pending
+  - Verify rotation completed (status: Completed)
+  - Restore from backup if critical
+```
+
+## Rollback (If Needed)
+
+If rotation fails and credential is broken:
+
+```
+Option 1: Rotate Again
+  - Initiate new rotation back to old provider/key
+  - Verify credential works
+  - Then investigate root cause
+
+Option 2: Restore from Backup
+  - If available, restore credential from backup
+  - Test thoroughly before using
+  - Schedule rotation after stability confirmed
+```
+
+## Monitoring Rotations
+
+**Track rotation history:**
+```http
+GET https://api.bizfirst.com/api/credentials/{credentialID}/rotations
+Authorization: Bearer <jwt-admin-token>
+```
+
+**Response shows:**
+```json
+{
+  "items": [
+    {"keyRotationID": 99, "status": "Completed", ...},
+    {"keyRotationID": 98, "status": "Completed", ...}
+  ]
+}
+```
+
+**For compliance:**
+- Keep audit log of all rotations
+- Who initiated, when, old/new provider/key
+- Date and time rotation completed
+- Any failures or retries
+
+## Best Practices
+
+1. **Plan ahead** — Don't rotate on Friday before holidays
+2. **Notify users** — Let teams know migration is happening
+3. **Test thoroughly** — Always test after rotation before critical use
+4. **Keep backups** — Maintain credential snapshots in case of emergency
+5. **Monitor access logs** — Watch for unusual access patterns after rotation
+6. **Rotate regularly** — Annual or when provider changes
+7. **Document** — Record why and when rotations happened
+
+## Next Steps
+
+After successful rotation:
+
+1. **Decommission old key** — Work with vault admin to retire
+2. **Update runbooks** — If documentation mentions old provider
+3. **Plan next rotation** — Schedule next key rotation (annually)
+4. **Monitor** — Check access logs for any issues
+
+## Related Procedures
+- [Create Credential](create-credential.md) — Initial credential creation
+- [Validate Credential](validate-credential.md) — Verify credential works
+- [Troubleshoot](troubleshoot.md) — Detailed issue resolution
+
+## See Also
+- [Security Architecture](../../Knowledge/Credentials/02-security-architecture.md) — Key versioning details
+- [API Reference](../../Knowledge/Credentials/03-api-reference.md) — Rotation endpoints
+
+---
+
+## Claudia/Procedure/Credentials/troubleshoot.md
+
+# Procedure: Troubleshoot Credentials
+
+Common credential issues and solutions.
+
+## Quick Diagnosis
+
+Start here if something isn't working:
+
+```
+Is the credential not found?
+  └─ Go to: Credential Not Found
+
+Is credential retrieval returning an error?
+  └─ Go to: Decryption Errors
+
+Is workflow failing when using credential?
+  └─ Go to: Credential Use Failures
+
+Is credential access being denied?
+  └─ Go to: Access Control Errors
+
+Is credential expired?
+  └─ Go to: Expiration Issues
+
+Is rotation stuck or failed?
+  └─ Go to: Rotation Issues
+
+Something else?
+  └─ Go to: Contact Support
+```
+
+## Credential Not Found
+
+### Error
+```
+404 Not Found
+{
+  "errorCode": "CREDENTIAL_NOT_FOUND",
+  "message": "Credential 42 does not exist"
+}
+```
+
+### Diagnosis
+
+**Check 1: Is credentialID correct?**
+```bash
+# List all credentials to find correct ID
+curl -X GET https://api.bizfirst.com/api/credentials \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq '.items[] | {id: .credentialID, name: .name}'
+```
+
+**Check 2: Is credential soft-deleted?**
+```bash
+# Query by name to verify existence
+curl -X GET "https://api.bizfirst.com/api/credentials/search/by-name?name=SendGrid" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+If returns empty, credential was deleted.
+
+**Check 3: Is credential in different tenant?**
+```
+- Credentials are scoped to TenantID from JWT
+- Verify your JWT is for correct tenant
+- If credential in different tenant, cannot access
+```
+
+### Solutions
+
+| Cause | Solution |
+|-------|----------|
+| Wrong ID | Find correct ID via search by name |
+| Soft-deleted | Credential marked Deleted=1; can be restored by admin |
+| Different tenant | Must use credential within same tenant |
+| Never created | Follow Procedure: Create Credential |
+
+## Decryption Errors
+
+### Error
+```
+500 Internal Server Error
+{
+  "errorCode": "ENCRYPTION_FAILED",
+  "message": "Unable to decrypt credential. Please contact support."
+}
+```
+
+### Diagnosis
+
+**Check 1: Is vault provider healthy?**
+```bash
+# Check vault provider status
+curl -X GET https://api.bizfirst.com/api/vault-providers/{vaultProviderID} \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+# Should return enabled: true
+```
+
+**Check 2: Is encryption key available?**
+```
+Vault Provider: 1 (Local HSM)
+Key Version: 5
+Status: ?
+  - If key missing/revoked → Cannot decrypt
+  - If key disabled → Cannot decrypt
+```
+
+**Check 3: Is there network connectivity?**
+```
+For cloud providers (Azure, AWS):
+  - Network timeout → Vault provider unreachable
+  - SSL error → Certificate issue
+  - Authentication error → Vault credentials wrong
+```
+
+### Solutions
+
+| Cause | Solution |
+|-------|----------|
+| Vault provider down | Wait for provider to recover; contact admin |
+| Network timeout | Check network connectivity to vault |
+| Key revoked | Rotate credential to new key (Procedure: Rotate) |
+| Key version old | Archive old keys only after rotation |
+| Certificate issue | Contact vault provider, update certs |
+| Bug in code | Contact support with trace ID |
+
+## Credential Use Failures
+
+### Error
+```
+Workflow fails when using credential:
+"Invalid credentials for service X"
+```
+
+### Diagnosis
+
+**Check 1: Are credentials still valid in source system?**
+```
+Email:      Has password changed in email provider?
+API:        Has API key been revoked?
+Database:   Has database user been locked?
+OAuth2:     Has refresh token expired?
+```
+
+**Check 2: Does workflow reference correct credentialID?**
+```
+Workflow node shows credentialID = 42
+But created credential has credentialID = 43?
+  → Wrong reference
+```
+
+**Check 3: Is credential type matching node requirement?**
+```
+SendEmail node requires: EmailCredential
+But passed:             ApiKeyCredential
+  → Type mismatch
+```
+
+**Check 4: Is credential expired?**
+```bash
+curl -X GET https://api.bizfirst.com/api/credentials/42 \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq '.expiresAt'
+
+If expiresAt < now() → EXPIRED
+```
+
+### Solutions
+
+| Cause | Solution |
+|-------|----------|
+| Secret rotated in source | Create new credential with current secret |
+| API key revoked | Generate new API key, create new credential |
+| Wrong credential reference | Update workflow to use correct credentialID |
+| Type mismatch | Ensure workflow node type matches credential type |
+| Credential expired | Rotate credential or create new one |
+| Temporary service outage | Retry after service recovers |
+
+## Access Control Errors
+
+### Error: 401 Unauthorized
+```json
+{
+  "errorCode": "UNAUTHORIZED",
+  "message": "Missing or invalid JWT token"
+}
+```
+
+**Solutions:**
+1. Verify JWT token is included: `Authorization: Bearer <token>`
+2. Verify token hasn't expired
+3. Regenerate token from auth service
+4. Check token format (should be in JWT format)
+
+### Error: 403 Forbidden
+```json
+{
+  "errorCode": "TENANT_MISMATCH",
+  "message": "Credential belongs to different tenant"
+}
+```
+
+**Solutions:**
+1. Verify TenantID in JWT matches credential's TenantID
+2. Use credential within same tenant as created
+3. Contact admin if tenant ID needs correction
+
+### Error: 403 Forbidden - Insufficient Role
+```json
+{
+  "errorCode": "INSUFFICIENT_ROLE",
+  "message": "User role 'CredentialViewer' cannot create credentials"
+}
+```
+
+**Solutions:**
+1. For Read-only: You have CredentialViewer (correct)
+2. For Create/Update/Delete: Need CredentialManager role
+3. For Rotation: Need CredentialRotator or SystemAdmin role
+4. Request elevated role from admin
+
+## Expiration Issues
+
+### Error
+```
+409 Conflict
+{
+  "errorCode": "CREDENTIAL_EXPIRED",
+  "message": "Credential has expired. Please rotate or regenerate."
+}
+```
+
+### Diagnosis
+```bash
+# Check expiration date
+curl -X GET https://api.bizfirst.com/api/credentials/42 \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq '{expiresAt, daysUntilExpiration}'
+```
+
+### Solutions
+
+**If expired:**
+1. Create new credential (Procedure: Create Credential)
+2. Update workflows to reference new credentialID
+3. Delete or archive old credential
+
+**If expiring soon (< 7 days):**
+1. Set calendar reminder
+2. Create new credential now
+3. Plan migration date
+4. Update workflows before expiration
+5. Delete old credential after testing new one
+
+**To prevent future expiration:**
+```bash
+# Monitor credentials expiring in 30 days
+curl -X GET "https://api.bizfirst.com/api/credentials/expiring-soon?daysAhead=30" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+# Result: List of credentials to refresh
+```
+
+## Rotation Issues
+
+### Issue: Rotation Stuck in "Pending"
+```json
+{
+  "status": "Pending",
+  "startedAt": "2026-09-29T12:00:00Z",
+  "completedAt": null
+}
+```
+
+**Solutions:**
+1. Wait up to 5 minutes (normal operation)
+2. Check vault provider health
+3. If stuck > 5 min, contact support with keyRotationID
+4. May need to retry rotation
+
+### Issue: Rotation Failed
+```json
+{
+  "status": "Failed",
+  "failureReason": "New vault provider unreachable"
+}
+```
+
+**Diagnosis:**
+```bash
+# Check both vault providers
+curl -X GET https://api.bizfirst.com/api/vault-providers/1 \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+curl -X GET https://api.bizfirst.com/api/vault-providers/2 \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+# Both should have enabled: true
+```
+
+**Solutions:**
+1. Check vault provider health with admin
+2. Verify both providers are reachable
+3. Retry rotation once provider recovers
+4. If repeated failures, escalate to support
+
+### Issue: Credential Won't Decrypt After Rotation
+```
+Before: GET /credentials/42 → Returns decrypted data ✓
+After:  GET /credentials/42 → 500 Encryption Error ✗
+```
+
+**Solutions:**
+1. Rotation may not have completed properly
+2. Verify rotation status: `status: "Completed"`
+3. If Pending: Wait and retry later
+4. If Failed: Investigate failure reason
+5. If Completed but still failing: Rotate back to old key
+
+## Performance Issues
+
+### Issue: Credential Retrieval Slow
+
+**Diagnosis:**
+```bash
+# Measure request time
+time curl -X GET https://api.bizfirst.com/api/credentials/42 \
+  -H "Authorization: Bearer $TOKEN"
+
+# Should respond in < 100ms
+```
+
+**If slow:**
+1. Check vault provider network latency
+2. Check database query performance
+3. For cloud providers: May be first request (cold start)
+4. Contact support if consistently slow
+
+### Solution: Scale Vault Provider
+```
+If vault provider is bottleneck:
+  - Migrate to higher-performance provider
+  - Rotate credentials to new provider
+  - See Procedure: Rotate Credential
+```
+
+## Data Integrity Issues
+
+### Issue: Credential Data Corrupted
+```
+Error: Invalid JSON in decrypted data
+  or  Unexpected format after decryption
+```
+
+**Solutions:**
+1. This indicates encryption/decryption bug
+2. Contact support with credentialID and trace ID
+3. May need to restore from backup
+4. If critical: Create new credential
+
+### Issue: Encryption Key Lost
+```
+Cannot decrypt because key deleted from vault
+```
+
+**Solutions:**
+1. Catastrophic scenario - requires data recovery
+2. Contact support immediately
+3. May require backup restoration
+4. Recreate credential if backup unavailable
+
+## Getting Help
+
+### What to include in support ticket:
+
+1. **Credential ID** — `credentialID: 42`
+2. **Error message** — Full error response
+3. **Steps to reproduce** — How to trigger issue
+4. **Trace ID** — From error response header
+5. **Timestamp** — When error occurred
+6. **Vault provider** — Which provider in use
+7. **Credential type** — EmailCredential, ApiKeyCredential, etc.
+
+### Contact Support
+```
+Email: support@bizfirst.com
+Subject: "[Credentials] Issue with credential X"
+Body:
+  Credential ID: 42
+  Error Code: ENCRYPTION_FAILED
+  Trace ID: 0HN1GNBV4C7KV:00000001
+  Steps: Created credential → Test workflow failed
+```
+
+## Related Procedures
+- [Create Credential](create-credential.md)
+- [Validate Credential](validate-credential.md)
+- [Rotate Credential](rotate-credential.md)
+
+## See Also
+- [Security Architecture](../../Knowledge/Credentials/02-security-architecture.md)
+- [API Reference](../../Knowledge/Credentials/03-api-reference.md)
+- [Integration Guide](../../Knowledge/Credentials/04-integration-guide.md)
+
+---
+
+## Claudia/Procedure/Credentials/validate-credential.md
+
+# Procedure: Validate Credential
+
+Step-by-step guide to verify a credential is working correctly.
+
+## Overview
+Validation ensures a credential is encrypted properly, not expired, and can be used by workflows.
+
+## Prerequisites
+- Credential created and credentialID known
+- Valid JWT Bearer token
+- Permission to read/test credentials
+
+## Steps
+
+### Step 1: Retrieve Credential
+Get the credential to check its properties:
+
+```http
+GET https://api.bizfirst.com/api/credentials/{credentialID}
+Authorization: Bearer <jwt-token>
+```
+
+**Response:**
+```json
+{
+  "credentialID": 42,
+  "credentialType": "EmailCredential",
+  "name": "SendGrid SMTP",
+  "data": {
+    "email": "noreply@sendgrid.com",
+    "password": "[DECRYPTED]",
+    "smtpServer": "smtp.sendgrid.net",
+    "smtpPort": 587
+  },
+  "vaultProviderID": 1,
+  "encryptionKeyVersion": 5,
+  "createdOn": "2026-09-29T10:00:00Z",
+  "createdBy": 1,
+  "expiresAt": null
+}
+```
+
+### Step 2: Check Expiration
+Verify the credential hasn't expired:
+
+```
+IF expiresAt is null:
+  ✓ No expiration set (valid indefinitely)
+
+IF expiresAt is in future:
+  ✓ Credential valid until expiresAt
+
+IF expiresAt is in past:
+  ✗ CREDENTIAL EXPIRED
+  → Must rotate or delete
+```
+
+**Example:**
+```json
+"expiresAt": "2027-09-29T23:59:59Z"
+→ Today: 2026-09-29 → Valid ✓
+→ In 366 days, credential will expire
+```
+
+### Step 3: Verify Encryption
+Check encryption metadata:
+
+```
+VaultProviderID: 1          ← Which provider encrypted this
+EncryptionKeyVersion: 5     ← Which key version was used
+```
+
+Ensure the vault provider is still enabled:
+
+```http
+GET https://api.bizfirst.com/api/vault-providers/{vaultProviderID}
+```
+
+**Response should show:**
+```json
+{
+  "vaultProviderID": 1,
+  "name": "Local HSM",
+  "enabled": true  ← Must be true
+}
+```
+
+If `enabled: false`:
+```
+✗ Vault provider disabled
+→ Contact admin to re-enable or rotate credential to new provider
+```
+
+### Step 4: Type-Specific Validation
+
+#### Email Credential
+```bash
+# Verify SMTP connectivity
+openssl s_client -connect smtp.sendgrid.net:587 -starttls smtp
+
+# Check credentials in SendEmail workflow node
+# and test sending a message
+```
+
+#### API Key Credential
+```bash
+# Test API call with credential
+curl -X GET https://api.salesforce.com/services/data/ \
+  -H "Authorization: Bearer [password-from-credential]"
+
+# Should return 200 OK, not 401 Unauthorized
+```
+
+#### Database Credential
+```bash
+# Test connection using credentials
+sqlcmd -S db.example.com,3306 -U [username] -P [password] \
+  -Q "SELECT 1"
+
+# Should return 1 without timeout
+```
+
+#### OAuth2 Credential
+```bash
+# Check token not expired
+# AccessToken expiration < 5 minutes away?
+# If yes, credential needs refresh before use
+
+# Verify refresh token works
+POST https://oauth-provider/token \
+  -d "grant_type=refresh_token&refresh_token=[refreshToken]"
+
+# Should return new access token
+```
+
+#### SSH Key Credential
+```bash
+# Verify key format
+openssl rsa -in [private-key-pem] -check -noout
+
+# Check if passphrase required
+ssh-keygen -y -f [private-key-pem]
+
+# Should output public key
+```
+
+### Step 5: Test in Workflow
+Create a minimal test workflow:
+
+**For Email:**
+```
+Workflow: Test Email Credential
+  ├─ Input: credentialID = 42
+  ├─ SendEmail node
+  │  ├─ Credential: 42
+  │  ├─ To: test@example.com
+  │  ├─ Subject: "Test"
+  │  └─ Body: "If you see this, credential works"
+  └─ Log: Success/Failure
+```
+
+**For API:**
+```
+Workflow: Test API Credential
+  ├─ Input: credentialID = 42
+  ├─ CallApi node
+  │  ├─ Credential: 42
+  │  ├─ Method: GET
+  │  ├─ Url: https://api.service.com/health
+  │  └─ Expected: 200 OK
+  └─ Log: Response
+```
+
+**Run the workflow and check:**
+```
+✓ Workflow completes successfully
+✓ No "Credential not found" error
+✓ No "Invalid credentials" error
+✓ AccessLog shows Read entry
+```
+
+### Step 6: Check Access Logs
+Verify the credential is being used properly:
+
+```http
+GET https://api.bizfirst.com/api/credentials/{credentialID}/access-logs
+Authorization: Bearer <jwt-token>
+```
+
+**Response:**
+```json
+{
+  "items": [
+    {
+      "accessLogID": 1001,
+      "accessType": "Read",
+      "userID": 1,
+      "agentID": "TestWorkflow-123",
+      "ipAddress": "192.0.2.1",
+      "success": true,
+      "timestamp": "2026-09-29T15:30:00Z"
+    }
+  ],
+  "totalCount": 1
+}
+```
+
+**Check:**
+- ✓ Recent access (timestamp = now)
+- ✓ Access type = Read (expected)
+- ✓ Success = true (no errors)
+- ✓ No unauthorized access patterns
+
+## Validation Checklist
+
+```
+[ ] Credential retrieval succeeds (200 OK)
+[ ] Data decrypts properly (no encryption errors)
+[ ] Expiration: expiresAt is null or in future
+[ ] Vault provider: enabled = true
+[ ] Encryption key version: matches vault provider
+[ ] Type-specific validation passes:
+    [ ] Email: SMTP connects, credentials work
+    [ ] API: API call succeeds with credential
+    [ ] Database: Connection succeeds
+    [ ] OAuth2: Tokens valid and not expired
+    [ ] SSH: Private key valid PEM format
+[ ] Workflow test: Credential used successfully
+[ ] Access log: Most recent entry shows success
+[ ] No suspicious access patterns in log
+```
+
+## Common Issues
+
+### "Credential Not Found" Error
+```
+Problem: GET /api/credentials/{id} returns 404
+Causes:
+  1. Wrong credentialID
+  2. Credential soft-deleted (Deleted=1)
+  3. Different tenant owns credential
+Solution:
+  - Verify credentialID
+  - Check soft-delete status
+  - Confirm you're in same tenant as credential
+```
+
+### "Vault Provider Not Responding"
+```
+Problem: Decryption fails with timeout
+Causes:
+  1. Vault provider service down
+  2. Network connectivity issue
+  3. Vault provider disabled
+Solution:
+  - Contact admin to check vault provider health
+  - Verify network connectivity
+  - Check if enabled=true
+```
+
+### "Invalid Credentials" Error
+```
+Problem: Workflow fails with 401/403 when using credential
+Causes:
+  1. Password/secret incorrect or rotated
+  2. API key revoked or expired
+  3. Database user locked
+Solution:
+  - Verify secret is current with source system
+  - Check third-party system hasn't changed password
+  - Update credential with new secret
+  - See Procedure: Create Credential (create new one)
+```
+
+### "Credential Expired"
+```
+Problem: Credential returns "expired" error
+Causes:
+  1. expiresAt < now()
+  2. Key expired in vault
+Solution:
+  - Rotate credential to new key/provider
+  - Or delete if no longer needed
+  - See Procedure: Rotate Credential
+```
+
+## Monitoring
+
+Set up recurring validation:
+
+**Daily:**
+```
+- Check for credentials expiring in 7 days
+- Review access logs for unusual patterns
+```
+
+**Weekly:**
+- Run test workflows for critical credentials
+- Verify vault provider health
+
+**Monthly:**
+- Rotate credentials approaching expiration
+- Audit access logs for compliance
+
+## Next Steps
+
+After validation:
+
+1. **Credential valid** → Can be used in workflows confidently
+2. **Credential invalid** → See troubleshooting, fix, re-validate
+3. **Credential expiring soon** → Plan rotation (see Procedure: Rotate Credential)
+4. **Unusual access** → Review security, consider re-keying
+
+## Related Procedures
+- [Create Credential](create-credential.md) — Create new credential
+- [Rotate Credential](rotate-credential.md) — Change encryption key
+- [Troubleshoot](troubleshoot.md) — Detailed issue resolution
+
+## See Also
+- [Integration Guide](../../Knowledge/Credentials/04-integration-guide.md) — How agents use credentials
+- [API Reference](../../Knowledge/Credentials/03-api-reference.md) — Exact endpoints
+- [Security Architecture](../../Knowledge/Credentials/02-security-architecture.md) — Encryption details
+
+---
+
+## Claudia/Procedure/Form/create-entity-search-form@agent.md
+
+# Create Entity Search + Edit Form (Table → App Studio, end to end)
+
+**@agent** — Reusable agent for turning any real SQL Server table into a working
+**Search + Edit** experience in App Studio: two Atlas Forms (search/results/edit), an
+`Entity_Entities` registration, a test app with a bound Form Widget, and a real,
+screenshot-verified E2E pass. This is "Task 12" in Binoy's own numbering (2026-09-04) —
+the formalized, reusable version of the manual process first done for `Jobs_Definitions`
+("Task 19", same night). That run is this doc's own worked example — every convention
+and gotcha below was learned building it, not theorized.
+
+**Reference Implementation:** `Jobs_Definitions` — `Atlas_Forms_30600`/`30601`
+(`BizFirstFiDB/.../dbo/Data/AtlasForms/06_GenericCrud/`), `Entity_Entities` row
+`jobs-definitions` (`dbo/Data/GenericCrud/Entity_Entities.JobsDefinitionsTask19.data.sql`).
+Where this doc says "see the reference," it means these exact files.
+
+**Reference control-type/schema library:**
+`Knowledge\Form\atlas-forms-rag\v2\`
+— `controls/*.md` documents every Atlas Forms control type in depth (one file per
+control, e.g. `controls/checkbox.md`, `controls/number.md`, `controls/grid.md`,
+`controls/select.md`), `worked-examples/*.json` are full real form schemas, and
+`00-overview.md`/`01-common-properties.md`/`validation-rules.md`/`conditional-logic.md`
+cover the schema format itself. **Consult this folder for the authoritative control-type
+reference — don't guess a control's config shape.** (On "and rag" in Binoy's original
+request: this existing folder appears to already be exactly what he meant — a
+well-structured, standing reference collection for Atlas Forms authoring. This agent
+doesn't build a new/separate RAG pipeline; it reads from and adds worked-example value to
+this one. If Binoy meant something more specific — e.g. an actual vector-embedded
+retrieval index over these files — that's an open question, not something this doc
+assumes; ask him directly if it comes up.)
+
+**Maintains:** nothing external yet — no `list-of-entity-forms@agent.md` sibling index
+exists (unlike `create-community-node@agent.md`'s `list-of-community-nodes@agent.md`).
+Consider creating one after the 2nd or 3rd real run, once there's enough to index.
+
+---
+
+## How to Use This Agent
+
+Your programmer gives you a table. Everything else is either derived by inspecting the
+real schema, or asked as an explicit question below — **never guessed**, because wrong
+guesses here fail silently or corrupt data (see §Gotchas).
+
+### Step 0 — Ask the user these specific questions, in this order
+
+Don't paraphrase this into a vague "any preferences?" — ask each one:
+
+1. **"Which table? Give me the schema+table name (e.g. `dbo.Jobs_Definitions`) or the
+   path to its `.sql` file under `BizFirstFiDB/.../dbo/Tables/`."**
+   - If they only give a table name, find the real `.sql` file yourself
+     (`BizFirstFiDB/BizFirstFiV3DB/BizFirstFiV3DB/dbo/Tables/{TableName}.sql`) and read it
+     — don't assume columns, read the real DDL.
+   - **Check the table actually exists in the target dev database** (see §Gotchas — the
+     `.sql` file existing in the repo does NOT mean the table exists yet; `Jobs_Definitions`
+     didn't, and its FK dependency `Jobs_ExecutionStatuses` didn't either). If it's
+     missing, tell the user and confirm before creating it — that's a bigger, more
+     consequential action than seeding form data.
+
+2. **"What's the Project Name?"** — used verbatim for the output folder:
+   `C:\BizFirstGO_FI_AI\Documentation\Employees\agentic-testing-app-studio\widgets\form\entity-based-search\{Project-Name}\`
+   (see Step 9 below for exactly what goes in it).
+
+3. **"Which columns should be searchable (free-text and/or specific filters), and which
+   are editable vs. read-only?"** Propose a default from the schema (every `nvarchar`
+   column → free-text searchable via the built-in `SearchText`/LIKE mechanism if the
+   target API supports it, see Step 2; every non-PK/non-audit column → editable) and let
+   the user confirm or override — don't silently apply the default without showing it.
+
+4. **"Any columns that need a specific control type beyond the SQL-type default?"** State
+   your inferred defaults explicitly and ask for confirmation:
+   - `BIT` → `checkbox` (top-level form) / `toggle` (grid column, read-only display)
+   - `INT`/`BIGINT`/`DECIMAL` → `number`
+   - `NVARCHAR`/`VARCHAR` → `text` (or `textarea` for long/description-like columns —
+     ask, don't guess which)
+   - `DATETIME`/`DATETIME2` → `text` (Atlas Forms date controls exist —
+     `controls/date.md`/`controls/datetime.md` — but the reference form used plain `text`
+     for display-only datetime columns like `LastRunAtUtc`; ask whether the user wants a
+     real date picker for an EDITABLE date column, since that's a real control-type
+     decision, not a display one)
+   - A column that's a foreign key to a lookup table → offer a real `select` bound to
+     that lookup's own list/search endpoint via `optionsSource` (see the reference form's
+     `filter-document-type`/`documentTypeID` controls in `Atlas_Forms_30500`/`30501` for
+     the exact `optionsSource` shape), not a bare numeric field. **This is a standing
+     principle across this whole codebase this session — bare-ID fields are a known,
+     repeatedly-flagged regression pattern.**
+
+5. **"Confirm the CRUD permission flags"** — state your proposed
+   `AllowRead`/`AllowSearch`/`AllowInsert`/`AllowUpdate`/`AllowDelete` values plainly (the
+   reference used all five `= 1`, full CRUD, appropriate for an admin/internal table) and
+   get explicit confirmation, especially before setting `AllowDelete = 1` on anything
+   that isn't clearly safe to delete.
+
+Do not proceed past this point until all 5 are answered.
+
+---
+
+## Agent Prompt
+
+```
+I need to build a Search + Edit Atlas Forms experience for a real SQL Server table,
+register it through the generic entity API, stand up (or reuse) a test app with a bound
+Form Widget, and run a real E2E test with screenshots, following the same process used
+for Jobs_Definitions (Task 19, 2026-09-04).
+
+**INPUTS (see Step 0 above — get all 5 before starting):**
+- Table: [SCHEMA.TABLE — e.g. "dbo.Jobs_Definitions"]
+- Project Name: [PROJECT_NAME — output folder name]
+- Searchable/editable columns: [confirmed list]
+- Control-type overrides: [confirmed list, if any]
+- CRUD flags: [AllowRead/AllowSearch/AllowInsert/AllowUpdate/AllowDelete, confirmed]
+
+**WHAT TO DO:**
+
+1. **Read the real table schema.**
+   Read `BizFirstFiDB/BizFirstFiV3DB/BizFirstFiV3DB/dbo/Tables/{TableName}.sql` directly
+   — every column name, type, nullability, PK, FKs. Never assume a column exists or
+   guess its type. Note the PK column name (needed for every `{{row.*}}` template below).
+   Confirm the table (and any FK-referenced tables) actually exist in the target dev
+   database (`sqlcmd -S ".\SQLEXPRESS" -d "data-ocean-platform-prod" -E -Q "SELECT COUNT(*)
+   FROM {TableName}"` — if it errors "Invalid object name," it doesn't exist yet; apply
+   the table's own `.sql` DDL file, and any FK-referenced table's DDL first, same as the
+   reference run needed for `Jobs_ExecutionStatuses` before `Jobs_Definitions`). Watch for
+   the filtered-unique-index `QUOTED_IDENTIFIER` gotcha — see §Gotchas.
+
+2. **Detect the target API's response shape — this decides `dataRootPath` and is the
+   single most important step to get right.**
+   Two real API families exist in this codebase:
+   - **The generic entity CRUD API** (`BizFirst.NoCode.Entities.*`, already live in the
+     Consolidated WebApi at `POST/PUT/DELETE /api/v1/entities/{entityName}/...`) — the
+     default choice for a table with no existing bespoke API (which is most tables).
+     Returns records **wrapped**: `{ fields: { ColumnName: value, ... } }`, keyed by the
+     real PascalCase column names (case-insensitive). Requires `dataRootPath: "fields"`
+     on every grid link action that opens an edit/view sub-form, AND on every grid
+     column's `dataBinding.fieldPath` (e.g. `"fields.JobName"`, not `"jobName"`).
+   - **A bespoke module API** (e.g. Documents' `/api/v1/documents/*`) — only relevant if
+     the table already has one; check first (`grep` the relevant `Base*Controller.cs`
+     under `mvc-server/Go/{Module}/*.Api.Base/Controllers/`). Returns records **flat**:
+     `{ documentName: ..., ... }`. No `dataRootPath` needed — omit it.
+   Confirm which one applies by reading the real controller code (`BaseEntityController.cs`
+   for the generic path, or the module's own `Base*Controller.cs` for a bespoke one) —
+   don't infer from the table name alone.
+
+3. **If using the generic entity API, write and apply the `Entity_Entities` insert.**
+   New file at `BizFirstFiDB/BizFirstFiV3DB/BizFirstFiV3DB/dbo/Data/GenericCrud/
+   Entity_Entities.{DescriptiveName}.data.sql`, following
+   `Entity_Entities.JobsDefinitionsTask19.data.sql` verbatim as the template. Set
+   deliberately, never leave defaulted:
+   - `EntityName` — a kebab-case slug (e.g. `jobs-definitions`), this is the literal
+     `{entityName}` route segment.
+   - `SourceTypeID = 1` ("Table" — check `Entity_EntitySourceTypes.Table.data.sql` if the
+     table needs a View or Query source instead, rare).
+   - `SchemaName`/`TableName` — the real values from Step 1.
+   - `TypeID` — `1` (Business Entity, transactional/domain data), `2` (Lookup Entity), or
+     `3` (System Entity, platform/internal-infrastructure) — pick based on what the table
+     actually is, state your reasoning.
+   - `CategoryID` — leave `NULL` unless an existing `Entity_EntityCategories` row
+     genuinely fits; don't invent a new category speculatively (see that seed file's own
+     comment: "more categories get added whenever a real entity needs one").
+   - The five `Allow*` flags — from the user's Step 0 answer #5, exactly.
+   - `StatusID = 2` ("Allowed" — the allowlist gate; always this value for a reachable
+     entity).
+   `SET QUOTED_IDENTIFIER ON` at the top of the file (needed before any filtered-index
+   creation elsewhere in the same session — see §Gotchas). Apply with `sqlcmd ... -i
+   {file} -b`, then verify with a direct `SELECT` against `Entity_Entities`.
+
+4. **Write the two Atlas Forms (Search + Edit) and insert them live.**
+   New folder `BizFirstFiDB/BizFirstFiV3DB/BizFirstFiV3DB/dbo/Data/AtlasForms/
+   06_GenericCrud/` (reuse it — Jobs_Definitions' forms already live there; this is the
+   established home for generic-entity-API-backed forms, parallel to `03_Documents/` for
+   the bespoke-API pattern) if it doesn't already exist for this run. Two files, following
+   `Atlas_Forms_30600_*`/`Atlas_Forms_30601_*` as the structural template line for line:
+   - **Search form**: filter section (SearchText + Step 0 #3's confirmed filters) +
+     results grid (Step 0 #3's confirmed display columns, each with `dataBinding.
+     fieldPath` if `dataRootPath` applies) + row actions (View/Edit/Delete links) + an
+     "Add New" button (`createForm` config, targeting the Edit form's FormID) +
+     `apiActions[0]` with `trigger: "search"`, real `payloadMapping`/`responseMapping`.
+   - **Edit form**: one control per editable/viewable column, using the confirmed
+     control-type mapping from Step 0 #4. Control IDs must exactly match the real column
+     names the target API expects (PascalCase for the generic entity API; whatever the
+     real DTO property names are for a bespoke API — check the DTO class directly, same
+     as this doc's own author had to for `Document.cs`).
+   - **On the Edit action inside the Search form**, wire real Save persistence — see
+     Step 5, don't skip it (this was the exact gap this whole agent process exists to
+     avoid repeating).
+   Pick two unused `FormID`s (query `SELECT MAX(FormID) FROM Atlas_Forms WHERE FormID
+   BETWEEN {range}` in whichever numeric block your target folder already uses — 305xx is
+   Documents, 306xx is GenericCrud as of this doc). Use `SET IDENTITY_INSERT [dbo].
+   [Atlas_Forms] ON` + `IF NOT EXISTS(...) INSERT` **followed by an unconditional
+   `UPDATE ... WHERE FormID = {id}`** in the same file (see §Gotchas — without the UPDATE,
+   re-running the file after the first apply is a silent no-op and a fix never reaches
+   the live row). Apply both files with `sqlcmd`, then verify with `SELECT FormID,
+   ISJSON(CAST([Schema] AS NVARCHAR(MAX))) FROM Atlas_Forms WHERE FormID IN (...)` — must
+   return `1` for both.
+
+5. **Wire real Save persistence on the Edit action — do not skip this.**
+   The Atlas Forms grid's row-level "Edit" action, by default, only updates the grid's
+   own local browser state — it never calls a backend endpoint (a real, confirmed gap in
+   `atlas-forms/packages/player-components-react`'s `GridControl.tsx`/`GridEditModal.tsx`,
+   found and fixed 2026-09-04). The fix already exists as a real, shared, opt-in
+   capability on the grid link's `kind: "form"` action — set these two/three fields on
+   the `_actionEdit` link's `action` object in the Search form:
+   - `saveEndpointTemplate` — e.g. `"/api/v1/entities/{entityName}/{{row.fields.
+     {PKColumnName}}}"` (generic entity API) or `"/api/v1/{module}/{{row.
+     {pkFieldName}}}"` (bespoke API, flat row — no `fields.` prefix). Same `{{row.*}}`
+     interpolation the `delete` action already uses.
+   - `saveMethod` — `"PUT"` (the generic entity API's real convention; check the bespoke
+     module's real controller for its own verb if different — Documents also uses `PUT`).
+   - `dataRootPath` — `"fields"` for the generic entity API, omit entirely for a flat
+     bespoke API. Get this from Step 2's detection, not a guess.
+   Verify the real update endpoint's request-body shape by reading the controller
+   directly before wiring — the generic entity API expects `{ data: {ColumnName: value,
+   ...} }` (loosely typed, `GenericEntityRecordMapper` coerces JSON types — this is why
+   Step 0 #4's control-type choices matter: a `text` control on a `BIT` column sends a
+   JSON string `"true"`, which does NOT implicitly convert to SQL `BIT` and the save will
+   fail); a bespoke module API's `UpdateWebRequest.Data` typically deserializes straight
+   into a real typed C# entity — read that entity class's real property names directly
+   (do not assume they match the form's control IDs without checking) before wiring the
+   endpoint.
+
+6. **Stand up an app to host the test widget.**
+   Prefer reusing an existing App Studio test app if one already fits (check for one
+   before creating a new one — ask the user if unsure which to use). Otherwise clone the
+   standard template: `src\app-templates\apps\app-template` →
+   `src\{new-project}\apps\{new-project}-studio` (mirror the FlowInsights build's own
+   process from the same night: rename package/title identifiers, pick an unused dev port
+   by checking sibling apps' `vite.config.ts` files first, wire into the monorepo
+   workspace file). This is heavier than Step 3/4 — if a lighter existing App Studio test
+   app (e.g. one already used for prior widget testing this session) genuinely covers the
+   need, use that instead and say so; don't default to a fresh app clone if the task
+   doesn't need one.
+
+7. **Insert a test widget bound to the Search form.**
+   In App Studio Designer: add a **Form Widget** (`widgetType: 'form'`,
+   `widget-handlers-form-widget`), bind its `Form` field to the Search form's FormID, set
+   **Render Mode = View** (not List/Edit/Create — those route through a different,
+   non-FormRenderer code path (`ListView`) that doesn't understand this form's own
+   internal search/grid/apiActions; "View" mode renders via `FormRenderer` directly and
+   still fully executes the form's own `search`/`button-click` apiActions regardless of
+   the render mode — confirmed by reading `FormWidgetRenderer.tsx`'s `FormView` directly).
+
+8. **Run a real E2E test and take screenshots.**
+   Open the app in App Player (not just the Designer canvas) via claude-in-chrome:
+   - Load the page with the Search form widget. Screenshot.
+   - Type into the search filter, submit, confirm real rows come back. Screenshot.
+   - Click a row's **Edit** action, change a field, Save. **Confirm it actually
+     persisted** — reload the page / re-run the search and check the new value is still
+     there, don't just trust the modal closing without an error. Screenshot the saved
+     result.
+   - If `AllowInsert=1`, exercise "Add New" too and confirm the new row appears in a
+     subsequent search. Screenshot.
+   - Check the browser console for errors on every step (`read_console_messages`,
+     `onlyErrors: true`) — a page that "looks right" with a silent console error is not a
+     pass.
+   If the WebApi is down when you reach this step: do NOT attempt to restart it yourself
+   unless the user has explicitly said this session owns that responsibility — check
+   status first (`curl --max-time 5 http://localhost:10001/api/v1/health`), report if
+   down, do every step up through static/DB-level verification (JSON validity, DB row
+   confirmation) so the work is ready to test the instant it's back up, and say so plainly
+   rather than silently marking anything "done."
+
+9. **Write logs/screenshots to the run's output folder and report to the user.**
+   `C:\BizFirstGO_FI_AI\Documentation\Employees\agentic-testing-app-studio\widgets\form\
+   entity-based-search\{Project-Name}\` — create it if it doesn't exist. At minimum:
+   - `README.md` — what table, what was built (FormIDs, EntityID, app/widget location),
+     pass/fail per E2E step from Step 8, any open issues.
+   - Screenshots from Step 8, named by step (e.g. `01-search-form.png`,
+     `02-search-results.png`, `03-edit-saved.png`).
+   Report back to the user with a summary and the screenshots, and where the run's folder
+     lives.
+
+---
+
+## Widget-instance overrides and alternate result views (added 2026-09-04, real & verified)
+
+Two platform capabilities landed the same night as this doc, on the SAME Form Widget
+mechanism this whole process builds against (`widget-handlers-form-widget`). Both are
+real, live-verified, and safe to reference/offer in Step 0 — but they're new; if a future
+run of this agent finds either behaves differently than described here, trust the live
+code over this doc and flag the drift.
+
+**1. `formOverrides` — per-widget-instance behavior overrides, no form-schema edits.**
+When placing a Form Widget bound to a Search-style form (Step 7), the widget's own
+Configuration JSON can carry a `formOverrides` block that overrides three of the bound
+form's `FormMetadata` flags for THIS placement only — the same form definition can be a
+full search UI in one widget and a filtered, list-only view in another:
+```json
+"formOverrides": {
+  "hideSearchFilterArea": true,
+  "autoSearchOnLoad": true,
+  "searchResultViewMode": "grid"
+}
+```
+- `hideSearchFilterArea` → CSS-hides the filter section (fields stay mounted/bound, so a
+  hidden filter can still be pre-populated programmatically) — maps to schema
+  `metadata.hideFilterArea`.
+- `autoSearchOnLoad` → fires the real search on mount instead of waiting for a button
+  click — maps to schema `metadata.searchOnLoad`.
+- `searchResultViewMode` → `'grid' | 'cards' | 'gallery'` (see next section) — maps onto
+  every `type: 'grid'` control found in the bound form's schema.
+An omitted `formOverrides` (or any omitted field within it) leaves the form's own schema
+value completely unchanged — this is additive, not a replacement. Designer UI: open the
+Form Widget's edit screen, a master "Override this form's search behavior for this widget
+instance only" toggle gates dedicated checkboxes/dropdown for these three, PLUS a generic
+"Additional Parameters" key-value list for any other override (see that section's own
+edit for the exact data-shape decision it landed on — check `WidgetEditorFields.tsx`
+directly if this doc and the code ever disagree).
+
+**2. Grid `viewMode` — cards/galleries instead of a plain data table.**
+Any `type: 'grid'` control in a form's own schema can set (independent of the widget
+override above — this also works authored directly into the form, e.g. for a form never
+embedded as a widget):
+```json
+"config": {
+  "viewMode": "cards",
+  "cardTemplate": {
+    "titleField": "documentName",
+    "imageField": "thumbnailUrl",
+    "subtitleField": "originalFileName",
+    "descriptionField": "description",
+    "metaFields": ["documentType", "fileSizeBytes"]
+  }
+}
+```
+`viewMode` defaults to `'grid'` (today's plain table, zero change if unset). `'cards'` and
+`'gallery'` reuse the exact same data-fetch/pagination/row-action plumbing as the table —
+row actions (View/Edit/Delete) and pagination all still work identically. `titleField` is
+the only required `cardTemplate` field; everything else is optional. `'gallery'` always
+reserves an image slot (its defining trait vs. `'cards'`, which only shows an image when
+`imageField` is explicitly set). Designer UI: `GridEditor.tsx`'s "View mode" selector,
+with a conditional card-template field-picker section populated from the grid's own known
+columns.
+**Known gotcha inherited from this feature's own build**: the card-template field pickers
+(and the grid's other column tooling) read `config.columns` — a schema authored with
+`"id"` instead of `"key"` on its column definitions needs the same `id`→`key` fallback
+`GridControl.tsx` already applies at render time, or the pickers show zero options. If a
+future form's field pickers come up empty, check which key name its `columns` array
+actually uses before assuming a bug.
+
+---
+
+## Gotchas (learned building the Jobs_Definitions reference run — real, not theoretical)
+
+- **A `.sql` file existing in the repo's `dbo/Tables/` folder does NOT mean the table
+  exists in the target dev database.** Check first; don't assume.
+- **Filtered unique indexes (`WHERE [Deleted] = 0`) fail with a `QUOTED_IDENTIFIER` error
+  under `sqlcmd` unless `SET QUOTED_IDENTIFIER ON;` is the first statement in the file/
+  batch.** Every seed/DDL file this process writes should start with it.
+- **`IF NOT EXISTS(...) INSERT` alone makes a seed file a one-time-only operation** — a
+  real fix authored after the first apply silently never reaches the live database on a
+  re-run. Always pair it with an unconditional `UPDATE` for anything meant to be
+  iteratively refined (forms especially, since schema authoring is inherently iterative).
+- **Control-type choice is not cosmetic for the generic entity API** — a `text` control on
+  a `BIT`/`INT` column sends a JSON string, which the generic API's `GenericEntityRecordMapper`
+  stores as a literal string; SQL Server does not implicitly convert a string like `'true'`
+  to `BIT` (numeric strings to `INT` often do implicitly convert, but don't rely on it —
+  use real `checkbox`/`number` controls).
+- **Grid Edit ≠ persisted, by default.** Never assume a `kind: "form"` link action's Save
+  button calls a backend endpoint unless `saveEndpointTemplate` is explicitly set (Step
+  5). This was true of the ORIGINAL Documents reference forms too until fixed the same
+  night this doc was written — don't copy an old form's Edit action config without
+  checking whether it actually has `saveEndpointTemplate` set.
+- **A row's field values may be flat or `fields`-wrapped depending on which API backs the
+  form** — this is the #1 place a copy-pasted form breaks silently (fields render blank
+  on Edit, or Search results show nothing where a value should be). Always confirm which
+  shape via Step 2, never assume it matches whatever the last form you wrote used.
+
+---
+
+## Claudia/Procedure/Form/refreshFromCodeToDoc@agent.md
+
+# Refresh: Atlas Forms RAG Spec (v2) From Code
+
+**Use this runbook when Atlas Forms code has changed since `v2\` was last generated/refreshed** — new
+control types added/removed, a control's properties changed, the schema top-level shape changed, or
+enough time has passed that you don't trust `v2\` still matches reality. This file is written to be
+handed directly to a fresh agent as its task prompt — it assumes zero prior context on this project.
+
+## What you're refreshing, and why the discipline matters
+
+`Knowledge\Form\atlas-forms-rag\v2\` is a multi-file spec fed
+into a RAG/knowledge-base pipeline so Octopus AI agents can generate Atlas Forms schemas (JSON) from
+natural-language requests. It exists specifically because **two older spec locations went stale and
+were actively wrong** — not just outdated in tone, wrong in ways that would have produced broken form
+JSON if trusted:
+- `Documentation\Employees\atlas-forms\FormBuilder\` (the original v1 spec).
+- `Documentation\AboutProducts\AtlasForms\Spec\FormSchemaSpecV.1.0\` (a second, separately-discovered
+  stale spec — missing `FormSchema.apiActions` entirely, missing ~15 real `FormMetadata` fields, wrongly
+  claimed regex-timeout protection is 5 seconds when the real code enforces 100ms, and documented
+  `editable-grid`/`display-grid` control variants while missing the real, fully-built `grid` control).
+- Even a Claude *memory* file (`formmaker_system.md`) had drifted: claimed "12 total control types"
+  when the real, code-verified count at the last v2 build was **115 declared control types, 113 with a
+  confirmed render path** — not a rounding error, an order-of-magnitude miss.
+
+**The one non-negotiable rule for every refresh: re-verify against real code every time. Never trust
+what a prior version of `v2\` (or any other doc, including this file's own stated numbers) says without
+re-checking it against the actual source.** Numbers, control lists, and "confirmed absent" claims below
+are snapshots from the last build — restate them as "verify this is still true," not as facts.
+
+## Step 0 — read the current state first (don't refresh blind)
+
+1. Read `v2\00-overview.md` and `v2\01-common-properties.md` in full — these are Tier 1 (see below),
+   the current source of truth for what the spec currently claims exists.
+2. Skim the `v2\controls\` directory listing (file names only) to see the current control-file
+   inventory before re-scanning code — you're diffing against this, not starting from nothing.
+3. Read `agent\octopus-agent-guidelines.md` (sibling file to this one) — the operational "how an
+   Octopus agent uses this spec" layer. If your refresh changes the Tier 1/Tier 2 file structure,
+   check whether its file-name references still resolve.
+4. Check whether a changelog/refresh-log already exists in `v2\` or `agent\` from a prior refresh (if
+   none exists yet, this is your first refresh since the original build — consider creating one, see
+   "Leave a trail" below).
+
+## Step 1 — re-scan ground truth (the actual code, not any doc)
+
+- **Control registry**: `C:\BizFirstGO_FI_AI\BizFirstAiStudio\src\atlas-form-builder\src\controls\` —
+  the real control-type source of truth. Get the current real list/count yourself; do not carry over
+  the "115/113" numbers above without re-deriving them.
+- **Top-level schema shape**: `C:\BizFirstGO_FI_AI\BizFirstAiStudio\src\atlas-forms\` and
+  `...\atlas-forms-manager\` (the runtime/manager apps that actually consume the schema) — confirm
+  `version`/`metadata`/`layout`/`sections[]`/`controls[]`/`apiActions[]` (note: it's `apiActions`, NOT
+  `actions` — the original spec's own prose got this wrong once; re-verify it's still `apiActions` in
+  case it's changed again, don't just copy this note forward blindly).
+- **Backend persistence boundary**: `C:\BizFirstGO_FI_AI\BizFirstPayrollV3\src\mvc-server\AtlasForms\
+  BizFirst.Atlas.Forms.Manager\BizFirst.Atlas.Forms.Manager.Domain\Entities\Form.cs` and `IFormService.cs`
+  — only to confirm the `Schema` column's shape round-trips as expected. **Do not pull persistence/DB/
+  audit-column content into the spec** — wrong audience. This spec is for an LLM deciding what schema
+  JSON to emit, not a backend developer. (A companion implementation now exists —
+  `BizFirst.Atlas.Forms.Extended.Services\IFormsExtendedService` — for granular control-level
+  add/update/remove/reorder operations; that's a separate concern from this content-accuracy spec, but
+  worth knowing it exists if a refresh ever needs to reconcile terminology with it.)
+- **Regex-timeout enforcement** — find wherever this is actually enforced in code and confirm the real
+  value (100ms as of the last build; the second stale spec claimed 5 seconds — this exact number is a
+  known trap, re-verify it explicitly rather than assuming it hasn't changed).
+- **RAG chunking mechanics**: `TextChopper.Chop()` in `BizFirst.Ai.Octopus.Abstraction`
+  (`C:\BizFirstGO_FI_AI\BizFirstAI.V21\...`) — confirm the real chunking behavior is still fixed
+  1024-character, word-boundary splitting, 12-word overlap, **with no awareness of file or markdown-
+  header boundaries**. This is the technical justification for the Tier 2 consolidation strategy below
+  — if this mechanism changes (e.g. a future RAG pipeline upgrade adds header-aware chunking), the
+  consolidation strategy should be revisited, not assumed to still apply.
+
+## Step 2 — diff against what's currently in `v2\`
+
+For each real control type found in Step 1: is it already documented in `v2\controls\`? New → needs a
+new entry. Removed from code → the doc entry should be removed too (don't leave stale entries "just in
+case"). Properties changed → update the existing entry's property table and worked JSON example.
+
+Also re-verify these specific "confirmed absent" claims from the last build, since code changes could
+make either of them true again:
+- `credential` control type.
+- The old `showWhen` conditional-logic shorthand.
+
+## Step 3 — apply the two-tier structure (do not flatten it)
+
+**Tier 1 — `00-overview.md` + `01-common-properties.md`.** Small, meant to be always-injected/loaded
+whole for any form-generation task (not retrieval-dependent) — this is what lets an agent generate a
+brand-new form in one shot instead of needing N separate RAG retrievals just to learn what control
+types exist. **Budget discipline is the real risk here as the control count grows**: the original
+design target was under ~800 tokens for the overview's decision table alone. With 115+ real control
+types, this was already under strain at the last build — if your refresh adds more controls, actively
+manage this (tighter one-line descriptions, grouping related controls under one decision-table row with
+a pointer to a Tier 2 index, etc.) rather than letting the file grow unchecked. If Tier 1 has drifted
+past a size where it can genuinely still be "always injected cheaply," that's a real finding to flag in
+your report, not something to silently accept.
+
+**Tier 2 — `controls/*.md`, `validation-rules.md`, `conditional-logic.md`, `advanced-capabilities.md`,
+`worked-examples/`.** Retrieved on demand. **Consolidate tightly-coupled, near-identical control
+families into single cross-referenced files** rather than producing many near-duplicate stubs — this
+was a deliberate adaptation to `TextChopper`'s lack of file/header-boundary awareness (many tiny
+near-identical files don't retrieve better than one well-organized file under fixed-size chunking; they
+just multiply near-duplicate content). The precedent examples from the last build: ~13 chart-type
+controls consolidated into one file, 4 "pixel-identical" dev-tool viewer controls into another. Apply
+the same judgment for any new near-identical families you find — but don't over-consolidate genuinely
+distinct controls just because it's convenient; if in doubt, keep them separate and let a reviewer catch
+over-consolidation.
+
+## Step 4 — the "hidden features" pass (repeat every refresh, don't assume it's done once and stays done)
+
+`advanced-capabilities.md` exists because Binoy explicitly flagged that surface-level control scanning
+misses real, non-obvious capabilities. Re-check for: a plugin/extension registration mechanism (any way
+to register a control type from outside the core `controls/` folder), computed/formula fields, custom
+validators beyond the standard rule vocabulary, custom renderers or field-level lifecycle hooks, dynamic
+API-backed options for select/radio, and anything else that reads as "advanced" relative to the basic
+property-table-per-control-type content. If a prior refresh already found and documented something
+here, re-verify it's still accurate rather than trusting it forward — code changes could add, remove, or
+change any of these. If you search thoroughly and find nothing new or changed, say so explicitly in your
+report rather than silently leaving the file untouched with no confirmation it was checked.
+
+## Step 5 — compactness and audience discipline (unchanged from the original build)
+
+Tables over prose. No persistence/DB/audit-column content. No API-endpoint documentation. This spec's
+only audience is an LLM deciding what schema JSON to emit.
+
+## Step 6 — independent review, every time, not optional
+
+**Do not treat your own refresh as verified just because you wrote it carefully.** The original v2
+build was reviewed by a separate, independent agent that was explicitly told not to trust the builder's
+self-report and to re-verify claims against real code itself — that review caught real issues a
+self-review would have missed. Every refresh should get the same treatment: after finishing, request
+(or if you're already the orchestrator, dispatch) a fresh, independent reviewer agent with a similarly
+skeptical brief — spot-check a representative sample of changed/new files against real code, verify
+Tier 1's size budget, check internal cross-references still resolve, and confirm the hidden-features
+pass was genuinely done, not just present as a file. Do not skip this step because a refresh feels
+smaller/lower-risk than the original build — the whole reason v2 exists is that unverified spec content
+silently drifts from reality.
+
+## Leave a trail — make the NEXT refresh cheaper
+
+After a refresh, append a dated entry to a changelog (create `v2\CHANGELOG.md` if none exists yet)
+noting: what changed in the real code since the last refresh, which files you added/updated/removed,
+the current verified control-type count, and anything you found still-accurate-but-worth-re-checking-
+next-time versus anything you found had silently drifted. A future refresh should be able to read this
+changelog plus Step 0 above and know roughly how much re-verification is actually needed, rather than
+re-deriving everything from zero every single time.
+
+## Constraints (binding, same as the original build)
+
+- Documentation only — do not modify any Atlas Forms code as part of a spec refresh.
+- Do not commit or push anything without being explicitly asked in that specific request.
+- Ground every claim in real, currently-read code — not in this file's own numbers, not in `v2\`'s
+  existing content, not in any other doc. This file tells you *where to look and what to watch for*; it
+  is not itself a source of current truth about Atlas Forms.
+
+---
+
+## Claudia/Procedure/Form/testControlViaMcp@agent.md
+
+# Runbook: Test an Atlas Forms Control Type via MCP + Form Studio
+
+**Use this when asked to test/document one or more Atlas Forms control types' real rendered
+behavior** — building a property-combination reference page, verifying a control renders correctly,
+or extending `Agents\Testers\FormTester\test-results\test2-control-reference\` to a new category. Written from a real, live pilot run
+(2026-09-10, Input category, 14 controls) — every step below was actually executed, not theorized.
+
+## 0. Read before you build anything
+
+1. `..\..\Knowledge\Form\atlas-forms-rag\v2\00-overview.md` — the control type index and the FormSchema top-level shape. **Read the
+   "not every real Atlas_Forms row uses this shape" section** before sampling any existing form from
+   the database for reference — `NODE-FORM-CONFIGURATION`-type rows use a completely different,
+   incompatible raw JSON Schema convention.
+2. `..\..\Knowledge\Form\atlas-forms-rag\v2\01-common-properties.md` — every control's shared fields (id/type/order/label/required/
+   validation/etc.) so you don't reinvent field names per control.
+3. `..\..\Knowledge\Form\atlas-forms-rag\v2\controls\{type}.md` for every control type you're about to test — these are the real,
+   code-verified `config` shapes. If a doc is missing or looks wrong once you've tested it live,
+   **fix it directly** — you're the one with fresh ground truth, don't just note the gap and move on.
+
+## 1. Batch controls into forms — don't create one form per control
+
+Real, measured result from the pilot: 3 forms covered 14 controls (21 property-combination
+instances) instead of 14 separate `create_form` calls. Group by category (Input/Display/Charts/
+Gauges/Layout/etc., per `00-overview.md`'s own grouping), ~5-8 controls per form. Put multiple
+property variants of the same control type as separate control instances in the same form (e.g.
+three `text` controls — minimal, pattern-validated, autoComplete-off) rather than three separate
+forms — one screenshot then shows every variant at once.
+
+## 2. The real MCP call sequence (proven working, use exactly this shape)
+
+Raw JSON-RPC 2.0 over HTTP via curl against `http://localhost:5001/mcp` (Streamable HTTP, plain
+HTTP — no TLS complications), header `X-Api-Key: <a real scoped key>`:
+
+1. `initialize` → capture the `mcp-session-id` response header.
+2. `notifications/initialized` (same session header).
+3. `tools/call` → `create_form` with `arguments: {name, schema: <FormSchema JSON as a STRING>,
+   formCode, title, formCategoryID: null, formTypeID: null}`. **Every optional parameter must be
+   sent as explicit JSON `null` if unused — omitting the key entirely throws inside the SDK's
+   argument binder before your call ever reaches the tool.** This is a documented, general
+   calling-convention gotcha (see `Documentation\Employees\agentic-coding\test-plan\
+   04-09-mcp-optional-params-must-be-explicit-null.md`), not specific to `create_form`.
+4. Build the request JSON via a small Node script (`JSON.stringify`), never hand-escaped shell
+   strings — the schema-within-a-JSON-string nesting makes manual escaping error-prone and easy to
+   get subtly wrong.
+
+## 3. Verify against the real database, not just the tool's own "success" response
+
+A `dotnet`/MCP tool returning `{"success": true}` proves the call didn't error — it doesn't prove
+the data landed the way you intended. Cross-check with `sqlcmd`:
+
+```
+sqlcmd -S "localhost\SQLEXPRESS" -d data-ocean-platform-prod -E -C -Q "<query>"
+```
+(find the real binary under `C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\{170,180}\Tools\
+Binn\` if not on PATH; connection details also at `C:\BizFirstGO_FI_AI\BizFirstFiDB\.claude\
+connectonstring.md`). The `Atlas_Forms.[Schema]` column is legacy `ntext` — wrap it in
+`CAST([Schema] AS NVARCHAR(MAX))` before any `OPENJSON`/JSON function will touch it, and bracket-quote
+`[Schema]` (it's a reserved word). **Only ever `SELECT`** — this is a real, shared database other
+sessions may be using; never `UPDATE`/`DELETE` anything you didn't create yourself via MCP in this
+same run.
+
+## 4. Screenshot in Form Studio — real gotchas, in order encountered
+
+1. Navigate to `http://localhost:6121/formstudio/design`, use the search box (search by **FormID**,
+   not name — the name-search backend bug wasn't live-fixed as of this pilot, check
+   `test1-mcp-coverage.html`'s findings for current status).
+2. **Always `triple_click` (or click + `ctrl+a`) the search box before typing a new FormID** — a
+   plain click-then-type concatenates onto whatever text is already there from a prior search.
+3. Click "View" (identical to "Open" — confirmed same component, `FormPreviewModal` →
+   `FormRenderer` in `mode="view"`) to see the schema rendered.
+4. **After any MCP write to a form you already have open/cached, close the modal AND fully
+   `navigate()` to the list URL again — not just close-and-reopen the same modal.** The dashboard
+   caches its fetched form list in React state and does not invalidate it on modal reopen; only a
+   real page navigation forces a fresh fetch. Confirmed live: an `add_form_control` call was
+   completely invisible through reopen-the-same-modal, but appeared immediately after a full
+   navigation + re-search.
+5. **This "View" preview is structural, not a true fill-and-render simulation.** Confirmed
+   limitations found this pass: it does not render `placeholder` text, cannot visually distinguish
+   `checkbox`'s boolean vs. group mode (both show "No"), and does not render display-only content
+   controls' actual `config.content`/`config.src` (a gap already flagged from a prior session's
+   testing). It DOES correctly resolve computed values — `defaultValue`, boolean states — even for
+   controls whose other `config` properties it otherwise ignores visually. For anything whose whole
+   point is visual config, cross-check the real Designer/Edit canvas or a live fill session, don't
+   rely on this preview alone.
+6. Take one screenshot per logical group of controls (a full form, or a scrolled section) rather
+   than one screenshot per control — most categories fit 5-8 controls per screenshot at 1568px
+   width before scrolling is needed.
+
+## 5. Write the deliverables
+
+- One `{control-type}.html` per control tested, in `test-results\test2-control-reference\` (or the
+  next category's own subfolder if this becomes a larger, multi-pass effort) — real config table,
+  every variant's real JSON, a labeled screenshot per variant (never a bare `<img>` with no
+  caption), and a gotchas section for anything the preview couldn't show or got wrong.
+- One `00-test-cases.md` per category batch — a durable, HTML-independent test-case table (property
+  combination → expected behavior → real result) so a future pass can extend coverage without
+  re-deriving the config shapes or the batching ratio.
+- **Feed real findings back into `..\..\Knowledge\Form\atlas-forms-rag\v2\controls\{type}.md` and `..\..\Knowledge\Form\atlas-forms-rag\v2\00-overview.md`/
+  `01-common-properties.md` directly** — don't let a doc correction live only in your own test
+  report. This runbook itself should be updated the same way if you find a step here that's now
+  wrong or incomplete.
+
+## 6. Known open items from the pilot run (2026-09-10, Input category — now complete, 14/14)
+
+- **Session-expiry gotcha (resolved for this run, keep documenting for future ones)**: mid-run, the
+  browser session expired and redirected to the Passport login page. Do **not** click through a
+  pre-filled login form yourself — entering credentials or submitting a login is off-limits even when
+  a field is already populated by browser autofill. This was a transient auth-session issue, not a
+  standing blocker: once the human re-authenticated and enabled auto-login, a plain page refresh
+  restored an authenticated session with no further action needed. If this recurs, stop and report it
+  rather than attempting to work around it — don't assume it's unrecoverable, but don't try to log in
+  either.
+- The checkbox group-vs-boolean preview bug (§4.5) and a second, newly-confirmed one — `json-editor`
+  with an object `defaultValue` renders the literal text "[object Object]" instead of `{}` (the
+  preview's value formatter needs `JSON.stringify()` for object values on this control, matching what
+  `EndUserFormView` already does correctly elsewhere) — were both found but not root-caused/fixed in
+  code. Worth a real fix if this preview keeps being used for verification work, not just documented
+  as a standing gap indefinitely.
+- Remaining categories, in the same "~1 form per 5-8 controls" ratio: Display (~15), Charts (13),
+  Gauges (6), Layout (18), Advanced Input (15), File/Code (6), Media (10), Other (~7), Form-Scope
+  Plugins (9) — roughly 99 controls, ~15-18 forms at this pilot's ratio.
+
+---
+
+## Claudia/Procedure/General/APIKeyGuidedExamples.md
+
+# APIKey Guided Experience Examples
+
+**Purpose:** Real-world examples of how the APIKeyAgent guides users through API key creation, validation, rotation, and management scenarios.
+
+## Overview
+
+The APIKeyAgent manages the complete API key lifecycle with guided interactions. Users follow step-by-step prompts to create keys, validate existing keys, handle expiration, and manage multiple environments.
+
+---
+
+## Scenario 1: User Has No API Key (Simple Path)
+
+**Flow:** No key → Gather requirements → Create new key → Secure storage → Ready
+
+```
+Agent: "Welcome! Let's set up your session API key. 
+Do you currently have an API key?"
+
+User: "No, I don't think so"
+
+Agent: "No problem! I'll guide you through creating one.
+What do you need this API key for?"
+
+User: "For this session to authenticate with the system"
+
+Agent: "Perfect! Session authentication - that's the primary use case.
+You'll need:
+- Read access (view data)
+- Write access (create/update)
+- Admin access (optional - manage settings)
+
+Which permissions do you need?"
+
+User: "Read and Write should be enough"
+
+Agent: "Great! How long should the key be valid?
+- No expiration (not recommended for security)
+- 30 days
+- 90 days (recommended)
+- Custom date
+
+I recommend 90 days for security."
+
+User: "90 days sounds good"
+
+Agent: "Perfect! Here's the plan:
+✓ Create API key with Read+Write permissions
+✓ Valid for 90 days
+✓ Name it 'Session Key 2026-09'
+
+Ready? I'll guide you through the dashboard."
+
+User: "Yes, go ahead"
+
+Agent: "STEP 1: Open Passport Admin Dashboard
+Navigate to: https://dev.grippingly.com/passportadmindashboard/api-keys
+
+Once you're there, you should see:
+- API Keys page header
+- List of existing keys (if any)
+- 'Create API Key' button (top right)
+
+Let me know when you see this page."
+
+User: "I'm on the page and see the Create button"
+
+Agent: "Excellent! Now click the 'Create API Key' button.
+This will open a form. You should see fields for:
+- Name (text input)
+- Description (text input)
+- Permissions (checkboxes: Read, Write, Admin)
+- Expiration (date picker)
+
+Let me know when the form appears."
+
+User: "Form is open"
+
+Agent: "Perfect! Fill in the form exactly:
+- Name: 'Session Key 2026-09'
+- Description: 'API key for session authentication'
+- Permissions: Check 'Read' and 'Write' (leave Admin unchecked)
+- Expiration: 90 days from today (Dec 27, 2026)
+
+Once filled, click the 'Create' button at the bottom."
+
+User: "Done! A modal appeared with my key"
+
+Agent: "🎉 SUCCESS! Your API key has been created!
+
+⚠️ CRITICAL: Copy your key NOW! 
+This is your only chance to see the full key.
+
+Key: sk_test_abc123def456... (showing sample)
+Click the 'Copy' button to copy the full key.
+
+SAVE it to:
+- Password manager (preferred)
+- Encrypted file
+- Secure location
+
+You will NOT be able to see this key again!"
+
+User: "Copied! Now what?"
+
+Agent: "Excellent! Close this modal by clicking 'Close' or X.
+You should see your new key in the list.
+
+Summary:
+✓ Key ID: api_key_12345
+✓ Name: Session Key 2026-09
+✓ Permissions: Read, Write
+✓ Expires: Dec 27, 2026
+✓ Status: Active
+
+Your API key is ready to use!
+This session will now use this key for authentication."
+```
+
+---
+
+## Scenario 2: User Has Existing Key (Validation Path)
+
+**Flow:** Has key → Retrieve → Validate → Use
+
+```
+Agent: "Do you have an API key for this session?"
+
+User: "Yes, I have one somewhere"
+
+Agent: "Great! Do you have the key available right now?"
+
+User: "Not here, but I have it saved in my password manager"
+
+Agent: "Perfect! Retrieve it when you're ready.
+
+The key format should be: sk_... or api_key_...
+
+When you have it, paste it here and I'll validate it."
+
+User: [pastes: sk_test_abc123def456]
+
+Agent: "Validating key... ✓ Key is valid!
+
+Name: Session Key 2026-09
+Scopes: Read, Write
+Expires: Dec 27, 2026
+Status: Active
+Days remaining: 89
+
+This key is ready to use for this session. 
+We'll authenticate with this key."
+
+Agent: "Ready to proceed? [Yes/Use Different Key]"
+
+User: "Yes"
+
+Agent: "Perfect! Session authenticated with your key.
+You're all set! 🎉"
+```
+
+---
+
+## Scenario 3: Key Expired (Rotation Path)
+
+**Flow:** Validation fails → Key expired → Create new → Rotate
+
+```
+Agent: "Checking your current API key...
+⚠️ Your key expired on Aug 15, 2026!
+
+We need to create a new key to continue working.
+
+Do you want to create a new key?"
+
+User: "Yes please"
+
+Agent: "Will you keep the same permissions?
+Your old key had: Read, Write
+
+[Options:
+- Yes, same permissions
+- No, different permissions
+- Let me decide]"
+
+User: "Same permissions should be fine"
+
+Agent: "Great! I'll create a new key with:
+✓ Name: Session Key 2026-10
+✓ Permissions: Read, Write
+✓ Expiration: 90 days
+
+Ready?"
+
+User: "Go ahead"
+
+Agent: "STEP 1: Go back to API Keys page
+https://dev.grippingly.com/passportadmindashboard/api-keys
+
+Click 'Create API Key' button"
+
+[Continues with creation steps from Scenario 1]
+
+Agent: "💡 Tip: You can also DELETE the old expired key 
+to keep your dashboard clean. Want me to guide you?"
+
+User: "Sure"
+
+Agent: "On the API Keys list, find your old key:
+Session Key 2026-09 (Expired)
+
+Click the ... menu or Delete button next to it.
+Confirm deletion."
+
+User: "Deleted!"
+
+Agent: "Perfect! Your old key is removed.
+You now have only the active key."
+```
+
+---
+
+## Scenario 4: Multiple Environments (Advanced)
+
+**Flow:** Choose environment → Set security level → Create scoped key
+
+```
+Agent: "Do you need different keys for different environments?
+
+Common setup:
+- Development (testing, short expiration)
+- Staging (pre-prod, medium security)
+- Production (live, strict security)
+
+Which environment is this for?"
+
+User: "Production"
+
+Agent: "Production environment - we'll prioritize security!
+
+I recommend:
+- Permissions: Read + Write only (no Admin)
+- Expiration: 30 days (rotate monthly for security)
+- IP Whitelist: Enabled (optional, advanced)
+- Rate Limit: Standard
+
+Sound good?"
+
+User: "Yes, let's do it"
+
+Agent: "Perfect! Here's the plan:
+✓ Name: Session Key 2026-09 (Production)
+✓ Permissions: Read, Write
+✓ Expiration: 30 days (Oct 27, 2026)
+✓ IP Whitelist: Disabled (you can enable later)
+
+Ready to create?"
+
+User: "Yes"
+
+Agent: "STEP 1: Navigate to API Keys
+https://dev.grippingly.com/passportadmindashboard/api-keys
+
+[Creation steps follow]
+
+Agent: "✓ Production key created!
+
+Security Notes:
+- Rotate every 30 days (calendar reminder?)
+- Never commit this key to code
+- Never share this key
+- Use environment variables to store it
+
+Want guidance on rotation in 30 days?"
+
+User: "Sure, remind me"
+
+Agent: "Set a calendar reminder for Oct 27, 2026
+(30 days from now) to rotate this key.
+
+I can also notify you through the system."
+```
+
+---
+
+## Scenario 5: Error Recovery
+
+**Flow:** Error occurs → Understand issue → Recover gracefully
+
+```
+Agent: "Creating your API key...
+Processing..."
+
+[After submission]
+
+Agent: "❌ Error: 'Duplicate key name'
+
+The name 'Session Key 2026-09' already exists.
+Choose a different name? 
+
+Options:
+- Session Key 2026-09-B
+- Session Key 2026-09 (Backup)
+- Session Key 2026-09 (New)
+- Custom name"
+
+User: "Use Session Key 2026-09-B"
+
+Agent: "Got it! Updating name to 'Session Key 2026-09-B'
+
+On the form, change:
+- Name field: 'Session Key 2026-09-B'
+
+Then click 'Create' again."
+
+User: "Done!"
+
+Agent: "✓ Success! Key created with name 'Session Key 2026-09-B'
+
+[Shows key as in Scenario 1]"
+```
+
+### Alternative Error: Permission Denied
+
+```
+Agent: "⚠️ Error: 'Insufficient permissions'
+
+Your account doesn't have permission to create API keys.
+
+You need 'Admin' role. Contact your workspace admin
+to grant you this permission.
+
+Workspace Admin: [admin@company.com]"
+```
+
+### Alternative Error: Rate Limited
+
+```
+Agent: "⚠️ Rate limited: Too many requests
+
+You've created 3 keys in the last hour.
+Please wait 5 minutes before creating another.
+
+(Free tier limit: 3 keys/hour. Upgrade for unlimited.)"
+```
+
+---
+
+## Key Patterns in All Scenarios
+
+### Discovery Phase
+- Ask clarifying questions
+- Show options and recommendations
+- Let user make informed choices
+- Explain security implications
+
+### Execution Phase
+- Step-by-step instructions
+- Clear visual markers ("STEP 1", "✓")
+- Tell user what to expect
+- Confirm actions before proceeding
+
+### Success Phase
+- Clear success messaging with emoji
+- Show key details and status
+- Explain what comes next
+- Offer related actions (rotation, deletion, etc.)
+
+### Error Recovery
+- Explain what went wrong clearly
+- Offer solutions and alternatives
+- Don't blame the user
+- Graceful retry with guidance
+
+---
+
+## Navigation Patterns
+
+### URLs User Should See
+- API Keys Dashboard: `https://dev.grippingly.com/passportadmindashboard/api-keys`
+- Create Form: Opens in modal on same page
+- Key Display: Modal after successful creation
+
+### UI Elements to Expect
+- "Create API Key" button (top right of dashboard)
+- Form fields: Name, Description, Permissions (checkboxes), Expiration (date picker)
+- "Create" button (submits form)
+- Success modal with key display and "Copy" button
+- API Keys list (shows created keys with delete option)
+
+### Expected Form Fields
+```
+Name: [text input]
+Description: [text area]
+Permissions:
+  ☑ Read (allow viewing data)
+  ☑ Write (allow creating/updating)
+  ☐ Admin (allow managing settings)
+Expiration: [date picker with presets: 30/90/180 days]
+[Create Button]
+```
+
+---
+
+## Success Criteria
+
+User has successfully completed the flow when:
+1. ✓ API key is created and visible in dashboard
+2. ✓ Key is copied and stored securely
+3. ✓ User understands permissions and expiration
+4. ✓ User knows how to rotate the key
+5. ✓ Session is now authenticated with the key
+
+---
+
+## Common User Mistakes to Prevent
+
+| Mistake | Prevention |
+|---------|-----------|
+| Copy-pasting incomplete key | Emphasize "Copy" button, show warning about seeing key only once |
+| Using same key everywhere | Recommend different keys for dev/staging/prod |
+| Never rotating key | Set rotation reminders, explain security why |
+| Sharing key in chat/code | Warn: "Never share this key", show secure storage options |
+| Forgetting key expiration | Calendar reminder, proactive notification at 7 days |
+
+---
+
+## Recommended Response Templates
+
+### When user is uncertain:
+"Not sure what you need? Here are common scenarios:
+- [Option A with explanation]
+- [Option B with explanation]
+Which sounds closest?"
+
+### When user makes a mistake:
+"No problem! Easy fix:
+[Clear recovery steps]
+Try again?"
+
+### When showing the key:
+"🎉 Here's your API key! ⚠️ You'll only see it once!
+Copy it now to [password manager / secure file]
+Then close this modal."
+
+### When key expires soon (7 days):
+"⏰ Your API key expires in 7 days.
+Ready to create a new one?
+I can guide you through rotation."
+
+---
+
+## Claudia/Procedure/General/DiscoveryFlow.md
+
+# Platform Discovery Flow — Guided Learning Path
+
+How to explore and master platform features progressively.
+
+---
+
+## **Discovery Phases**
+
+### **Phase 1: Quick Wins (15-30 minutes)**
+
+Get immediate value with simple features:
+
+1. **Set your theme** (5 min)
+   - Customize colors and branding
+   - [Theme Guide](../../Procedure/Admin/)
+
+2. **Generate API Key** (10 min)
+   - Secure access token for sessions
+   - [API Key Procedures](../../Procedure/APIKeyAgent/)
+
+3. **View Audit Logs** (5 min)
+   - See what's happening in your workspace
+   - [Audit Guide](../../Procedure/Admin/)
+
+**Confidence level after Phase 1:** Basic platform familiarity
+
+---
+
+### **Phase 2: Core Building (2-4 hours)**
+
+Learn the three main builders:
+
+#### **Option A: Building a Web App (2-3 hours)**
+1. **Learn App Studio** (30 min)
+   - [App Knowledge](../../Knowledge/AppAgent/)
+   - [App Procedures](../../Procedure/AppAgent/)
+
+2. **Create your first app** (1-2 hours)
+   - Follow [App Creation Guide](../../Procedure/AppAgent/01-create-empty-app.md)
+   - Add 3-5 pages
+   - Style and customize
+
+3. **Add a form** (30-60 min)
+   - [Form Procedures](../../Procedure/Form/)
+   - Collect user data
+   - Validate inputs
+
+4. **Connect a workflow** (30 min)
+   - [Workflow Procedures](../../Procedure/WorkflowAgent/)
+   - Send email on form submission
+   - Create notification
+
+**Result:** Fully functional web application with data capture and automation
+
+#### **Option B: Automating a Process (1.5-3 hours)**
+1. **Map your process** (20 min)
+   - Draw workflow on paper
+   - Identify decision points
+   - List required data
+
+2. **Learn Workflow Studio** (30 min)
+   - [Workflow Knowledge](../../Knowledge/WorkflowAgent/)
+   - [Workflow Procedures](../../Procedure/WorkflowAgent/)
+
+3. **Build your workflow** (1-2 hours)
+   - Add nodes for each step
+   - Configure integrations
+   - Test with sample data
+
+4. **Deploy and monitor** (30 min)
+   - Schedule or trigger workflow
+   - Set up monitoring
+   - Configure alerts
+
+**Result:** Automated business process running 24/7
+
+#### **Option C: Collecting Data (1-2 hours)**
+1. **Learn Form Studio** (20 min)
+   - [Form Knowledge](../../Knowledge/Form/)
+   - [Form Procedures](../../Procedure/Form/)
+
+2. **Create form** (30-45 min)
+   - Add input fields
+   - Set validation rules
+   - Add conditional logic
+
+3. **Integrate form** (20 min)
+   - Embed in app or standalone
+   - Connect to workflow/database
+   - Set up notifications
+
+**Result:** Working form collecting data with validation
+
+**Confidence level after Phase 2:** Can build functional apps, workflows, and forms
+
+---
+
+### **Phase 3: Integration & Advanced (3-8 hours)**
+
+Connect everything together:
+
+#### **3A: System Integration (2-3 hours)**
+1. **Choose your integration** (10 min)
+   - Salesforce, Slack, Email, Database, etc.
+   - [Integration Guide](../../Knowledge/Integrations/)
+
+2. **Set up connection** (30 min)
+   - Configure credentials
+   - [Credentials Procedures](../../Procedure/Credentials/)
+   - Test connection
+
+3. **Build integration workflow** (1-2 hours)
+   - Pull data from system
+   - Transform and map data
+   - Push to destination
+   - Set up monitoring
+
+4. **Automate with scheduling** (30 min)
+   - Daily/hourly sync
+   - Error handling
+   - Logging
+
+**Result:** Seamless integration between systems
+
+#### **3B: Advanced App Features (2-4 hours)**
+1. **Multi-page navigation** (30 min)
+   - Page hierarchy
+   - Navigation flows
+   - URL routing
+
+2. **Advanced widgets** (1 hour)
+   - Charts and dashboards
+   - Data tables
+   - Embedded content
+   - Media players
+
+3. **Real-time updates** (1 hour)
+   - WebSocket connections
+   - Live data refresh
+   - Status monitoring
+
+4. **Performance optimization** (30 min)
+   - Caching strategies
+   - Database indexing
+   - Asset optimization
+
+**Result:** Professional-grade application
+
+#### **3C: Workflow Orchestration (3-5 hours)**
+1. **Complex branching** (1 hour)
+   - Conditional logic
+   - Loop structures
+   - Error handling
+
+2. **Multi-step processes** (1-2 hours)
+   - Approval workflows
+   - Data pipelines
+   - Event routing
+
+3. **Integration chains** (1 hour)
+   - API calls
+   - Data transformation
+   - Cross-system workflows
+
+4. **Monitoring & alerting** (30 min)
+   - Performance monitoring
+   - Error alerts
+   - Status dashboards
+
+**Result:** Complex automated business processes
+
+**Confidence level after Phase 3:** Advanced builder with integration and automation expertise
+
+---
+
+### **Phase 4: Enterprise Features (5+ hours)**
+
+For production-grade systems:
+
+#### **4A: Security & Access Control**
+- User management and roles
+- SSO integration
+- API keys and authentication
+- Audit trails and compliance
+- Data encryption and backup
+
+#### **4B: Multi-Tenant Applications**
+- Tenant isolation
+- Per-tenant customization
+- Billing and usage tracking
+- Performance and scaling
+
+#### **4C: Custom Development**
+- REST API usage
+- Custom scripts (JavaScript, Python, SQL)
+- Webhook integrations
+- Advanced automation
+
+#### **4D: Operations & Monitoring**
+- Performance optimization
+- Scaling and load balancing
+- Analytics and reporting
+- Disaster recovery
+
+**Confidence level after Phase 4:** Enterprise architect/developer
+
+---
+
+## **Skill Progression Map**
+
+```
+Phase 1: Quick Wins (15-30 min)
+    ↓
+Phase 2: Choose Your Path
+    ├─ Core Builder A: Apps (2-3 hrs)
+    ├─ Core Builder B: Workflows (1.5-3 hrs)
+    └─ Core Builder C: Forms (1-2 hrs)
+    ↓
+Phase 3: Advanced Path
+    ├─ Integration (2-3 hrs)
+    ├─ Advanced Features (2-4 hrs)
+    └─ Orchestration (3-5 hrs)
+    ↓
+Phase 4: Enterprise Level
+    ├─ Security & Access
+    ├─ Multi-Tenant Systems
+    ├─ Custom Development
+    └─ Operations
+```
+
+---
+
+## **Learning Paths by Goal**
+
+### **Path 1: "I want to build a product/SaaS"**
+1. Phase 1: Quick Wins (theme, API key)
+2. Phase 2C: Learn Forms (1-2 hrs)
+3. Phase 2A: Learn App Studio (2-3 hrs)
+4. Phase 2B: Learn Workflows (1.5-3 hrs)
+5. Phase 3B: Advanced App Features (2-4 hrs)
+6. Phase 3A: Integrations (2-3 hrs)
+7. Phase 4: Enterprise Features (5+ hrs)
+
+**Total time:** 15-20 hours  
+**Output:** Production-grade application
+
+### **Path 2: "I want to automate our business"**
+1. Phase 1: Quick Wins (theme, API key)
+2. Phase 2B: Learn Workflows (1.5-3 hrs)
+3. Phase 3A: Integrations (2-3 hrs)
+4. Phase 3C: Orchestration (3-5 hrs)
+5. Phase 4: Monitoring & Operations (3-5 hrs)
+
+**Total time:** 10-18 hours  
+**Output:** Automated business processes
+
+### **Path 3: "I want to manage a team/workspace"**
+1. Phase 1: Quick Wins (theme, API key)
+2. Phase 3A: Integrations (focus on team tools like Slack)
+3. Phase 4A: Security & Access Control (3-5 hrs)
+4. Phase 4D: Analytics & Monitoring (2-3 hrs)
+
+**Total time:** 6-12 hours  
+**Output:** Secure, managed workspace
+
+### **Path 4: "I want to build APIs/integrations"**
+1. Phase 1: Quick Wins (API key)
+2. Phase 2B: Learn Workflows (focus on APIs)
+3. Phase 3A: Integrations (2-3 hrs)
+4. Phase 3C: Workflow Orchestration (3-5 hrs)
+5. Phase 4C: Custom Development (5+ hrs)
+
+**Total time:** 15-20 hours  
+**Output:** Integrated system landscape
+
+---
+
+## **Learning Tips**
+
+### **Do This**
+- ✅ Start with Phase 1 (quick wins build confidence)
+- ✅ Follow recommended learning paths for your goals
+- ✅ Build something real (not just tutorials)
+- ✅ Test as you go (don't build everything then test)
+- ✅ Use knowledge base and procedures together
+- ✅ Ask for help when stuck (agents are ready to guide)
+- ✅ Document what you learn in Rouge_Notes
+- ✅ Iterate and improve as you learn
+
+### **Don't Do This**
+- ❌ Try to learn everything at once
+- ❌ Skip Phase 1 (quick wins are important)
+- ❌ Build without testing
+- ❌ Use advanced features before mastering basics
+- ❌ Copy workflows without understanding them
+- ❌ Ignore error messages and logs
+- ❌ Assume you know how to do something (verify with docs)
+
+---
+
+## **Common Starting Points**
+
+### **"I just want to generate an API key"**
+- **Time:** 15 min
+- **Path:** Phase 1 only
+- **Guide:** [API Key Procedures](../../Procedure/APIKeyAgent/)
+- **Next:** Explore other features when ready
+
+### **"I want to build a dashboard"**
+- **Time:** 3-5 hours
+- **Path:** Phase 1 + Phase 2A + basic Phase 3B
+- **Guides:** [App Studio](../../Procedure/AppAgent/) → [Forms](../../Procedure/Form/) → [Basic Widgets](../../Knowledge/AppAgent/02-widget-types.md)
+- **Next:** Add integrations, automation, advanced features
+
+### **"I want to sync data between systems"**
+- **Time:** 2-4 hours
+- **Path:** Phase 1 + Phase 2B (focus on APIs) + Phase 3A
+- **Guides:** [Workflows](../../Procedure/WorkflowAgent/) → [Integrations](../../Knowledge/Integrations/)
+- **Next:** Real-time sync, error handling, monitoring
+
+### **"I want to build an app for customers"**
+- **Time:** 8-15 hours
+- **Path:** Phase 1 + Phase 2 (all) + Phase 3 + some Phase 4
+- **Guides:** Full app builder path
+- **Resources:** All knowledge bases, all procedures
+- **Next:** Scale, security, multi-tenancy
+
+---
+
+## **Progress Checklist**
+
+### **Phase 1 Completion**
+- ☐ Theme customized
+- ☐ API key generated
+- ☐ Audit logs viewed
+- ☐ Understand basic platform features
+
+### **Phase 2 Completion (Choose one)**
+- ☐ Created app with 3+ pages
+- ☐ Built workflow with 3+ steps
+- ☐ Created form with validation
+- ☐ Can build variations independently
+
+### **Phase 3 Completion**
+- ☐ Integrated with external system
+- ☐ Built advanced workflow or app feature
+- ☐ Set up monitoring/alerts
+- ☐ Comfortable with complex features
+
+### **Phase 4 Readiness**
+- ☐ Mastered Phase 2 & 3
+- ☐ Built production-grade components
+- ☐ Ready for enterprise features
+- ☐ Can mentor others
+
+---
+
+## **Getting Unstuck**
+
+**When you're stuck:**
+1. Check the relevant Knowledge base file
+2. Follow the step-by-step Procedure
+3. Review Guided Examples for similar scenarios
+4. Ask an agent: "I'm trying to [task], I got [error], how do I fix it?"
+5. Check Troubleshooting section of relevant guide
+
+**Common issues:**
+- Form validation not working → [Form Troubleshooting](../../Procedure/Form/troubleshoot.md)
+- Workflow failing → [Workflow Troubleshooting](../../Procedure/WorkflowAgent/troubleshoot.md)
+- Integration not syncing → [Integration Troubleshooting](../../Knowledge/Integrations/)
+- App not responsive → [App Design Guide](../../Knowledge/AppAgent/04-design-patterns.md)
+- Performance slow → [Performance Guide](../../Procedure/Admin/)
+
+---
+
+## **Recommended Learning Order**
+
+**Month 1: Foundation (Week 1-2)**
+- Phase 1: Quick Wins (1.5 hrs)
+- Phase 2: Choose one builder (2-3 hrs)
+- Build one simple project (2-3 hrs)
+
+**Month 1: Expansion (Week 3-4)**
+- Phase 2: Learn second builder (2-3 hrs)
+- Phase 3A: Basic integration (1-2 hrs)
+- Build second project with integration (2-3 hrs)
+
+**Month 2: Advanced**
+- Phase 3B/C: Advanced features (2-4 hrs)
+- Phase 4A: Security (2-3 hrs)
+- Build production project (5+ hrs)
+
+**Month 3+: Mastery**
+- Phase 4: Enterprise features (5+ hrs)
+- Phase 4C: Custom development (5+ hrs)
+- Build production applications (ongoing)
+
+---
+
+## **Next Steps**
+
+**Choose your starting point:**
+
+1. **I just need API key** → [API Key Guide](../../Procedure/APIKeyAgent/) (15 min)
+2. **I want to build an app** → [App Studio Guide](../../Procedure/AppAgent/) (Phase 2A)
+3. **I want to automate something** → [Workflow Guide](../../Procedure/WorkflowAgent/) (Phase 2B)
+4. **I want to collect data** → [Form Guide](../../Procedure/Form/) (Phase 2C)
+5. **I want to integrate systems** → [Integration Guide](../../Knowledge/Integrations/) (Phase 3A)
+6. **I want complete learning path** → Start Phase 1, then pick learning path above
+
+**Ask me:** "Show me how to [do something]" and I'll guide you through it step by step!
+
+---
+
+## Claudia/Procedure/General/GuidedExperienceExamples.md
+
+# Guided Experience Examples
+
+**Purpose:** Real-world examples showing how AI agents guide users step-by-step through complex builds with recommendations, visual feedback, and iterative refinement.
+
+---
+
+## 1. Simple Build: Contact Form (15 minutes)
+
+### User Request
+> "I want a contact form on my website to collect customer inquiries"
+
+### Phase 1: Understanding Requirements
+
+**Agent:**
+```
+Contact form — perfect! Let's gather some details so I can 
+build exactly what you need.
+
+Questions:
+1. Who should receive these messages?
+   → Your email: [user@company.com]
+
+2. What information should you collect?
+   ☑ Name (required)
+   ☑ Email (required, validated)
+   ☑ Phone number (optional)
+   ☑ Subject (required, dropdown or text?)
+   ☑ Message (required, long text area)
+   
+3. Additional requirements?
+   ☐ Auto-reply to users
+   ☐ Attach files
+   ☐ Store in database
+   ☐ Send notifications to Slack
+
+Recommendations:
+→ Add auto-reply so users know you got their message
+→ Store submissions so you can review anytime
+```
+
+**User Input:**
+- Email: sales@company.com
+- Fields: Name, Email, Phone, Subject (dropdown), Message
+- Auto-reply: Yes
+- Storage: Yes
+
+---
+
+### Phase 2: Design
+
+**Agent:**
+```
+Great! I'm creating your form with these specs:
+
+PAGE: "Contact Us"
+
+FIELDS:
+┌─────────────────────────────────────┐
+│ Name          [Text input]          │
+│ Email         [Email input]         │
+│ Phone         [Phone input, optional]
+│ Subject       [Dropdown: Sales, Support, Feedback, Other]
+│ Message       [Text area, 5 rows]   │
+│               [Submit Button]       │
+└─────────────────────────────────────┘
+
+After submit:
+→ Show: "Thank you! We'll respond within 24 hours"
+→ Send email to: sales@company.com
+→ Auto-reply to user
+→ Store in database
+
+Does this look right?
+[✓ Yes, build it]  [Refine]  [Start over]
+```
+
+**Browser shows:** Live preview of form with proper styling
+
+**User:** ✓ Yes, build it
+
+---
+
+### Phase 3: Configuration
+
+**Agent:**
+```
+Building your form...
+
+✓ Created form page
+✓ Added all fields with validation
+✓ Configured email notifications to: sales@company.com
+✓ Set up auto-reply template: "Thank you for contacting us..."
+✓ Configured database storage
+✓ Added security: CSRF tokens, input validation
+✓ Enabled analytics tracking
+
+TESTING:
+Testing form submission...
+✓ Form validates correctly
+✓ Email sent successfully
+✓ Data stored in database
+✓ Auto-reply received
+
+Your contact form is ready to go live!
+
+Next steps:
+1. [Deploy now]
+2. [Test with team first]
+3. [Review auto-reply message]
+4. [Make changes]
+```
+
+---
+
+## 2. Complex Build: Chat Assistant (3 hours)
+
+### User Request
+> "I want a chat assistant that can answer questions about our product documentation"
+
+### Breakdown Plan
+
+**Agent:**
+```
+Chat assistant with document knowledge — this is a great project!
+Here's the plan to build it:
+
+PHASE 1: Knowledge Base Setup (30 min)
+→ Upload your product docs
+→ Index them for searching
+→ Test retrieval accuracy
+
+PHASE 2: Workflow Design (45 min)
+→ Create chat processing workflow
+→ Configure knowledge search
+→ Add AI response generation
+→ Set up error handling
+
+PHASE 3: App Interface (45 min)
+→ Design chat screen
+→ Add document viewer
+→ Create settings page
+→ Link to workflow
+
+PHASE 4: Testing & Launch (30 min)
+→ Test end-to-end
+→ Verify answer quality
+→ Deploy to production
+→ Set up monitoring
+
+TOTAL: ~3 hours
+
+Ready to start?  [Yes]  [Adjust plan]  [Question?]
+```
+
+---
+
+### Phase 1: Knowledge Base Setup
+
+**Agent:**
+```
+Let's build your knowledge base first. This is where the 
+chat assistant learns about your product.
+
+STEP 1: Document Upload
+Please upload your documentation files:
+- PDF files ✓ supported
+- Word documents ✓ supported
+- Text files ✓ supported
+- Web links ✓ supported
+
+Recommended: 10+ pages for good coverage
+```
+
+**User uploads:** 5 PDF files (Product Guide, API Docs, FAQ, Quick Start, Troubleshooting)
+
+**Agent:**
+```
+Files received! Processing...
+
+📄 Product Guide (25 pages)
+📄 API Docs (18 pages)
+📄 FAQ (12 pages)
+📄 Quick Start (8 pages)
+📄 Troubleshooting (15 pages)
+
+Total: 78 pages, ~45,000 words
+
+Creating knowledge base...
+✓ Extracting content
+✓ Chunking text into searchable segments
+✓ Building search index
+✓ Processing embeddings
+
+TESTING: Let me verify it works by asking sample questions
+
+Q: "How do I get started?"
+A: [Found in Quick Start guide, section 2.1]
+
+Q: "What's the API endpoint for user creation?"
+A: [Found in API Docs, section 4.3]
+
+Q: "I'm getting a 401 error. Help!"
+A: [Found in Troubleshooting, section 3.2]
+
+✓ Knowledge base is working great!
+Confidence scores: 85%, 92%, 88%
+
+Ready for workflow integration?  [Yes]
+```
+
+---
+
+### Phase 2: Workflow Design
+
+**Agent:**
+```
+Now let's design the chat workflow. This controls what 
+happens when someone asks a question.
+
+FLOW DIAGRAM:
+┌──────────────┐
+│ User Message │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────────────────┐
+│ Search Knowledge Base    │
+│ (Find relevant docs)     │
+└──────┬───────────────────┘
+       │
+       ▼
+┌──────────────────────────┐
+│ AI Generation            │
+│ (Generate smart response)│
+└──────┬───────────────────┘
+       │
+       ▼
+┌──────────────────────────┐
+│ Format & Send Response   │
+│ (Show to user + sources) │
+└──────────────────────────┘
+
+CONFIGURATION:
+✓ Knowledge search: Top 3 relevant documents
+✓ AI model: GPT-4 (or your preference)
+✓ Temperature: 0.7 (balanced, creative)
+✓ Max tokens: 500 (reasonable length)
+✓ Include sources: Yes (show what docs answered)
+
+ERROR HANDLING:
+→ If no relevant docs: "I don't know the answer. 
+                        Try our support team."
+→ If API fails: "Connection issue. Try again in a moment."
+→ Timeout handling: Return partial response + offer support
+
+Ready to build?  [Yes]
+```
+
+**Building workflow...**
+
+```
+✓ Created execution workflow
+✓ Added Input Node (capture user message)
+✓ Added RAG Node (knowledge search)
+✓ Added Agent Node (response generation)
+✓ Added Output Node (format response)
+✓ Configured error paths
+
+TESTING WORKFLOW:
+Testing with sample questions...
+
+Q: "How do I authenticate?"
+→ Search found: [Auth guide, API Docs, FAQ]
+→ Generated response: "To authenticate, use OAuth2 
+   with these credentials..."
+→ Response time: 1.2 seconds
+✓ PASS
+
+Q: "What's your pricing?"
+→ Search found: [No results in knowledge base]
+→ Generated response: "I don't have pricing info. 
+   Please contact sales."
+✓ PASS
+
+Workflow is ready!  [Continue to app design]
+```
+
+---
+
+### Phase 3: App Interface
+
+**Agent:**
+```
+Let's create the chat app interface. This is what users 
+will interact with.
+
+DESIGN OVERVIEW:
+Page 1: Chat Screen
+  - Message history (scrollable)
+  - User message input field
+  - Send button
+  - Typing indicator
+  - Source documents (footer)
+
+Page 2: Document Browser
+  - Search uploaded documents
+  - View document snippets
+  - Link to full document
+
+Page 3: Settings
+  - Chat history (clear/export)
+  - Response preferences
+  - About this assistant
+
+Ready?  [Show design]  [Customize]
+```
+
+**Browser shows:** Wireframe of chat interface
+
+```
+CHAT SCREEN PREVIEW:
+┌─────────────────────────────────┐
+│ 💬 Product Assistant            │ ← Title
+├─────────────────────────────────┤
+│ Assistant: Hi! I can help with  │ ← Bot message
+│ questions about our product...  │
+│                                  │
+│ You: How do I get started?      │ ← User message
+│                                  │
+│ Assistant: To get started:      │ ← Bot response
+│ 1. Create an account at...      │
+│                                  │
+│ 📄 Source: Quick Start Guide    │ ← Sources
+├─────────────────────────────────┤
+│ [Your question here...]  [Send] │ ← Input
+└─────────────────────────────────┘
+```
+
+**Agent continues:**
+```
+Building the app...
+
+✓ Created Chat page with message history
+✓ Added input field with send button
+✓ Connected to workflow
+✓ Added source document display
+✓ Configured styling (professional, clean)
+✓ Added Document Browser page
+✓ Added Settings page
+
+STYLING:
+→ Color scheme: Professional (blue/white)
+→ Font: Clear, readable
+→ Mobile responsive: Yes
+→ Dark mode: Available
+
+Ready to test?  [Yes]
+```
+
+---
+
+### Phase 4: Testing & Deployment
+
+**Agent:**
+```
+FULL END-TO-END TEST:
+
+Scenario 1: User asks about features
+User: "What can your product do?"
+→ Search: [Found 8 relevant sections]
+→ AI generates: "Our product allows you to..."
+→ Shows: Sources from features doc
+Result: ✓ PASS
+
+Scenario 2: User asks unclear question
+User: "xyz abc 123"
+→ Search: [No relevant match]
+→ AI generates: "I didn't understand. Try asking about..."
+→ Helpful fallback: "Or browse our docs"
+Result: ✓ PASS
+
+Scenario 3: Multiple messages in sequence
+User: "How do I authenticate?"
+Asst: [Response with auth steps]
+User: "Can I use API key instead?"
+→ Context preserved from previous message
+→ AI gives follow-up answer
+Result: ✓ PASS
+
+ALL TESTS PASSED! ✓
+
+DEPLOYMENT:
+✓ Knowledge base indexed
+✓ Workflow tested and optimized
+✓ App interface tested on mobile/desktop
+✓ Security: Input sanitized, rate limiting enabled
+✓ Monitoring: Set up performance tracking
+
+Your chat assistant is ready for production!
+
+NEXT STEPS:
+→ Deploy to production
+→ Share link with team
+→ Monitor usage
+→ Gather feedback
+→ Iterate (improve docs/answers based on questions)
+
+[Deploy now]  [Review logs]  [Make changes]
+```
+
+---
+
+## 3. Integration Scenario: Salesforce Sync Workflow
+
+### User Request
+> "I want to automatically sync our Salesforce contacts into our app every day"
+
+### Step-by-Step Guided Build
+
+**Step 1: Connect Salesforce**
+
+```
+Agent: "First, we need to securely connect to Salesforce.
+I'll guide you through getting the OAuth credentials.
+
+GO TO YOUR SALESFORCE ORG:
+1. Settings → Apps → App Manager
+2. Create New Connected App
+3. Fill in:
+   - App Name: 'BizFirst Sync'
+   - API Name: 'bizfirst_sync'
+   - Enable OAuth: Yes
+   - Callback URL: [I'll provide this]
+
+4. Copy these values:
+   - Client ID: [field to paste]
+   - Client Secret: [field to paste]
+
+Need help? [Detailed guide]"
+```
+
+User provides credentials.
+
+```
+Agent: "Testing connection to Salesforce...
+✓ Connected successfully!
+✓ Can read contacts: YES (250 total)
+✓ Permissions verified
+
+Great! Let's design the sync workflow."
+```
+
+**Step 2: Design Sync Logic**
+
+```
+Agent: "Here's the daily sync workflow I'm creating:
+
+EVERY DAY AT 2 AM:
+1. Connect to Salesforce
+2. Fetch all contacts (with changes since last sync)
+3. Map fields:
+   Salesforce → BizFirst App
+   First Name → FirstName
+   Email → Email
+   Phone → PhoneNumber
+   
+4. Load into database
+5. Send sync report to you
+6. Log any issues
+
+What should happen if:
+→ Contact email is missing?
+   ☐ Skip contact
+   ☐ Use phone as identifier
+   ☑ Notify admin (recommended)
+
+→ Contact already exists?
+   ☑ Update with new data (recommended)
+   ☐ Keep existing data
+   ☐ Duplicate it
+
+→ Sync fails?
+   ☑ Retry 3 times (recommended)
+   ☐ Notify admin
+   ☐ Pause workflow
+   
+Is this good?  [Yes]  [Adjust]
+```
+
+**Step 3: Configure Schedule**
+
+```
+Agent: "When should the sync run?
+
+Options:
+→ Every hour (most frequent)
+→ Every 6 hours
+→ Daily at [2 AM] (recommended for data freshness)
+→ Weekly
+→ Manual only
+
+Best time to run: Off-peak hours (2 AM - 6 AM)
+Recommended: Daily at 2 AM
+
+Your preference?  [2 AM daily]
+```
+
+**Step 4: Testing**
+
+```
+Agent: "Running a test sync to verify everything works...
+
+SYNC LOG:
+────────────────────────────────────────
+Time: 2024-01-15 14:32:05
+Type: TEST SYNC
+────────────────────────────────────────
+
+📊 RESULTS:
+✓ Connected to Salesforce
+✓ Retrieved 250 contacts
+✓ Processed 248 contacts
+  - 200: Added as new
+  - 48: Updated existing
+  
+⚠️ Issues (2):
+  - Contact ID 2841: Missing email (skipped)
+  - Contact ID 3029: Invalid phone format (fixed)
+
+✓ Loaded to database
+✓ Sent report email
+
+Duration: 4.2 seconds
+Next automatic sync: Tomorrow 2 AM
+
+Issues found:
+1. Contact 2841 should be reviewed manually
+2. Phone format validation updated for future syncs
+
+Actions:
+[✓ Everything looks good]  [Review issues]  [Adjust config]
+```
+
+**Step 5: Go Live**
+
+```
+Agent: "Your Salesforce sync is now LIVE! 🎉
+
+CONFIGURATION SUMMARY:
+─────────────────────────────
+Sync Frequency: Daily at 2 AM
+Source: Salesforce (250 contacts)
+Destination: BizFirst App Database
+Field Mapping: Email, Phone, Name, Company
+Error Handling: Retry 3x, notify admin
+Status: ACTIVE
+
+NEXT AUTOMATIC SYNC:
+→ Tomorrow at 2 AM (Jan 16, 2024)
+
+MONITORING DASHBOARD:
+View sync history: [Dashboard link]
+Recent syncs:
+- ✓ Jan 15 - TEST (248 of 250 synced)
+- ✓ Jan 14 - AUTOMATIC (250 of 250 synced)
+- ✓ Jan 13 - AUTOMATIC (250 of 250 synced)
+
+You'll receive daily emails with:
+- Number of contacts synced
+- Any issues found
+- Link to view full log
+
+Questions or issues?  [Contact support]  [View logs]
+```
+
+---
+
+## 4. Error Recovery: Graceful Failure
+
+### Scenario: Widget Not Available
+
+```
+User: "Add a Chart widget to my dashboard"
+
+Agent: "Adding Chart widget to dashboard...
+[Working...]
+
+⚠️ Error: Chart widget type is not currently available
+
+Recovery Options:
+
+Option 1: Use Table widget instead (recommended)
+→ Shows data in rows/columns
+→ Very flexible, can sort and filter
+→ Ready now
+→ Can upgrade to Chart later
+
+Option 2: Wait for Chart widget
+→ Chart widget releases tomorrow
+→ Will have full charting capabilities
+→ You can update your dashboard then
+
+Option 3: Build a custom solution
+→ More complex, takes longer
+→ But fully customizable
+
+RECOMMENDATION: Start with Table (Option 1)
+→ Get your dashboard working today
+→ Upgrade to Chart tomorrow
+→ Easy to switch, no data loss
+
+Which option?  
+[✓ Use Table]  [Wait for Chart]  [Custom]
+```
+
+User chooses Option 1.
+
+```
+Agent: "Building with Table widget...
+
+✓ Added table widget
+✓ Configured with your data
+✓ Added sorting and filtering
+✓ Styled to match dashboard
+
+TABLE PREVIEW:
+┌──────────────────────────────────┐
+│ Date    | Sales    | Trend       │
+├──────────────────────────────────┤
+│ Jan 15  | $45,230  | ↑ +5%       │
+│ Jan 14  | $43,100  | ↓ -2%       │
+│ Jan 13  | $43,900  | ↑ +1%       │
+└──────────────────────────────────┘
+
+✓ Dashboard is ready!
+
+NEXT STEPS:
+Tomorrow when Chart widget releases:
+→ You'll get a notification
+→ I can convert this to a Chart in 2 minutes
+→ No data loss, no redesign needed
+
+Documented for future reference:
+→ Saved in your project notes
+→ I'll remind you tomorrow
+
+Ready to continue?  [Yes]
+```
+
+---
+
+## 5. Iterative Feedback Loop
+
+### Scenario: User Refines App Design
+
+```
+Agent: "I've created your app with 4 pages:
+
+1. Dashboard (overview, key metrics)
+2. Transactions (detailed table)
+3. Reports (charts, analytics)
+4. Settings (config, preferences)
+
+Let me show you a preview..."
+
+[Browser shows: Clickable prototype]
+
+Agent: "What do you think? Any changes?"
+
+User: "The dashboard feels cramped. The layout is too tight."
+```
+
+**Agent responds:**
+
+```
+I see what you mean. The dashboard has a lot of information.
+Let's refine the layout.
+
+Options:
+1. Remove the least important widgets
+   → Which widgets matter most?
+
+2. Spread across more pages
+   → Dashboard (top-level metrics)
+   → Dashboard Detail 1 (sales metrics)
+   → Dashboard Detail 2 (user metrics)
+
+3. Use tabs instead of separate pages
+   → Keep information grouped
+   → Less cluttered
+   → Easier navigation
+
+4. Reorganize layout
+   → 2-column instead of 3-column
+   → Larger font
+   → More whitespace
+
+Recommendation: Try Option 3 (tabs)
+→ Looks cleaner
+→ Still organized
+→ Fast to implement
+
+Which would you prefer?
+[Use tabs]  [Remove widgets]  [More pages]  [Reorganize]
+```
+
+User chooses tabs.
+
+```
+Agent: "Redesigning with tabs...
+[Updating preview in real-time]
+
+NEW LAYOUT:
+┌────────────────────────────────────┐
+│ Dashboard [▼ Tabs ▼] │ | Settings │
+├────────────────────────────────────┤
+│ [Overall] [Sales] [Users] [Reports]│
+├────────────────────────────────────┤
+│                                     │
+│  Key Metrics Overview               │
+│  ┌─────────┐  ┌─────────┐         │
+│  │ Revenue │  │ Orders  │         │
+│  │ $150K   │  │ 1,234   │         │
+│  └─────────┘  └─────────┘         │
+│                                     │
+└────────────────────────────────────┘
+
+Much cleaner! What do you think?"
+
+User: "Perfect! That's exactly what I wanted."
+
+Agent: "Excellent! Saving these design decisions:
+- Changed to tab-based layout
+- Grouped metrics by category
+- Improved whitespace and readability
+
+Design locked in. Ready to continue with:
+→ Add more pages?
+→ Configure data sources?
+→ Test the app?
+→ Deploy to production?
+
+[Add pages]  [Configure data]  [Test]  [Deploy]
+```
+
+---
+
+## 6. Key UX Patterns Demonstrated
+
+### ✓ Clear Phases with Progress
+- Understand → Design → Build → Test → Deploy
+- Progress indicator at each stage
+- Clear timing expectations
+- Visual milestones
+
+### ✓ Recommendations Based on Context
+- "We recommend..." suggestions
+- Reasoning provided
+- User can accept or customize
+- Best practices built in
+
+### ✓ Visual Feedback & Browser Preview
+- Screenshots and prototypes
+- Live updates as you build
+- See it before committing
+- Real-time validation
+
+### ✓ Error Recovery (Graceful, Non-Blocking)
+- No dead-ends
+- Multiple solutions offered
+- Recommended path highlighted
+- Can always adjust later
+
+### ✓ User Choice at Key Points
+- Confirm major decisions
+- Options clearly labeled
+- Recommendation highlighted
+- Never forced into one path
+
+### ✓ Summary Before Proceeding
+- Recap what will be built
+- Confirm understanding
+- Easy to ask questions
+- Clear next steps
+
+### ✓ Decision Documentation
+- Decisions saved in notes
+- Rationale recorded
+- Can reference later
+- Used for future iterations
+
+### ✓ Fast Feedback Loops
+- Build → Show → Get feedback → Adjust
+- Cycles take 5-15 minutes
+- User feels progress
+- Motivation maintained
+
+---
+
+## Summary
+
+These examples show how guided experiences:
+- **Simplify complexity** through step-by-step guidance
+- **Build confidence** with visual feedback and recommendations
+- **Save time** with smart defaults and templates
+- **Enable iteration** through fast feedback loops
+- **Recover gracefully** from errors and constraints
+- **Document decisions** for future reference
+
+The key is making the user feel in control while providing expert guidance every step of the way.
+
+---
+
+## Claudia/Procedure/General/InitialGuidelines.md
+
+# Agent Onboarding & Operating Guidelines
+
+**Quick Start:** Begin by reading `index.md` at the repo root. Use parallel agents to understand the codebase. Reference the knowledge bases for each agent type.
+
+---
+
+## Part 1: Repository Structure & Learning Path
+
+### Two-Repo System
+- **SoftwareEngineerAiAgents** (this repo) — Agent specs, knowledge bases, procedures, MCP server designs
+- **BizFirstPayrollV3** — Core backend (.NET 9.0, 70+ microservices, SQL Server)
+
+### Repo Organization
+```
+SoftwareEngineerAiAgents/
+├── index.md                          # Start here — navigation hub
+├── Agents/                           # Agent specifications
+│   ├── Builders/ (AppDeveloper, FormDeveloper, WorkflowDeveloper)
+│   └── Testers/ (AppTester, FormTester, WorkflowTester)
+├── Knowledge/                        # Deep reference docs for each agent
+│   ├── AppAgent/                     # App Studio knowledge
+│   ├── WorkflowAgent/                # Workflow Studio knowledge
+│   ├── Credentials/                  # Credential management
+│   ├── Servers/                      # Infrastructure & server management
+│   └── Notes/                        # Rouge agent memory system
+└── Procedure/                        # Step-by-step guides
+    ├── AppAgent/
+    ├── WorkflowAgent/
+    ├── Credentials/
+    ├── Servers/
+    └── General/ (Rouge_Notes, InitialGuidelines)
+```
+
+### How to Learn the Repo
+1. Start with `index.md` for overview
+2. Use parallel agents to explore structure, architecture, tech stack, database model
+3. Review `Knowledge/[AgentName]/00-overview.md` for each agent type
+4. Reference `Procedure/[AgentName]/` when executing tasks
+5. Use Rouge_Notes (Semantic/Episodic/Procedural memory) to persist learnings
+
+### Knowledge vs. Procedure
+- **Knowledge** — Reference material, concepts, architecture, deep dives, API specs
+- **Procedure** — Step-by-step guides, workflows, checklists, best practices
+- Both cross-linked; reference knowledge while following procedures
+
+### Agent Types & Their Roles
+- **Builders** — Create features (AppDeveloper, FormDeveloper, WorkflowDeveloper)
+- **Testers** — Validate end-to-end functionality (AppTester, FormTester, WorkflowTester)
+- **System Agents** — Infrastructure & credentials (ServerAgent, CredentialAgent)
+- **Memory Agent** — Persistent user/session memory (RougeAgent)
+
+---
+
+## Part 2: Core Operating Principles
+
+### 1. Always Use MCP Tools (Never UI Manipulation)
+- All creation/modification goes through MCP servers, never through web UI
+- MCP servers are the source of truth for platform state
+- Browser is read-only for display and validation only
+- Studio endpoints (AppStudio, FlowStudio, etc.) are at `/[StudioName}` on the server root
+  - Example: `http://localhost:5000/AppStudio` or `https://qa.example.com/FlowStudio`
+
+### 2. Browser is Display-Only
+- Use browser to show user progress after MCP operations complete
+- Navigate to relevant pages and refresh to display what you've created
+- Capture screenshots or GIFs to demonstrate changes to the user
+- Browser must never be the primary creation tool
+
+### 3. MCP Server Endpoints are Authoritative
+- Trust MCP APIs for state management
+- All relative paths in documentation are relative to the server root
+- Use provided MCP servers to read/write platform objects
+- Do not bypass MCP to directly query databases
+
+### 4. Multi-Tenancy & Security-First
+- All operations are tenant-aware (TenantID in context)
+- Use credentials securely (stored in encrypted vault, never in logs)
+- Validate user permissions before operations
+- Follow least-privilege principle for agent access
+
+### 5. Agents Provide Guided Experiences
+- Agents ask questions, not make assumptions
+- Capture comprehensive information before building
+- Present options and recommendations at each step
+- Allow users to decline/go back to main menu gracefully
+
+---
+
+## Part 3: Studio/Agent Overview
+
+### AppAgent
+- **Knowledge:** `Knowledge/AppAgent/`
+- **Procedures:** `Procedure/AppAgent/`
+- **Role:** Build web apps, sites, pages, widgets
+- **Capabilities:** 17 widget types, theming, responsive design, multi-page apps
+- **See:** AppAgent 00-overview.md for complete reference
+
+### WorkflowAgent
+- **Knowledge:** `Knowledge/WorkflowAgent/`
+- **Procedures:** `Procedure/WorkflowAgent/`
+- **Role:** Build workflows and workflow automation
+- **Capabilities:** 18+ execution node types, integrations (Elasticsearch, Odoo, APIs), scheduling
+- **See:** WorkflowAgent 00-overview.md for complete reference
+
+### FormAgent
+- **Knowledge:** TBD (follow AppAgent/WorkflowAgent structure)
+- **Procedures:** TBD
+- **Role:** Create forms and search+edit forms for tables
+- **Capabilities:** 65+ control types, validation, entity-based workflows
+- **Note:** Structure TBD; use AppAgent knowledge structure as template
+
+### CredentialAgent
+- **Knowledge:** `Knowledge/Credentials/`
+- **Procedures:** `Procedure/Credentials/`
+- **Role:** Manage API keys, OAuth2, database credentials, SSH keys, etc.
+- **Capabilities:** Secure storage, encryption, key rotation, audit trails
+- **Security:** All credentials encrypted; never log or expose in console
+
+### ServerAgent
+- **Knowledge:** `Knowledge/Servers/`
+- **Procedures:** `Procedure/Servers/`
+- **Role:** Provision, configure, and manage infrastructure
+- **Capabilities:** Physical/VM/container/cloud servers, deployment, scaling, monitoring
+- **See:** Servers 00-overview.md for deployment strategies
+
+### RougeAgent (Memory System)
+- **Knowledge:** `Knowledge/Notes/`
+- **Reference:** `Procedure/General/Rouge_Notes.md`
+- **Role:** Persistent agent memory (Semantic, Episodic, Procedural)
+- **Use:** Store user preferences, session decisions, lessons learned
+- **Memory Types:**
+  - **Semantic** — Facts, definitions, domain knowledge, patterns
+  - **Episodic** — Events, interactions, session history, decisions
+  - **Procedural** — Workflows, steps, best practices, how-to guides
+
+---
+
+## Part 4: Questionnaire Pattern (Guided Experience)
+
+### Concept
+Each agent provides a **guided, interactive experience** via questionnaires. Users answer structured questions to provide complete information upfront. Questionnaires are recommendation-based and can be progressively updated based on feedback.
+
+### Questionnaire File Structure
+Each agent should have a `{AgentName}Questionnaire.md` in its Procedure folder:
+- `Procedure/AppAgent/AppQuestionnaire.md`
+- `Procedure/WorkflowAgent/WorkflowQuestionnaire.md`
+- `Procedure/CredentialAgent/CredentialQuestionnaire.md`
+- etc.
+
+### Example: AppQuestionnaire.md
+```
+# App Creation Questionnaire
+
+## Section 1: Basic Info
+- **App Name:** (required, 3-50 chars)
+- **Description:** (optional)
+- **Use Case:** (dropdown: business, personal, template, etc.)
+
+## Section 2: Pages
+- **How many pages?** (1-20)
+- **For each page:**
+  - Page title
+  - Purpose/what does this page do?
+  - Content type (recommend: content-heavy, form, dashboard, etc.)
+
+## Section 3: Widgets
+- **For each page, what widgets needed?**
+  - Content (text, rich editor)
+  - Form (user input, validation)
+  - Workflow (agent interaction, automation)
+  - Gallery (images, video, audio, PDF)
+  - Navigation (page links, menu)
+  - Chat (chat assistant)
+  - Custom (specify)
+
+## Section 4: Design
+- **Theme/Style:** (recommend: default, dark, light, branded)
+- **Responsive?** (yes/no — recommend yes)
+- **Logo/Branding:** (optional file upload)
+
+## Section 5: Confirmation
+- Summary of selections
+- Recommendation (e.g., "Start with page 1, add widgets one at a time")
+- Ready to build? (yes/decline to main menu)
+```
+
+### Questionnaire Best Practices
+1. **Be User-Friendly** — Non-technical language; use dropdown/radio where possible
+2. **Provide Recommendations** — "For a form-heavy page, we recommend Form + Submit Button widgets"
+3. **Capture Everything** — Answer all questions before building to minimize rework
+4. **Allow Decline** — Always provide option to return to main menu or start over
+5. **Progressive Updates** — If user feedback changes requirements, update questionnaire for next iteration
+6. **Wizard-Like Flow** — Step through sections, don't overwhelm with one giant list
+
+---
+
+## Part 5: Multi-Agent Orchestration
+
+### Simple vs. Complex Scenarios
+- **Simple:** Create a single-page app with a content widget → Single AppAgent
+- **Complex:** Build a chat assistant workflow agent → Multi-agent orchestration
+
+### Complex Example: Chat Assistant Workflow Agent
+Building a chat assistant requires:
+1. **Planning phase** — Outline all tasks, get user approval
+2. **RAG (Retrieval-Augmented Generation) setup** — Create RAG collection, upload knowledge files
+3. **Workflow creation** — Build workflow, add execution nodes, configure logic
+4. **Agent configuration** — Set up AI agent node with LLM model, memory, tools
+5. **Execution template** — Create workflow execution template
+6. **App integration** — Add Chat Panel widget to app, link to workflow
+
+### Multi-Agent Workflow
+```
+User Request: "Build a chat assistant that answers questions about my documentation"
+
+Phase 1: Planning (1 agent)
+├─ Outline tasks (RAG, workflow, app integration)
+├─ Estimate effort
+└─ Get user approval for plan
+
+Phase 2: Task Execution (3+ agents in sequence)
+├─ RAG Agent: Create collection, user uploads docs
+├─ Workflow Agent: Build workflow with nodes
+├─ App Agent: Add Chat Panel widget, link to workflow
+└─ After each task: Show progress in browser, get user feedback
+
+Phase 3: Testing (Tester agents)
+├─ WorkflowTester: Validate workflow logic
+└─ AppTester: Validate chat panel + integration
+
+Phase 4: Refinement (feedback loop)
+├─ User tests chat assistant
+├─ Feedback captured in Rouge_Notes
+└─ Update workflow/app based on feedback
+```
+
+### Progress Tracking
+- After each task, navigate to relevant studio in browser and show user what was created
+- Refresh pages to show live updates
+- Capture screenshots/GIFs of progress
+- Communicate completion before moving to next task
+- Present findings/issues and ask for permission before continuing
+
+---
+
+## Part 6: Best Practices
+
+### UX & User Engagement
+- **Show Progress** — Always demonstrate what you've built in the browser (navigate, refresh, screenshot)
+- **Ask Before Action** — Never assume; present options and ask for confirmation
+- **Provide Recommendations** — "Based on your use case, we recommend X over Y because..."
+- **Graceful Decline** — Always allow users to return to main menu or start over
+- **User-Friendly Language** — Avoid technical jargon; use friendly, conversational tone
+
+### Information Capture
+- Use questionnaires to capture comprehensive info upfront
+- Wizard-like flow (step-by-step) prevents overwhelming users
+- Ask follow-ups if answers are vague; don't guess
+- Document all decisions in Rouge_Notes (Episodic memory)
+
+### Decision Documentation
+- Store user preferences in Rouge_Notes (Semantic)
+- Record decisions made during session (Episodic)
+- Document lessons learned for future sessions (Procedural)
+- Example: "User prefers light theme" → Semantic; "User chose 3 pages for app" → Episodic; "Best practice: validate all inputs before submission" → Procedural
+
+### Testing & Validation
+- Always test end-to-end before declaring a task complete
+- AppTester validates UI/UX in browser
+- WorkflowTester validates workflow logic
+- Create test plans upfront; execute incrementally
+- Report issues clearly; don't hide failures
+
+### Multi-Agent Coordination
+- Launch agents in sequence for dependent tasks (RAG → Workflow → App)
+- Launch agents in parallel for independent tasks (test multiple pages simultaneously)
+- Use phase() calls in workflows to organize complex orchestration
+- Share progress and errors across agents via consistent naming/logging
+
+---
+
+## Summary
+
+**Core Flow:**
+1. Learn repo using parallel agents → start with index.md
+2. Understand agent roles and knowledge bases → reference Knowledge/{AgentName}/
+3. Follow questionnaire pattern to gather user requirements → interactive, recommendation-based
+4. Execute tasks using MCP servers → never UI manipulation
+5. Show progress in browser → display what you've created
+6. Document decisions in Rouge_Notes → persistent memory
+7. Test end-to-end → validate with AppTester/WorkflowTester agents
+8. Refine based on feedback → interactive, iterative process
+
+**Remember:** Users are not IT experts. Be friendly, provide recommendations, show progress, and always allow them to go back or decline.
+---
+
+## Claudia/Procedure/General/MultiAgentOrchestration.md
+
+# Multi-Agent Orchestration Patterns
+
+Real-world complex scenarios showing how multiple BizFirst agents coordinate to deliver sophisticated solutions.
+
+---
+
+## **1. Chat Assistant Workflow — Knowledge-Driven Conversational Agent**
+
+**Scenario:** Build a production-ready chat assistant that answers questions using a custom knowledge base, deployed as a BizFirst app.
+
+**Agents Involved:** AppAgent, WorkflowAgent, FormDeveloper, RAG/Octopus, AppTester, WorkflowTester
+
+**Timeline:** 3-5 days per feature iteration
+
+---
+
+### **Phase 1: Requirements & Planning (Day 1)**
+
+**Who:** AppAgent + WorkflowAgent + User
+
+**Tasks:**
+1. **Gather Requirements**
+   - What is the chat assistant's domain? (e.g., HR policies, product support, technical docs)
+   - What tone/style? (friendly, formal, technical)
+   - What languages? (English, multi-language?)
+   - Expected volume? (users/day, concurrent users)
+   - Integrations needed? (email, Slack, CRM)
+
+2. **Design App Structure**
+   - Landing page (hero, CTA to chat)
+   - Chat panel widget (message history, user identification)
+   - Document viewer (show source of information)
+   - Admin dashboard (monitor conversations, feedback)
+
+3. **Design Workflow Logic**
+   ```
+   User Message
+     ↓
+   Input Validation & Parsing
+     ↓
+   RAG Search (find relevant documents)
+     ↓
+   Agent Reasoning (generate response)
+     ↓
+   Quality Check (confidence > threshold?)
+     ↓
+   Format & Return Response
+     ↓
+   Log & Monitor
+   ```
+
+4. **Define Success Criteria**
+   - Response accuracy (% correct answers)
+   - Response time (< 2s)
+   - User satisfaction (NPS > 40)
+   - Escalation rate (< 5% to human)
+
+**Output:** Architecture document, workflow flowchart, acceptance criteria
+
+**Progress Check:** Show user the planned app layout and workflow diagram
+
+---
+
+### **Phase 2: Knowledge Base Setup (Day 1-2)**
+
+**Who:** RAG/Octopus Agent
+
+**Tasks:**
+1. **Create RAG Collection**
+   ```
+   Collection Name: "HR_PolicyBot_KB"
+   Type: DocumentStore
+   Embedding Model: Default
+   Chunk Size: 512 tokens
+   Overlap: 100 tokens
+   ```
+
+2. **Prepare Documents**
+   - Convert policies to markdown
+   - Organize by category (Benefits, Time Off, Code of Conduct, etc.)
+   - Add metadata (department, effective date, version)
+
+3. **Upload & Index**
+   - Upload 50-200 documents via RAG uploader
+   - Run indexing (embeddings created)
+   - Verify index size & chunk count
+
+4. **Test Retrieval**
+   - Query: "What's the parental leave policy?"
+   - Verify top-3 results are relevant
+   - Adjust chunk size if needed
+   - Test edge cases (typos, synonyms, abbreviations)
+
+**Output:** Indexed RAG collection, test results showing recall > 80%
+
+**Progress Check:** Show user the RAG collection in browser, run live search query
+
+---
+
+### **Phase 3: Workflow Build (Day 2-3)**
+
+**Who:** WorkflowAgent
+
+**Tasks:**
+1. **Create Workflow**
+   ```
+   Name: ChatAssistant_GenerateResponse
+   Trigger: API call (input message, user context)
+   Timeout: 5 seconds
+   Retry: 2x with exponential backoff
+   ```
+
+2. **Build Nodes (in sequence)**
+
+   **Node 1: Input Validator**
+   - Type: ExecutionNode
+   - Validates message length (10-500 chars)
+   - Sanitizes input (no SQL injection, XSS)
+   - Extracts user context (ID, department, role)
+   - Output: validated_message, user_context
+
+   **Node 2: RAG Search**
+   - Type: WorkflowNode with RAG integration
+   - Query: validated_message
+   - Collection: HR_PolicyBot_KB
+   - Return top 3 results with similarity score
+   - Output: relevant_documents, confidence_score
+
+   **Node 3: Agent Reasoning**
+   - Type: AIAgent node
+   - Agent: ChatAssistant (or create new)
+   - Prompt: "Answer using documents. Cite sources. If unsure, escalate."
+   - Context: relevant_documents, user_context
+   - Output: response_text, confidence, sources_used
+
+   **Node 4: Quality Gate**
+   - Type: Decision node
+   - If confidence > 0.8: continue to response
+   - Else: escalate to human (send to queue)
+   - Output: escalation_flag
+
+   **Node 5: Format Response**
+   - Type: ExecutionNode
+   - Add citations
+   - Add helpful links
+   - Add "Was this helpful?" buttons
+   - Output: formatted_response
+
+   **Node 6: Log & Monitor**
+   - Type: ExecutionNode
+   - Log to database:
+     - user_id, message, response, confidence, escalated
+     - timestamp, response_time_ms, token_count
+   - Emit metric: response_time
+   - Output: log_id
+
+3. **Configure Error Handling**
+   - RAG timeout → use fallback response
+   - Agent timeout → escalate with apology
+   - Invalid input → return validation error
+   - Rate limit → queue and retry
+
+4. **Test Workflow**
+   - Unit test each node
+   - Integration test full flow
+   - Load test (simulate 100 concurrent)
+   - Verify response time < 2s
+
+**Output:** Published workflow, test results, performance metrics
+
+**Progress Check:** Show user workflow diagram in browser, run test message
+
+---
+
+### **Phase 4: App Integration (Day 3-4)**
+
+**Who:** AppAgent
+
+**Tasks:**
+1. **Create App**
+   ```
+   App Name: HR_ChatBot
+   Type: Multi-page web app
+   Template: Custom
+   ```
+
+2. **Build Pages**
+
+   **Page 1: Landing**
+   - Sections:
+     - Hero (title, description, image)
+     - CTA button ("Start Chat")
+     - Features list (quick answers, 24/7, etc.)
+   - Widgets: Content, Button, Image
+
+   **Page 2: Chat Interface**
+   - Sections:
+     - Header (app logo, title)
+     - Chat panel (conversation history)
+     - Input box (message field)
+     - Sidebar (suggested questions)
+   - Widgets: Chat Panel, Content, Form
+
+   **Page 3: Admin Dashboard** (future)
+   - Sections:
+     - Metrics (messages/day, escalation rate, satisfaction)
+     - Recent conversations
+     - Low-confidence responses
+   - Widgets: Chart, Table, Content
+
+3. **Configure Chat Panel Widget**
+   - Link to ChatAssistant_GenerateResponse workflow
+   - Pass message as input
+   - Display response in chat
+   - Add feedback buttons
+   - Store user ID from session
+
+4. **Apply Styling**
+   - Brand colors (company colors)
+   - Responsive (mobile, tablet, desktop)
+   - Dark mode option
+   - Accessibility (WCAG AA)
+
+5. **Configure Settings**
+   - Multi-tenancy: Select customer/department
+   - Environment: Staging vs. Production
+   - Analytics: Enable tracking
+
+**Output:** Published app, styling applied, workflow linked
+
+**Progress Check:** Show user the app in browser, test chat interaction
+
+---
+
+### **Phase 5: Testing & Validation (Day 4-5)**
+
+**Who:** AppTester + WorkflowTester + User
+
+**Tasks:**
+1. **Unit Tests**
+   - RAG retrieval accuracy: >= 80%
+   - Response generation: no hallucinations
+   - Input validation: all edge cases covered
+
+2. **Integration Tests**
+   - Full workflow: message → response (< 2s)
+   - Error handling: timeouts, invalid input
+   - Multi-user: concurrent messages
+   - Different roles: verify context-aware responses
+
+3. **End-to-End Tests**
+   - User scenario 1: "How much PTO do I get?"
+   - User scenario 2: "What's the remote work policy?"
+   - User scenario 3: (intentionally unclear) "Benefits?"
+   - Edge case: "Tell me a joke" (out-of-scope)
+
+4. **Performance Testing**
+   - Load: 50, 100, 200 concurrent users
+   - Measure: response time, error rate, resource usage
+   - Success criteria: < 5% errors, P95 latency < 3s
+
+5. **User Acceptance Testing (UAT)**
+   - Stakeholder reviews
+   - Gather feedback on responses
+   - Identify missing knowledge
+   - Validate escalation workflow
+
+6. **Refinement (iterative)**
+   - Add missing FAQs to RAG
+   - Improve agent prompt
+   - Adjust confidence thresholds
+   - Retest
+
+**Output:** Test report, UAT sign-off, final metrics
+
+**Progress Check:** Share test results with user, confirm ready for production
+
+---
+
+### **Phase 6: Deployment & Monitoring**
+
+**Who:** ServerAgent + WorkflowAgent
+
+**Tasks:**
+1. **Deploy to Production**
+   - Provision server/container
+   - Configure monitoring & alerting
+   - Set up backup/disaster recovery
+
+2. **Monitor**
+   - Daily: response accuracy, escalation rate, satisfaction
+   - Weekly: trend analysis, user feedback
+   - Monthly: performance review, updates
+
+3. **Iterate**
+   - Weekly feedback loop with stakeholders
+   - Update knowledge base with new policies
+   - Improve agent based on escalations
+
+---
+
+## **2. Data Integration Pipeline — Real-Time Sync**
+
+**Scenario:** Sync customer data from Salesforce to internal database in real-time.
+
+**Agents Involved:** ServerAgent, WorkflowAgent, CredentialAgent
+
+**Timeline:** 1-2 weeks
+
+---
+
+### **Phase 1: Source System Integration (Days 1-2)**
+
+**Who:** CredentialAgent + WorkflowAgent
+
+**Tasks:**
+1. **Configure Salesforce Credentials**
+   - API key from Salesforce
+   - Store in CredentialAgent
+   - Test authentication
+
+2. **Design Data Extraction**
+   - Which objects? (Account, Contact, Opportunity)
+   - Which fields? (name, email, phone, company)
+   - Filter criteria? (active only, last updated > 1 hour)
+   - Incremental or full sync?
+
+3. **Create Extraction Workflow**
+   - Trigger: Scheduled (every 1 hour) or Event-driven (Salesforce webhook)
+   - Query Salesforce API
+   - Handle pagination
+   - Log extraction metrics
+
+---
+
+### **Phase 2: Transformation (Day 2-3)**
+
+**Who:** WorkflowAgent
+
+**Tasks:**
+1. **Design Transformation**
+   - Map fields (Salesforce → internal schema)
+   - Handle null/missing values
+   - Normalize data (phone format, address, etc.)
+   - Add metadata (sync_timestamp, source, version)
+
+2. **Handle Edge Cases**
+   - Duplicate detection (by email, phone)
+   - Conflicting updates (last-write-wins)
+   - Soft deletes (mark deleted, keep history)
+
+---
+
+### **Phase 3: Destination Setup (Day 3)**
+
+**Who:** CredentialAgent + ServerAgent
+
+**Tasks:**
+1. **Configure Target Database**
+   - Create schema for Customer table
+   - Add audit columns (created_at, updated_at, synced_at)
+   - Create indexes for common queries
+
+2. **Set Up Credentials**
+   - Database connection string
+   - User with write permissions
+   - Test connectivity
+
+---
+
+### **Phase 4: Orchestration & Monitoring (Day 4-5)**
+
+**Who:** WorkflowAgent + ServerAgent
+
+**Tasks:**
+1. **Create Full Workflow**
+   - Extract (Salesforce API)
+   - Transform (field mapping)
+   - Load (database insert/update)
+   - Log results
+
+2. **Configure Error Handling**
+   - API errors: retry 3x with backoff
+   - DB errors: alert ops team
+   - Data quality issues: quarantine, review
+
+3. **Set Up Monitoring**
+   - Alert if sync fails
+   - Alert if lag > 5 minutes
+   - Track records synced/day
+   - Monitor data quality (null rate, duplicate rate)
+
+---
+
+## **3. Approval Workflow — Business Process Automation**
+
+**Scenario:** Implement an expense approval workflow (employee → manager → finance → paid).
+
+**Agents Involved:** AppAgent, FormDeveloper, WorkflowAgent, AppTester
+
+**Timeline:** 1-2 weeks
+
+---
+
+### **Phase 1: Request Design (Day 1)**
+
+**Who:** FormDeveloper + AppAgent
+
+**Tasks:**
+1. **Create Expense Request Form**
+   - Fields: amount, category, date, purpose, receipt file
+   - Validation: amount > 0, date <= today, file size < 10MB
+   - Attachments: receipt image/PDF
+
+2. **Design Approval Hierarchy**
+   - Employee submits
+   - Manager approves (for own team members)
+   - Finance verifies (budget, compliance)
+   - Approver(s) can comment/reject with reason
+
+3. **Set Escalation Rules**
+   - Amount > $5000: need director approval
+   - Amount > $50000: need CFO approval
+   - Missing receipt: automatic rejection
+
+---
+
+### **Phase 2: Workflow Build (Day 2-3)**
+
+**Who:** WorkflowAgent
+
+**Tasks:**
+1. **Create Approval Workflow**
+   ```
+   1. Validate request (format, required fields)
+   2. Route to manager (based on org hierarchy)
+   3. Manager decides: approve / reject / request info
+   4. If approved → Finance review
+   5. If finance approves → Mark as approved
+   6. If any rejection → Notify employee
+   7. If escalation needed → Route to director
+   8. Log all decisions & comments
+   ```
+
+2. **Configure Notifications**
+   - Email: "Request pending your approval"
+   - Email: "Your expense was approved/rejected"
+   - Slack: notification to manager
+   - In-app: notification center
+
+3. **Add SLA Monitoring**
+   - Manager must respond within 3 days
+   - Finance must respond within 2 days
+   - Alert if approaching deadline
+
+---
+
+### **Phase 3: App Integration (Day 3-4)**
+
+**Who:** AppAgent
+
+**Tasks:**
+1. **Create Multi-Page App**
+   - Page 1: Submit Expense (form)
+   - Page 2: My Requests (status of submitted requests)
+   - Page 3: Approvals Pending (for managers/finance - table of requests)
+   - Page 4: History (all expenses, filters by status/month)
+
+2. **Dashboard for Manager**
+   - Pending approvals (count, list)
+   - Team's spending (YTD, by category)
+   - Rejected expenses (reasons, trends)
+
+---
+
+### **Phase 4: Testing & Deployment (Day 4-5)**
+
+**Who:** AppTester + WorkflowTester
+
+**Tasks:**
+1. **Happy Path Test**
+   - Employee submits $500 expense
+   - Manager approves within 2 days
+   - Finance approves within 1 day
+   - Expense marked paid, email sent
+
+2. **Rejection Path**
+   - Employee submits without receipt
+   - System auto-rejects
+   - Email notification sent
+   - Employee can resubmit
+
+3. **Escalation Path**
+   - Employee submits $30,000 expense
+   - Routed to director (not manager)
+   - Director approves
+   - Proceeds to finance
+
+4. **Monitoring**
+   - Track approval times by role
+   - Identify bottlenecks
+   - Measure approval rate (% approved)
+
+---
+
+## **4. Coordination Patterns**
+
+Three primary ways agents work together:
+
+---
+
+### **Pattern A: Sequential (Phase → Phase)**
+
+```
+AppAgent (Plan UI)
+    ↓ (App design complete)
+WorkflowAgent (Build Logic)
+    ↓ (Workflow complete)
+AppAgent (Link workflow to app)
+    ↓ (Integration complete)
+AppTester (Validate)
+```
+
+**When to use:**
+- Dependencies exist (workflow must exist before linking)
+- Large, distinct phases
+- Clear handoff points
+
+**Example:** Chat Assistant Workflow (App → Workflow → Integration → Testing)
+
+**Timeline:** Longer (sequential adds time)
+
+**Risk:** Delays cascade (if one phase delays, all downstream delayed)
+
+---
+
+### **Pattern B: Parallel (Work Simultaneously)**
+
+```
+AppAgent (Build UI)         WorkflowAgent (Build Logic)
+     ↓                                ↓
+     Create pages, forms      Create workflow nodes
+     ↓                                ↓
+     Ready for integration ← → Ready for linking
+     ↓                                ↓
+     AppTester ← → WorkflowTester
+```
+
+**When to use:**
+- Independent work (UI and logic don't block each other)
+- Time-sensitive projects
+- Teams available (not bottleneck on single agent)
+
+**Example:** Data Integration Pipeline (Extract workflow, Transform, Load can happen in parallel)
+
+**Timeline:** Shorter (parallelism saves time)
+
+**Risk:** Coordination overhead, sync challenges
+
+---
+
+### **Pattern C: Feedback Loop (Iterative Refinement)**
+
+```
+Build v1 (AppAgent)
+    ↓
+Test v1 (AppTester)
+    ↓
+User Feedback
+    ↓
+Refine v2 (AppAgent)
+    ↓
+Re-test v2 (AppTester)
+    ↓
+(Repeat until approved)
+```
+
+**When to use:**
+- User-facing features (need UX validation)
+- Uncertain requirements
+- Iterative design process
+
+**Example:** Chat Assistant (initial build → UAT → refine based on feedback → redeploy)
+
+**Timeline:** Variable (depends on feedback cycles)
+
+**Benefit:** Converges on "right solution"
+
+---
+
+## **5. Decision Tree: Which Pattern to Use?**
+
+```
+Are there clear dependencies between tasks?
+├─ YES → Use Sequential
+│        (Phase A must complete before Phase B starts)
+│
+└─ NO → Can work be done in parallel?
+        ├─ YES → Use Parallel
+        │        (AppAgent and WorkflowAgent work simultaneously)
+        │
+        └─ NO → Is user feedback critical?
+                ├─ YES → Use Feedback Loop
+                │        (Build → Test → Feedback → Refine)
+                │
+                └─ NO → Use Sequential (safest fallback)
+```
+
+**Example Decision:**
+- Chat Assistant: Dependencies exist (RAG → Workflow → App) → Sequential, but can parallelize Phase 4 and 5 testing
+- Data Pipeline: Extraction and transformation are independent → Parallel
+- Expense Approval: Forms and workflow independent, but need integration → Parallel with sync point
+
+---
+
+## **6. Communication Protocol: How Agents Coordinate**
+
+### **Decision Documentation**
+1. Every decision logged in Rouge_Notes:
+   - NoteType: Procedural (how we'll build it)
+   - Content: "Decision: Use RAG with chunk_size=512 for HR bot KB"
+   - Status: Active
+   - Owner: Agent name
+
+2. Examples:
+   - "Chat workflow will escalate if confidence < 0.8"
+   - "Database sync should retry on failure with exponential backoff"
+   - "Approval routing uses org chart from Salesforce"
+
+### **Progress Updates**
+After each phase:
+1. Screenshot/artifact showing work completed
+2. Status: On-track, at-risk, or blocked
+3. Next phase: When starting, what's needed
+4. Blockers: Any waiting on external input
+
+### **Handoff Points**
+Clear handoffs with:
+1. **Deliverable:** What's being passed (e.g., app design, workflow spec)
+2. **Interface:** How it connects (e.g., chat panel calls this workflow endpoint)
+3. **Test Criteria:** How to verify it works (e.g., response time < 2s)
+4. **Support:** Who answers questions from next agent
+
+Example Handoff:
+```
+FROM: AppAgent → TO: WorkflowAgent
+DELIVERABLE: App design with Chat panel widget
+INTERFACE: Widget calls POST /api/workflows/ChatAssistant_GenerateResponse
+INPUT: { message: string, user_id: int }
+OUTPUT: { response: string, sources: string[], confidence: float }
+TEST: Send 10 test messages, verify response time < 2s
+SUPPORT: AppAgent available for questions about Chat panel widget spec
+```
+
+### **Risk Mitigation**
+1. **Regular Sync:** Daily standup (if multi-day project)
+2. **Clear Dates:** "RAG collection ready by EOD Friday"
+3. **Buffer Time:** 1-2 days padding for unknowns
+4. **Escalation:** If blocked > 2 hours, escalate to user
+
+---
+
+## **7. Real-World Scenario: Chat Assistant Timeline**
+
+| Day | Phase | Agent | Deliverable | Status Check |
+|-----|-------|-------|-------------|--------------|
+| 1AM | Planning | App + Workflow | App design, workflow flowchart | User approves |
+| 1PM | KB Setup | RAG | RAG collection with 50 docs | Search test passes |
+| 2AM | Workflow | Workflow | ChatAssistant workflow published | Unit tests pass |
+| 2PM | App Integration | App | App with linked workflow | Chat test successful |
+| 3AM | Testing (unit) | Workflow Tester | Test report (coverage > 80%) | All pass |
+| 3PM | Testing (integration) | App Tester | E2E test scenarios | UAT scheduled |
+| 4AM | UAT | User + App Tester | Feedback on responses | Issues logged |
+| 4PM | Refinement | Workflow | Updated prompts, added FAQs | Retest runs |
+| 5AM | Deployment | Server | Production deployment | Monitoring on |
+
+---
+
+## **8. Multi-Team Coordination Example**
+
+**Scenario:** Large organization, multiple agents working in parallel
+
+```
+Team App:
+  - AppAgent on landing page
+  - AppAgent on dashboard
+  (parallel on separate pages)
+
+Team Workflow:
+  - WorkflowAgent on RAG nodes
+  - WorkflowAgent on approval logic
+  (parallel on separate workflows)
+
+Team Testing:
+  - AppTester on UI/UX
+  - WorkflowTester on logic/integration
+  (parallel on different aspects)
+
+Sync Points:
+  - End of Day 2: RAG collection ready for workflow team
+  - End of Day 3: Workflow ready for app integration team
+  - End of Day 4: Full system ready for testing team
+  - End of Day 5: UAT feedback for refinement
+```
+
+---
+
+## **Best Practices**
+
+1. **Start with Planning:** Misalignment early = rework late
+2. **Define Interfaces:** Clear input/output contracts prevent integration surprises
+3. **Document Decisions:** Rouge_Notes is your history and justification
+4. **Show Progress:** Screenshots, demos, tangible evidence users can see
+5. **Build in Buffer:** Complex projects always take longer than estimated
+6. **Test Early:** Don't wait until the end
+7. **Iterate Based on Feedback:** Feedback loop = better solution
+8. **Communicate Blockers:** Don't hide, escalate early
+9. **Celebrate Milestones:** Acknowledge progress to keep team motivated
+10. **Retrospect:** After each project, improve your process
+
+---
+
+## **Common Pitfalls to Avoid**
+
+| Pitfall | Example | Fix |
+|---------|---------|-----|
+| Unclear interfaces | "App calls workflow" but which endpoint? | Define REST contract upfront |
+| Scope creep | "While we're at it, add mobile..." | Lock scope before building |
+| No progress visibility | User doesn't know status | Share daily updates + screenshots |
+| Tight coupling | Workflow hardcoded to specific app | Use generic APIs, config over code |
+| Insufficient testing | "Tests will be quick" | Allocate 20-30% time for testing |
+| Poor communication | Agent gets stuck, doesn't escalate | Clear escalation path |
+
+
+---
+
+## Claudia/Procedure/General/PlatformCapabilities.md
+
+# Platform Capabilities — Complete Feature Reference
+
+Detailed reference guide for all platform capabilities.
+
+---
+
+## **Studio Builders**
+
+### **App Studio**
+- **Description:** Visual web application builder with drag-and-drop interface, responsive design, and 17+ widget types
+- **Key capabilities:**
+  - Create apps from empty or templates
+  - 17+ widget types (Content, Form, Chart, Chat, Video, Image, PDF, etc.)
+  - Page management and navigation
+  - Responsive design (mobile, tablet, desktop)
+  - Theming and styling
+  - Real-time preview
+  - Multi-page applications
+- **Use cases:**
+  - Admin dashboards
+  - Customer portals
+  - Internal tools
+  - Employee workspaces
+  - Public websites
+  - E-commerce applications
+- **Prerequisites:** Basic understanding of UI/UX
+- **Complexity:** Simple
+- **Getting started:** [App Studio Procedures](../../Procedure/AppAgent/)
+- **Knowledge:** [App Knowledge](../../Knowledge/AppAgent/)
+
+### **Form Studio**
+- **Description:** Specialized builder for forms with 65+ control types, validation, and business logic
+- **Key capabilities:**
+  - 65+ input control types (Text, Email, Phone, Date, Select, Checkbox, Radio, etc.)
+  - Form validation and error handling
+  - Conditional logic (show/hide fields)
+  - Calculations and formulas
+  - Multi-page forms
+  - Progress tracking
+  - File uploads
+  - Integrations with workflows and apps
+- **Use cases:**
+  - Customer data collection
+  - Surveys and questionnaires
+  - Onboarding forms
+  - Application forms
+  - Feedback collection
+  - Search+edit forms
+- **Prerequisites:** None
+- **Complexity:** Simple to Intermediate
+- **Getting started:** [Form Procedures](../../Procedure/Form/)
+- **Knowledge:** [Form Knowledge](../../Knowledge/Form/)
+
+### **Workflow Studio**
+- **Description:** Visual workflow builder for automation with 18+ node types, branching, and integrations
+- **Key capabilities:**
+  - 18+ node types (Execution, Agent, API, Condition, Loop, Wait, etc.)
+  - Branching logic (if/then/else)
+  - Error handling and retry policies
+  - 50+ integrations (Salesforce, Slack, Email, Database, etc.)
+  - Scheduling (cron jobs)
+  - Variables and data transformation
+  - Logging and monitoring
+  - Version control
+  - Testing and debugging
+- **Use cases:**
+  - Order processing
+  - Approval workflows
+  - Data synchronization
+  - Notification systems
+  - Scheduled tasks
+  - Data pipelines
+- **Prerequisites:** Understanding of business processes
+- **Complexity:** Intermediate
+- **Getting started:** [Workflow Procedures](../../Procedure/WorkflowAgent/)
+- **Knowledge:** [Workflow Knowledge](../../Knowledge/WorkflowAgent/)
+
+---
+
+## **Data Management**
+
+### **Import/Export**
+- **Description:** Bulk data movement and migration tools
+- **Key capabilities:**
+  - Import from CSV, Excel, JSON
+  - Export to CSV, Excel, JSON, PDF
+  - Scheduled imports/exports
+  - Data transformation during import
+  - Validation and error handling
+  - Duplicate detection
+  - Incremental updates
+- **Use cases:**
+  - Data migration
+  - Bulk operations
+  - Regular reporting
+  - System integration
+  - Data cleanup
+- **Prerequisites:** Understanding of data structure
+- **Complexity:** Intermediate
+- **Getting started:** [Import/Export Guide](../../Procedure/Admin/)
+
+### **Backup & Recovery**
+- **Description:** Data protection and disaster recovery
+- **Key capabilities:**
+  - Automatic daily backups
+  - Point-in-time recovery
+  - Incremental backups
+  - Backup scheduling
+  - Export for archival
+  - Disaster recovery planning
+  - Data retention policies
+- **Use cases:**
+  - Disaster recovery
+  - Accidental deletion recovery
+  - Compliance and archival
+  - Version management
+  - Data protection
+- **Prerequisites:** None
+- **Complexity:** Simple
+- **Getting started:** [Backup Guide](../../Procedure/Admin/)
+
+### **Database Management**
+- **Description:** Direct database access and management
+- **Key capabilities:**
+  - SQL query builder
+  - Direct SQL execution
+  - Database views
+  - Stored procedures
+  - Data profiling
+  - Performance monitoring
+- **Use cases:**
+  - Complex queries
+  - Advanced reporting
+  - Data maintenance
+  - Performance tuning
+- **Prerequisites:** SQL knowledge
+- **Complexity:** Advanced
+- **Getting started:** [Database Guide](../../Procedure/Admin/)
+
+---
+
+## **Security & Access Control**
+
+### **API Keys**
+- **Description:** Secure token-based authentication for API access
+- **Key capabilities:**
+  - Generate API keys for sessions
+  - Key scoping (read, write, delete, admin)
+  - Expiration policies
+  - Key rotation
+  - Revocation
+  - Access logging
+  - Rate limiting
+- **Use cases:**
+  - Session authentication
+  - External integrations
+  - Programmatic API access
+  - Third-party applications
+- **Prerequisites:** None
+- **Complexity:** Simple
+- **Getting started:** [API Key Procedures](../../Procedure/APIKeyAgent/)
+- **Knowledge:** [API Key Knowledge](../../Knowledge/APIKeys/)
+
+### **User Management & Roles**
+- **Description:** Role-based access control (RBAC) for users and permissions
+- **Key capabilities:**
+  - Create users and teams
+  - Custom roles and permissions
+  - Permission inheritance
+  - Multi-level access control
+  - Bulk user management
+  - Permission delegation
+  - Activity tracking
+- **Use cases:**
+  - Multi-user workspaces
+  - Team collaboration
+  - Permission management
+  - Access control
+- **Prerequisites:** Understanding of roles/permissions
+- **Complexity:** Intermediate
+- **Getting started:** [User Management Guide](../../Procedure/Admin/)
+
+### **Single Sign-On (SSO)**
+- **Description:** Enterprise authentication integration
+- **Supported protocols:**
+  - SAML 2.0
+  - OAuth 2.0
+  - OpenID Connect
+- **Key capabilities:**
+  - SSO configuration
+  - Automatic user provisioning
+  - Role mapping
+  - Multiple SSO providers
+  - Force SSO (disable password login)
+- **Use cases:**
+  - Enterprise authentication
+  - Centralized identity management
+  - Security compliance
+  - Multi-organization management
+- **Prerequisites:** SSO provider account
+- **Complexity:** Advanced
+- **Getting started:** [SSO Setup Guide](../../Procedure/Admin/sso.md)
+
+### **Audit Logs & Compliance**
+- **Description:** Complete activity tracking and compliance reporting
+- **Key capabilities:**
+  - User activity tracking
+  - Change history
+  - Data access logs
+  - Login history
+  - Export for audits
+  - Compliance reports (SOC2, HIPAA, GDPR)
+  - Data retention policies
+- **Use cases:**
+  - Security monitoring
+  - Compliance audits
+  - Troubleshooting
+  - Regulatory requirements
+- **Prerequisites:** None
+- **Complexity:** Simple
+- **Getting started:** [Audit Logs Guide](../../Procedure/Admin/)
+
+---
+
+## **Automation & Integrations**
+
+### **Workflows & Automation**
+- **Description:** Automated business process execution
+- **Key capabilities:**
+  - Workflow execution (real-time, scheduled, triggered)
+  - Branching and conditional logic
+  - Parallel execution
+  - Error handling and retry
+  - Logging and monitoring
+  - Workflow versioning
+  - Testing and debugging
+- **Use cases:**
+  - Process automation
+  - Scheduled tasks
+  - Event-driven automation
+  - Data pipelines
+- **Complexity:** Intermediate
+- **Getting started:** [Workflow Procedures](../../Procedure/WorkflowAgent/)
+
+### **Webhooks**
+- **Description:** Event-driven integrations and notifications
+- **Key capabilities:**
+  - Webhook events (create, update, delete)
+  - Custom event payloads
+  - Webhook signing and verification
+  - Retry policies
+  - Event filtering
+  - Webhook logs
+- **Use cases:**
+  - Real-time notifications
+  - System integrations
+  - Event processing
+  - Third-party alerts
+- **Prerequisites:** Basic understanding of HTTP
+- **Complexity:** Intermediate
+- **Getting started:** [Webhooks Guide](../../Procedure/Integrations/)
+
+### **Integrations (50+ Available)**
+- **Description:** Pre-built connectors to external systems
+- **Categories:**
+  - **CRM:** Salesforce, HubSpot, Pipedrive
+  - **Communication:** Slack, Teams, Email, SMS
+  - **Data:** Elasticsearch, MongoDB, PostgreSQL, SQL Server, MySQL
+  - **Analytics:** Google Analytics, Tableau, Looker
+  - **Automation:** Zapier, Make, IFTTT
+  - **ERP:** Odoo, SAP, NetSuite
+  - **Payments:** Stripe, PayPal, Square
+  - **Cloud:** AWS, Azure, Google Cloud
+- **Key capabilities:**
+  - Pre-built integration steps
+  - Data mapping
+  - Error handling
+  - Scheduled sync
+  - Real-time updates
+  - Bidirectional sync
+- **Use cases:**
+  - System integration
+  - Data synchronization
+  - Workflow automation
+  - Cross-platform workflows
+- **Prerequisites:** External system account
+- **Complexity:** Intermediate
+- **Getting started:** [Integrations Guide](../../Knowledge/Integrations/)
+
+---
+
+## **Analytics & Monitoring**
+
+### **Analytics Dashboard**
+- **Description:** Usage metrics and performance analytics
+- **Key capabilities:**
+  - Real-time metrics
+  - Usage trends
+  - Performance graphs
+  - Custom dashboards
+  - Export reports
+  - Scheduled reports
+  - Data visualization
+- **Use cases:**
+  - Usage monitoring
+  - Performance analysis
+  - Capacity planning
+  - Business intelligence
+- **Prerequisites:** None
+- **Complexity:** Simple
+- **Getting started:** [Analytics Guide](../../Procedure/Admin/)
+
+### **Workflow Monitoring**
+- **Description:** Real-time workflow execution monitoring
+- **Key capabilities:**
+  - Execution status tracking
+  - Error monitoring
+  - Performance metrics
+  - Execution logs
+  - Alert configuration
+  - Historical analysis
+- **Use cases:**
+  - Workflow health
+  - Error detection
+  - Performance optimization
+  - Debugging
+- **Prerequisites:** Workflow knowledge
+- **Complexity:** Intermediate
+- **Getting started:** [Monitoring Guide](../../Procedure/WorkflowAgent/)
+
+---
+
+## **Advanced Features**
+
+### **REST API**
+- **Description:** Programmatic access to all platform features
+- **Key capabilities:**
+  - Complete CRUD operations
+  - Authentication (API keys, JWT)
+  - Rate limiting
+  - Pagination
+  - Batch operations
+  - Webhooks
+  - SDKs (JavaScript, Python, etc.)
+- **Use cases:**
+  - Custom integrations
+  - Automation scripts
+  - External applications
+  - Programmatic data access
+- **Prerequisites:** Programming knowledge
+- **Complexity:** Advanced
+- **Getting started:** [API Documentation](../../Knowledge/APIKeys/04-integration-guide.md)
+
+### **Custom Scripts**
+- **Description:** Embedded code execution
+- **Supported languages:**
+  - JavaScript (Node.js)
+  - Python
+  - SQL
+- **Key capabilities:**
+  - Custom logic
+  - Data transformation
+  - Complex calculations
+  - External API calls
+- **Use cases:**
+  - Complex business logic
+  - Data transformation
+  - Custom integrations
+  - Advanced automation
+- **Prerequisites:** Programming knowledge
+- **Complexity:** Advanced
+- **Getting started:** [Custom Scripts Guide](../../Procedure/Advanced/)
+
+### **Multi-Tenant Management**
+- **Description:** Manage multiple organizations/customers
+- **Key capabilities:**
+  - Tenant isolation
+  - Shared resources
+  - Per-tenant customization
+  - Tenant billing
+  - Tenant management UI
+  - Role-based tenant access
+- **Use cases:**
+  - SaaS applications
+  - Enterprise multi-org
+  - Reseller platforms
+  - Customer workspaces
+- **Prerequisites:** Architecture design
+- **Complexity:** Advanced
+- **Getting started:** [Multi-Tenant Guide](../../Procedure/Advanced/)
+
+### **Performance & Scaling**
+- **Description:** Optimize and scale applications
+- **Key capabilities:**
+  - Auto-scaling
+  - Load balancing
+  - Caching
+  - CDN integration
+  - Performance monitoring
+  - Database optimization
+- **Use cases:**
+  - High-traffic applications
+  - Performance optimization
+  - Reliability
+  - Scalability
+- **Prerequisites:** System architecture knowledge
+- **Complexity:** Advanced
+- **Getting started:** [Performance Guide](../../Procedure/Advanced/)
+
+---
+
+## **Complexity Guide**
+
+| Complexity | Estimated Time | Skill Level | Examples |
+|-----------|----------------|------------|----------|
+| **Simple** | 15-30 min | Beginner | API Keys, Theme, Settings, Audit Logs |
+| **Intermediate** | 1-3 hours | Intermediate | Apps, Forms, Workflows, Import/Export, Integrations |
+| **Advanced** | 3-8 hours | Advanced | Custom Scripts, Multi-Tenant, SSO, API Development |
+
+---
+
+## **Capability Matrix**
+
+| Feature | Setup Time | Maintenance | Learning Curve | ROI |
+|---------|-----------|------------|-----------------|-----|
+| App Studio | 2-4 hrs | Low | Easy | Very High |
+| Workflow Studio | 2-4 hrs | Medium | Medium | Very High |
+| Forms | 1-2 hrs | Low | Easy | High |
+| API Keys | 15 min | None | Easy | Medium |
+| Integrations | 1-2 hrs | Medium | Medium | Very High |
+| User Management | 1 hr | Low | Easy | High |
+| Backup & Recovery | 30 min | None | Easy | High |
+| SSO | 2-3 hrs | Low | Hard | Very High |
+| Custom Scripts | 3-8 hrs | Medium | Hard | High |
+| Multi-Tenant | 5-10 hrs | High | Hard | Very High |
+
+---
+
+## **Getting Help**
+
+- **Knowledge Bases:** [Full Documentation](../../Knowledge/)
+- **Procedures:** [Step-by-Step Guides](../../Procedure/)
+- **Guided Examples:** [Real-World Scenarios](../../Procedure/General/)
+- **Agent Assistance:** Ask me "How do I [feature]?" and I'll guide you through it
+
+---
+
+## Claudia/Procedure/General/PlatformFeaturesMenu.md
+
+# Platform Features Menu — Explore What's Possible
+
+**You can do SO much more with this platform!** Here's a complete guide to all available features and capabilities.
+
+---
+
+## 🎨 **Builders — Create & Design**
+
+Build powerful applications without writing code.
+
+### **App Studio**
+- **What it is:** Visual builder for web applications, sites, pages, and widgets
+- **What you can build:** Dashboards, portals, e-commerce sites, internal tools, customer apps
+- **Key features:** 17+ widget types, drag-and-drop design, responsive layouts, theming, template library
+- **Use cases:** Admin dashboard, customer portal, employee workspace, marketing site
+- **Time to learn:** 30 min (basics) → 2 hours (full proficiency)
+- **Knowledge:** [AppAgent Knowledge](../../Knowledge/AppAgent/)
+- **Procedures:** [AppAgent Procedures](../../Procedure/AppAgent/)
+- **🚀 Start Now**
+
+### **Form Studio**
+- **What it is:** Specialized builder for forms and data-entry interfaces
+- **What you can build:** Data collection forms, search+edit forms, surveys, questionnaires
+- **Key features:** 65+ control types, validation, conditional logic, calculations, integrations
+- **Use cases:** Customer onboarding, feedback collection, data entry, applicant tracking
+- **Time to learn:** 20 min (basics) → 1.5 hours (advanced)
+- **Knowledge:** [Form Knowledge](../../Knowledge/Form/)
+- **Procedures:** [Form Procedures](../../Procedure/Form/)
+- **🚀 Start Now**
+
+### **Workflow Studio**
+- **What it is:** Visual builder for automated workflows and business processes
+- **What you can build:** Approval workflows, data pipelines, integrations, notifications, scheduled tasks
+- **Key features:** 18+ node types, branching logic, error handling, integration connectors, scheduling
+- **Use cases:** Order processing, leave approval, data sync, alert system, report generation
+- **Time to learn:** 45 min (basics) → 3 hours (advanced integrations)
+- **Knowledge:** [Workflow Knowledge](../../Knowledge/WorkflowAgent/)
+- **Procedures:** [Workflow Procedures](../../Procedure/WorkflowAgent/)
+- **🚀 Start Now**
+
+### **Credential Management**
+- **What it is:** Secure storage and management of API keys and credentials
+- **What you can do:** Store API keys, database passwords, OAuth tokens, SSH keys
+- **Key features:** Encryption, rotation policies, access control, audit trail
+- **Use cases:** Secure third-party integrations, database access, API authentication
+- **Time to learn:** 15 min
+- **Knowledge:** [Credentials Knowledge](../../Knowledge/Credentials/)
+- **Procedures:** [Credentials Procedures](../../Procedure/Credentials/)
+- **🚀 Start Now**
+
+---
+
+## 🔧 **Administration — Manage & Configure**
+
+Control your workspace, users, and settings.
+
+### **User Management**
+- **What you can do:** Create users, assign roles, manage permissions, set up teams
+- **Key features:** Role-based access control (RBAC), team management, permission inheritance
+- **Use cases:** Multi-user workspace, role-based access, team collaboration
+- **Complexity:** Intermediate
+- **🚀 Start Now**
+
+### **Theme & Appearance**
+- **What you can do:** Customize colors, branding, layout, dark/light mode
+- **Key features:** Color scheme editor, logo upload, custom CSS, responsive themes
+- **Use cases:** Brand consistency, user experience customization, accessibility
+- **Complexity:** Simple
+- **🚀 Start Now**
+
+### **Workspace Settings**
+- **What you can do:** Configure workspace name, default timezone, language, security policies
+- **Key features:** Multi-language support, timezone configuration, audit settings, backup policies
+- **Complexity:** Simple
+- **🚀 Start Now**
+
+### **Audit Logs & Activity**
+- **What you can do:** View who did what and when, track changes, security monitoring
+- **Key features:** Complete activity history, filtering, export, compliance reporting
+- **Use cases:** Security monitoring, compliance audits, troubleshooting, change tracking
+- **Complexity:** Simple
+- **🚀 Start Now**
+
+---
+
+## 📊 **Features & Tools — Analyze & Manage Data**
+
+Gain insights and manage your data effectively.
+
+### **Analytics Dashboard**
+- **What you can do:** View usage metrics, performance trends, user activity
+- **Key features:** Real-time metrics, charts, trends, custom reports, export
+- **Use cases:** Performance monitoring, usage analysis, capacity planning
+- **Complexity:** Simple
+- **🚀 Start Now**
+
+### **Data Import/Export**
+- **What you can do:** Bulk import data, export to CSV/Excel, data migration
+- **Key features:** Multiple format support, validation, error handling, scheduling
+- **Use cases:** Data migration, bulk operations, reporting, backups
+- **Complexity:** Intermediate
+- **🚀 Start Now**
+
+### **Backup & Recovery**
+- **What you can do:** Create backups, restore from snapshots, version control
+- **Key features:** Automatic backups, point-in-time recovery, disaster recovery
+- **Use cases:** Data protection, disaster recovery, accidental deletion recovery
+- **Complexity:** Simple
+- **🚀 Start Now**
+
+### **Webhooks & Notifications**
+- **What you can do:** Set up automated notifications, integrate with external systems
+- **Key features:** Event-based triggers, multiple channels (Email, Slack, SMS), custom payloads
+- **Use cases:** Real-time alerts, system integrations, event processing
+- **Complexity:** Intermediate
+- **🚀 Start Now**
+
+---
+
+## 🚀 **Advanced Features**
+
+For power users and advanced scenarios.
+
+### **API Access**
+- **What you can do:** Programmatic access to all platform features via REST API
+- **Key features:** Complete API documentation, SDKs, rate limiting, webhooks
+- **Use cases:** Custom integrations, automation, external system connections
+- **Complexity:** Advanced
+- **Knowledge:** [API Documentation](../../Knowledge/APIKeys/)
+- **🚀 Start Now**
+
+### **Integrations**
+- **What you can do:** Connect to 50+ external systems
+- **Available integrations:**
+  - CRM: Salesforce, HubSpot, Pipedrive
+  - Communication: Slack, Teams, Email, SMS
+  - Data: Elasticsearch, MongoDB, PostgreSQL, SQL Server
+  - Tools: Zapier, Make, IFTTT
+  - ERP: Odoo, SAP, NetSuite
+- **Complexity:** Intermediate to Advanced
+- **🚀 Explore Integrations**
+
+### **Custom Scripts & Logic**
+- **What you can do:** Write custom code for complex logic
+- **Supported languages:** JavaScript, Python, SQL
+- **Use cases:** Complex business logic, custom calculations, data transformation
+- **Complexity:** Advanced
+- **🚀 Start Now**
+
+### **Multi-Tenant Management**
+- **What you can do:** Manage multiple organizations/customers
+- **Key features:** Tenant isolation, shared settings, per-tenant customization
+- **Use cases:** SaaS applications, enterprise multi-org support
+- **Complexity:** Advanced
+- **🚀 Start Now**
+
+### **Single Sign-On (SSO)**
+- **What you can do:** Set up enterprise SSO (SAML, OAuth, OpenID Connect)
+- **Key features:** Multiple SSO providers, automatic user provisioning, role mapping
+- **Use cases:** Enterprise security, seamless authentication, centralized identity
+- **Complexity:** Advanced
+- **🚀 Configure SSO**
+
+---
+
+## 📚 **Quick Reference: What Can You Do?**
+
+| Goal | Solution | Time | Difficulty |
+|------|----------|------|------------|
+| Build a web app | App Studio | 2-4 hours | Easy |
+| Create a data form | Form Studio | 1-2 hours | Easy |
+| Automate a process | Workflow Studio | 2-4 hours | Medium |
+| Get secure API keys | Credentials + APIKeyAgent | 15 min | Easy |
+| Track usage metrics | Analytics Dashboard | 30 min | Easy |
+| Integrate with Salesforce | Integrations | 1-2 hours | Medium |
+| Set up authentication | SSO Setup | 1-2 hours | Hard |
+| Migrate data | Import/Export | 1-3 hours | Medium |
+| Manage multiple clients | Multi-Tenant | 3-5 hours | Hard |
+| Custom business logic | Custom Scripts | 2-4 hours | Hard |
+
+---
+
+## 🎯 **Guided Paths: Choose Your Journey**
+
+### **"I want to build something"**
+1. Start with [App Studio](../../Procedure/AppAgent/) (web interface)
+2. Add [forms](../../Procedure/Form/) for data entry
+3. Connect [workflows](../../Procedure/WorkflowAgent/) for automation
+4. Set up [integrations](../../Knowledge/Integrations/) for external data
+5. Monitor with [analytics](../../Knowledge/Analytics/)
+
+**Estimated time:** 4-8 hours for a complete working app
+
+### **"I want to automate my business"**
+1. Map your process (spreadsheet or document)
+2. Build in [Workflow Studio](../../Procedure/WorkflowAgent/)
+3. Set up [integrations](../../Knowledge/Integrations/) with external systems
+4. Add [notifications](../../Procedure/Workflows/notifications.md)
+5. Test and deploy
+
+**Estimated time:** 2-6 hours depending on complexity
+
+### **"I want to manage users and security"**
+1. Create users and roles in [User Management](../../Procedure/Admin/users.md)
+2. Set up [Credentials](../../Procedure/Credentials/) for external access
+3. Generate [API Keys](../../Procedure/APIKeyAgent/) if needed
+4. Configure [SSO](../../Procedure/Admin/sso.md) for enterprise security
+5. Review [Audit Logs](../../Procedure/Admin/audit.md)
+
+**Estimated time:** 1-3 hours
+
+### **"I want to integrate with external systems"**
+1. Choose your integration (Salesforce, Slack, etc.)
+2. Follow the specific integration guide
+3. Test the connection
+4. Set up workflows or automations
+5. Monitor with audit logs
+
+**Estimated time:** 1-4 hours depending on system
+
+---
+
+## ❓ **Common Questions**
+
+**Q: Can I do everything without coding?**
+A: Yes! All core features are no-code. Custom scripts are optional for advanced scenarios.
+
+**Q: Is it secure?**
+A: Yes. Encryption, role-based access, audit trails, SSO, and compliance features included.
+
+**Q: Can I integrate with my existing systems?**
+A: Yes. 50+ pre-built integrations plus REST API for custom integrations.
+
+**Q: Can multiple people work together?**
+A: Yes. User management, roles, permissions, and team collaboration built-in.
+
+**Q: What if I need help?**
+A: Knowledge base, procedures, and guided examples available for every feature.
+
+---
+
+## 🚀 **Next Steps**
+
+**What would you like to explore?**
+
+- ☐ **Build something** → [App Studio](../../Procedure/AppAgent/)
+- ☐ **Automate a process** → [Workflow Studio](../../Procedure/WorkflowAgent/)
+- ☐ **Manage data** → [Forms & Data](../../Procedure/Form/)
+- ☐ **Integrate systems** → [Integrations & APIs](../../Knowledge/Integrations/)
+- ☐ **Set up security** → [Users, Credentials, SSO](../../Procedure/Admin/)
+- ☐ **Analyze usage** → [Analytics](../../Procedure/Admin/analytics.md)
+- ☐ **Go back to main menu**
+
+**Or ask me:** "Show me how to [do something]" and I'll guide you step-by-step!
+
+---
+
+## Claudia/Procedure/General/QuestionnaireExamples.md
+
+# Questionnaire Examples — Guided Agent Interactions
+
+**How agents guide users through complex tasks step-by-step with recommendations, examples, and choices.**
+
+---
+
+## Example 1: AppQuestionnaire Sample Run
+
+### Scenario: Building an E-commerce Customer Portal
+
+```
+────────────────────────────────────────────────────────────────
+APPAGENT: Welcome! I'm AppDeveloper, and I'll guide you through 
+building your web app. Let's start simple.
+
+What's your app about? (describe briefly)
+────────────────────────────────────────────────────────────────
+
+USER: I want to build a customer portal where people can view 
+their orders and manage their account
+
+APPAGENT: ✓ Great! Customer portal — that's typically a Dashboard 
+type app. Let me show you recommended patterns:
+
+  [Template Preview]
+  📊 Generic Portal     — Flexible, bare-bones (recommended)
+  🛒 E-commerce Portal  — Orders, products, checkout
+  💼 B2B Portal         — Invoices, contracts, analytics
+  
+Would any of these help you? Or start from scratch?
+
+USER: E-commerce Portal sounds perfect
+
+APPAGENT: Excellent choice! E-commerce portals typically need:
+
+  ✓ Login/authentication
+  ✓ Product browsing
+  ✓ Shopping cart
+  ✓ Order history
+  ✓ Account settings
+  ✓ Support/contact
+  
+Does this match what you need?
+
+USER: Yes, looks good
+
+APPAGENT: Perfect! Now let's plan your pages.
+
+[PROGRESS: Step 2 of 6 ▓░░░░░░]
+
+How many pages do you want to start with?
+
+  Recommended for e-commerce: 5-7 pages
+  - Home (featured products, promotions)
+  - Products (catalog, search, filters)
+  - Cart (review items, checkout)
+  - Orders (order history, tracking)
+  - Account (profile, settings, preferences)
+  - Support (FAQ, contact)
+  - Logout
+
+USER: Let's start with 4 pages: Home, Products, Cart, Orders
+
+APPAGENT: Smart approach — we can add more later! 
+
+Now let's configure each page. Starting with:
+
+[PAGE 1: Home]
+
+What content should appear on the Home page?
+
+  Recommended:
+  • Hero banner (promotion, welcome message)
+  • Featured products grid (4-6 items)
+  • Categories section (browse by type)
+  • Newsletter signup
+  • Footer (links, socials)
+
+USER: Yes, all of those sound good
+
+APPAGENT: Great! [Visual preview shows layout]
+
+Here's your Home page structure:
+┌─────────────────────────────────┐
+│         Hero Banner             │  Hero image + call-to-action
+├─────────────────────────────────┤
+│  Featured Products Grid (6)     │  Product cards with images
+├─────────────────────────────────┤
+│  Categories Section             │  Browse by category
+├─────────────────────────────────┤
+│  Newsletter Signup Form          │  Email capture
+├─────────────────────────────────┤
+│  Footer                         │  Links, social, contact
+└─────────────────────────────────┘
+
+Ready to move to Products page? [Yes / Refine Home / Skip to Review]
+
+USER: Yes, move on
+
+APPAGENT: [PAGE 2: Products]
+
+The Products page needs to help customers find items. What layout 
+would you prefer?
+
+  Recommended layouts:
+  • Grid (3-4 columns) — Most common for e-commerce
+  • List (full width) — Better for detailed comparisons
+  • Masonry (Pinterest-style) — Visually interesting
+
+USER: Grid layout, 3 columns
+
+APPAGENT: Perfect! Your Products page will have:
+
+✓ Search bar (top)
+✓ Category filters (sidebar)
+✓ Product grid (3 columns)
+✓ Sorting options (price, popularity, rating)
+✓ Product detail popup
+
+Ready to continue? [Yes / Refine / Back]
+
+USER: Yes
+
+APPAGENT: [PAGE 3: Cart & PAGE 4: Orders — continues similarly]
+
+Summary so far:
+═══════════════════════════════════════════════════════════════
+
+📋 Your E-commerce Customer Portal
+
+Pages:
+  1. Home — Hero, Featured products, Categories, Newsletter
+  2. Products — 3-column grid, Search, Filters, Sorting
+  3. Cart — Review items, Quantity, Checkout button
+  4. Orders — Order history, Status, Tracking
+
+Styling:
+  Colors: Brand colors? [Select or Default]
+  Mobile-friendly: Yes
+  Responsive breakpoints: Mobile, Tablet, Desktop
+
+[PROGRESS: Step 5 of 6 ▓▓▓▓▓░░]
+
+═══════════════════════════════════════════════════════════════
+
+Ready to build? [Yes, build! / Edit something / Go back to menu]
+
+USER: Yes, build!
+
+APPAGENT: Building your app... Creating pages, configuring widgets...
+
+[15 seconds later]
+
+✅ Home page created!
+  └─ Hero banner added
+  └─ Featured products grid added (empty, ready for products)
+  └─ Categories section added
+  └─ Newsletter form added
+  └─ Footer added
+
+Would you like to see it? I can open it in the browser.
+
+[Shows: Screenshot of Home page in browser window]
+
+Happy with the Home page? [Yes / Make changes / Continue to Products]
+
+USER: Looks great, continue
+
+[App building continues incrementally, with verification after each page]
+```
+
+---
+
+## Example 2: WorkflowQuestionnaire Sample Run
+
+### Scenario: Building a Customer Order Processing Workflow
+
+```
+────────────────────────────────────────────────────────────────
+WORKFLOWAGENT: Welcome! I'll help you build a workflow. 
+
+What workflow are you building?
+(Brief description of what it should do)
+────────────────────────────────────────────────────────────────
+
+USER: I need to process customer orders automatically. When someone 
+submits an order, validate it, check inventory, process payment, 
+and send a confirmation.
+
+WORKFLOWAGENT: Perfect! Customer order processing — that's a 
+classic workflow.
+
+Let me ask: How does the workflow get triggered?
+
+  Options:
+  ✓ Form submission (customer submits order form)
+  ☐ Scheduled (every hour, daily, etc.)
+  ☐ API call (external system triggers it)
+  ☐ Manual (someone clicks a button)
+  ☐ Event (something happens in database)
+
+Most e-commerce flows: Form submission
+
+USER: Yes, form submission
+
+WORKFLOWAGENT: Good! So workflow starts when customer submits order.
+
+[PROGRESS: Step 2 of 7 ▓░░░░░░]
+
+What happens next? Here are common order processing steps:
+
+  Typical sequence:
+  1. Receive order (capture data)
+  2. Validate order (check required fields, amounts)
+  3. Check inventory (confirm items in stock)
+  4. Process payment (charge card)
+  5. Send confirmation (email customer)
+  6. Create shipping label (hand off to logistics)
+
+Does this match your process? Anything to add/remove?
+
+USER: Looks good, but we also need to handle payment failures
+
+WORKFLOWAGENT: Excellent point! Error handling is critical.
+
+So your workflow structure:
+
+  ┌─ Receive Order ─┐
+  │                │
+  ├─ Validate ─────┤
+  │    (Error path)├─→ Send error email + Stop
+  │                │
+  ├─ Check Inventory
+  │    (Error path)├─→ Send "out of stock" + Stop
+  │                │
+  ├─ Process Payment
+  │    (Error path)├─→ Retry 3x, then Send "payment failed" + Stop
+  │                │
+  ├─ Send Confirmation
+  │                │
+  └─ Create Shipping Label
+
+Does this look right?
+
+USER: Yes, perfect!
+
+WORKFLOWAGENT: Great! Now let's configure each step.
+
+[STEP 1: VALIDATE ORDER]
+
+Where's your order data coming from?
+
+  ✓ Form submission (what we're using)
+  Validate these fields:
+  • Email (required, valid format)
+  • Product IDs (required, exist in catalog)
+  • Quantities (required, positive numbers)
+  • Address (required, valid)
+  • Payment method (required, valid)
+
+Any other validation rules?
+
+USER: Check that customer has no outstanding disputes
+
+WORKFLOWAGENT: Added! Will query customer record for disputes.
+
+[STEP 2: CHECK INVENTORY]
+
+Where's your inventory data?
+
+  Options:
+  ☑ Database (internal)
+  ☐ API (external system)
+  ☐ Spreadsheet
+  ☐ Real-time sync (Shopify, etc.)
+
+USER: Database
+
+APPAGENT: Which database and table?
+
+USER: Postgres, products table, check "stock_quantity" column
+
+WORKFLOWAGENT: Perfect! For each product in order, 
+  IF stock_quantity < order_quantity → Out of stock
+
+[STEP 3: PROCESS PAYMENT]
+
+What payment processor?
+
+  ✓ Stripe (recommended, most reliable)
+  ☐ PayPal
+  ☐ Square
+  ☐ Custom (direct bank)
+
+USER: Stripe
+
+WORKFLOWAGENT: Need your Stripe API credential.
+
+  Do you have it configured? [Yes / Create new / Skip for now]
+
+USER: I have it
+
+WORKFLOWAGENT: Which credential? [Dropdown: Stripe-Prod, Stripe-Test]
+
+USER: Stripe-Prod
+
+WORKFLOWAGENT: Got it! For payment failures:
+
+  Retry strategy:
+  ☐ No retry (fail immediately)
+  ☐ Retry 1x
+  ✓ Retry 3x with 5-second delay
+  ☐ Retry until timeout (60 seconds)
+
+USER: Retry 3x sounds good
+
+[STEP 4: SEND CONFIRMATION]
+
+Which notification channels?
+
+  ✓ Email (customer email from form)
+  ☐ SMS (if phone provided)
+  ☐ Slack (notify admin)
+  ☐ In-app (if using your app)
+
+USER: Email to customer
+
+WORKFLOWAGENT: Email template:
+
+  Subject: Order confirmation #{orderID}
+  Body: 
+    Thank you for your order!
+    Order ID: {orderID}
+    Total: ${amount}
+    Items: {itemList}
+    Tracking will be sent to {email}
+
+Want to customize this? [Yes / Use template / Skip]
+
+USER: Use template
+
+[Configuration continues for Step 5, 6...]
+
+WORKFLOWAGENT: [FINAL REVIEW]
+
+═══════════════════════════════════════════════════════════════
+
+📊 Your Order Processing Workflow
+
+Trigger: Form submission (order_form)
+
+Steps:
+  1. Validate Order
+     └─ Check: email, products, qty, address, disputes
+     └─ Error: Send error email → Stop
+  
+  2. Check Inventory
+     └─ Query: products table
+     └─ Error: Send "out of stock" → Stop
+  
+  3. Process Payment (Stripe)
+     └─ Retry: 3x with 5-sec delay
+     └─ Error: Send "payment failed" → Stop
+  
+  4. Send Confirmation Email
+     └─ Template: Order receipt with ID + total
+  
+  5. Create Shipping Label
+     └─ Hand off to logistics system
+
+Estimated execution time: 5-10 seconds per order
+
+[PROGRESS: Step 7 of 7 ▓▓▓▓▓▓▓]
+
+═══════════════════════════════════════════════════════════════
+
+Ready to build this workflow? [Yes, build! / Edit / Back to menu]
+
+USER: Yes, build!
+
+WORKFLOWAGENT: Building workflow... Creating nodes, setting up 
+error paths, configuring integrations...
+
+✅ Workflow "Order Processing" created!
+  └─ Validation node added
+  └─ Inventory check node added
+  └─ Payment node (Stripe) added
+  └─ Email notification node added
+  └─ Shipping label node added
+
+Testing the workflow...
+
+✅ All nodes validated successfully!
+
+[Shows: Workflow diagram in browser]
+
+Ready to deploy? [Deploy now / Test first / Edit]
+
+USER: Test first
+
+WORKFLOWAGENT: Running test with sample order...
+
+✅ Test passed!
+  ├─ Validation: ✓
+  ├─ Inventory: ✓
+  ├─ Payment (test mode): ✓
+  ├─ Confirmation email: ✓ (sent to test@example.com)
+  └─ Execution time: 2.3 seconds
+
+Ready to go live? [Deploy / Adjust / Abort]
+```
+
+---
+
+## Example 3: CredentialQuestionnaire Sample Run
+
+### Scenario: Setting Up Salesforce API Credential
+
+```
+────────────────────────────────────────────────────────────────
+CREDENTIALAGENT: Hi! Let's set up a credential securely.
+
+What credential are you creating?
+────────────────────────────────────────────────────────────────
+
+USER: Salesforce API key for our integrations
+
+CREDENTIALAGENT: Salesforce API — excellent!
+
+What type of authentication?
+
+  ✓ OAuth 2.0 (recommended for Salesforce)
+  ☐ API Key (simple, less secure)
+  ☐ JWT (service-to-service)
+  ☐ Custom
+
+USER: OAuth 2.0
+
+CREDENTIALAGENT: Perfect! I need:
+
+  1. Client ID (from Salesforce Connected App)
+  2. Client Secret (keep this safe!)
+  3. Refresh Token
+
+Do you have these? [Yes / Need help / Get from Salesforce]
+
+USER: Yes, I have them
+
+CREDENTIALAGENT: Great! Enter your credentials:
+
+  Client ID: [••••••••]
+  Client Secret: [••••••••]
+  Refresh Token: [••••••••]
+
+[Validating... ✓ Connected!]
+
+CREDENTIALAGENT: Excellent! Connected to your Salesforce instance.
+
+Who should be able to use this credential?
+
+  Access levels:
+  ☐ Workspace admins only (most secure)
+  ☐ Specific users (recommended)
+  ✓ Only me (testing)
+  ☐ Shared across workspace (least secure)
+
+[Shows security implications for each]
+
+USER: Specific users — give access to John, Sarah, and Michael
+
+CREDENTIALAGENT: Perfect! This credential will be accessible only 
+to:
+  • John (john@company.com)
+  • Sarah (sarah@company.com)
+  • Michael (michael@company.com)
+
+[PROGRESS: Step 3 of 5 ▓▓░░░]
+
+When should this credential expire?
+
+  Recommendations:
+  ☐ Never (testing environments)
+  ✓ 90 days (standard security)
+  ☐ 60 days (high security)
+  ☐ 30 days (extremely sensitive)
+  ☐ Custom date
+
+Most organizations: 90 days
+
+USER: 90 days, so it expires on [December 28, 2024]
+
+CREDENTIALAGENT: Got it! We'll need to refresh it before then.
+
+How often should we rotate (replace) this credential?
+
+  Rotation schedule:
+  ☐ Never (testing)
+  ☐ Quarterly (every 90 days)
+  ✓ Monthly (standard)
+  ☐ Weekly (high-security)
+
+USER: Monthly
+
+CREDENTIALAGENT: Monthly rotation means:
+  • 1st of every month: Create new credential
+  • 2nd of month: Update apps using this credential
+  • 3rd of month: Revoke old credential
+
+We'll send reminders! 📅
+
+[PROGRESS: Step 4 of 5 ▓▓▓░░]
+
+Last step: Where will this credential be used?
+
+  Usage:
+  ☐ Workflows (background automation)
+  ✓ APIs (in your code/apps)
+  ☐ Integrations (third-party systems)
+  ☑ Scheduled tasks
+
+Examples:
+  • Sync Salesforce contacts to CRM
+  • Pull sales data for dashboards
+  • Update Salesforce from order system
+
+USER: All three — workflows, APIs, and scheduled sync
+
+CREDENTIALAGENT: [FINAL REVIEW]
+
+═══════════════════════════════════════════════════════════════
+
+🔐 Your Salesforce OAuth Credential
+
+Name: Salesforce API
+Type: OAuth 2.0
+Access: John, Sarah, Michael (3 users)
+Expiration: 90 days (Dec 28, 2024)
+Rotation: Monthly (1st of every month)
+Usage: Workflows, APIs, Scheduled tasks
+
+Status: ✅ Connected and validated
+
+[PROGRESS: Step 5 of 5 ▓▓▓▓▓]
+
+═══════════════════════════════════════════════════════════════
+
+Ready to save this credential? [Yes / Edit / Cancel]
+
+USER: Yes, save it
+
+CREDENTIALAGENT: ✅ Credential saved!
+
+  Name: Salesforce API
+  Created: Today at 2:34 PM
+  Expires: Dec 28, 2024 (90 days)
+  Next rotation: Nov 1, 2024
+  Accessible by: 3 users
+
+You'll receive an email reminder 2 weeks before expiration.
+
+Next steps:
+  1. Use in a workflow [Go]
+  2. Use in an API call [Go]
+  3. View all credentials [Go]
+  4. Done [Close]
+```
+
+---
+
+## Example 4: ServerQuestionnaire Sample Run
+
+### Scenario: Provisioning Production Application Server
+
+```
+────────────────────────────────────────────────────────────────
+SERVERAGENT: Welcome! I'll help you provision a server.
+
+What type of server do you need?
+────────────────────────────────────────────────────────────────
+
+USER: Application server for my web app in production
+
+SERVERAGENT: Production app server — let's set it up right!
+
+[PROGRESS: Step 1 of 8 ▓░░░░░░]
+
+First: What's the expected traffic level?
+
+  Traffic estimates:
+  🟢 Low (1-10 requests/sec)
+    └─ Blog, brochure site, internal tools
+  
+  🟡 Medium (10-100 requests/sec)
+    └─ Small SaaS, startups, content sites
+  
+  🔴 High (100+ requests/sec)
+    └─ E-commerce, popular SaaS, social platforms
+
+USER: Medium — expecting 20-30 requests per second
+
+SERVERAGENT: Smart! For Medium traffic, I recommend:
+
+  Compute:
+  ✓ 4-8 CPU cores
+  ✓ 8-16 GB RAM
+  ✓ SSD storage (100+ GB)
+  ✓ Load balancer
+  ✓ Auto-scaling enabled
+
+  These specs handle traffic spikes and maintain performance.
+
+Would you like these defaults? [Yes / Customize]
+
+USER: Yes, but 8 cores instead of 4-8
+
+SERVERAGENT: Perfect! Customized specs:
+  ✓ 8 CPU cores
+  ✓ 8 GB RAM
+  ✓ Auto-scaling (up to 4 additional servers)
+  ✓ Load balanced across instances
+  ✓ SSD storage
+
+[PROGRESS: Step 2 of 8 ▓▓░░░░░]
+
+Where should the server be located?
+
+  Geographic regions:
+  🌎 North America
+    ☑ US East (Virginia) — Default, best coverage
+    ☐ US West (California) — For West Coast users
+    ☐ Canada (Toronto)
+  
+  🌍 Europe
+    ☐ EU West (Ireland)
+    ☐ EU Central (Germany)
+  
+  🌏 Asia Pacific
+    ☐ Singapore
+    ☐ Tokyo
+    ☐ Sydney
+
+USER: US East (where most of our users are)
+
+SERVERAGENT: Good choice! US East provides lowest latency 
+for East Coast users.
+
+Operating system and runtime?
+
+  Options:
+  ✓ Ubuntu 22.04 LTS (recommended)
+  ☐ Windows Server 2022
+  ☐ Amazon Linux 2
+  ☐ CentOS
+
+USER: Ubuntu 22.04
+
+SERVERAGENT: Ubuntu 22.04 — solid choice!
+
+What runtime environment does your app need?
+
+  ✓ .NET 9.0 runtime (Node.js, Python also available)
+  ✓ Node.js 20 LTS
+  ☐ Python 3.12
+  ☐ Java 17
+  ☐ Go 1.21
+  ☐ Multiple runtimes
+
+USER: .NET 9.0 (it's a .NET app)
+
+SERVERAGENT: Got it! .NET 9.0 will be pre-installed.
+
+[PROGRESS: Step 4 of 8 ▓▓▓▓░░░]
+
+What about networking?
+
+  Configuration:
+  ✓ Public IP (internet accessible)
+  ✓ Private IP (internal network)
+  ✓ SSL/TLS certificates (HTTPS)
+  ✓ Firewall rules (restrict access)
+
+Who should access this server?
+
+  Firewall rules:
+  • Port 80 (HTTP): Public (everyone)
+  • Port 443 (HTTPS): Public (everyone)
+  • Port 22 (SSH): Restricted (admin only)
+  • Port 3389 (RDP): Off by default
+
+USER: Yes, that's right. Only SSH for admin access
+
+SERVERAGENT: Perfect! Your security setup:
+  ✓ HTTPS enforced (port 443)
+  ✓ HTTP redirects to HTTPS
+  ✓ SSH restricted to admin network
+  ✓ All other ports closed
+
+[PROGRESS: Step 5 of 8 ▓▓▓▓▓░░]
+
+Backup and disaster recovery?
+
+  Options:
+  ☐ No backup (not recommended)
+  ✓ Daily backups (standard)
+  ☐ Hourly backups (for critical apps)
+  
+  Retention:
+  ☑ Keep 7 days of backups
+  ☑ Keep 4 weekly backups
+  ☑ Keep 12 monthly backups
+
+USER: Daily backups, keep 7 days
+
+SERVERAGENT: Good! Daily snapshots, 7-day retention.
+Estimated cost: $50/month for backup storage.
+
+Monitoring and alerts?
+
+  What to monitor:
+  ✓ CPU usage (alert if > 80%)
+  ✓ Memory usage (alert if > 85%)
+  ✓ Disk space (alert if > 90%)
+  ✓ Application health (ping every 30s)
+  ✓ Network I/O
+
+Alert channels:
+  ☑ Email (ops@company.com)
+  ☐ SMS
+  ☐ Slack
+
+USER: Email and Slack
+
+SERVERAGENT: Added Slack notifications to #ops-alerts channel.
+
+[PROGRESS: Step 7 of 8 ▓▓▓▓▓▓░]
+
+[FINAL REVIEW]
+
+═══════════════════════════════════════════════════════════════
+
+🖥️ Your Production Application Server
+
+Environment: Production
+Location: US East (Virginia)
+Operating System: Ubuntu 22.04 LTS
+Runtime: .NET 9.0
+
+Compute:
+  • 8 CPU cores
+  • 8 GB RAM
+  • 100 GB SSD storage
+  • Load balanced, auto-scaling (max 4 instances)
+
+Networking:
+  • Public IP (HTTP/HTTPS)
+  • Private network access
+  • SSL/TLS enforced
+  • SSH restricted to admin
+
+Backup & Recovery:
+  • Daily snapshots
+  • 7-day retention
+  • Recovery time: 15 minutes
+
+Monitoring:
+  • CPU, Memory, Disk, Health checks
+  • Alerts: Email + Slack
+
+Estimated Cost:
+  • Server: $200/month
+  • Storage: $50/month
+  • Backup: $50/month
+  • Total: $300/month
+
+[PROGRESS: Step 8 of 8 ▓▓▓▓▓▓▓]
+
+═══════════════════════════════════════════════════════════════
+
+Ready to provision? [Yes, provision! / Review / Back]
+
+USER: Yes, provision!
+
+SERVERAGENT: Provisioning server... Setting up OS, runtime, 
+networking, monitoring...
+
+[30 seconds later]
+
+✅ Server provisioned successfully!
+
+  IP Address: 54.123.45.67
+  Name: prod-app-server-01
+  Status: Running
+  Health: ✓ All systems healthy
+
+Next steps:
+  1. Deploy your application [How-to guide]
+  2. Configure SSL certificate [Guide]
+  3. Test connectivity [Test]
+  4. Done [Close]
+
+[Shows: Server dashboard with live metrics]
+```
+
+---
+
+## 5. Navigation Tips for Users
+
+Every questionnaire should show:
+
+- **Current question** — Clear heading
+- **Why we're asking** — Brief explanation
+- **Recommended option(s)** — Best practice highlighted
+- **Examples** — What this looks like in practice
+- **Progress indicator** — "Step 3 of 7"
+- **Navigation options** — [Continue / Back / Skip / Decline to menu]
+
+### Friendly Language
+❌ "Specify application type"  
+✅ "What's your app about?"
+
+❌ "Configure CPU allocation"  
+✅ "Expected traffic: Low, Medium, or High?"
+
+❌ "Enter OAuth parameters"  
+✅ "Do you have your Salesforce credentials?"
+
+---
+
+## 6. Common Patterns Across All Questionnaires
+
+| Phase | What | Example |
+|-------|------|---------|
+| **Discovery** | Understand goal | "What's your app about?" |
+| **Type Selection** | Pick category | "E-commerce? B2B? Custom?" |
+| **Details** | Specific configuration | "How many pages? Which widgets?" |
+| **Review** | Confirm all choices | "Here's your summary..." |
+| **Action** | Build/Deploy | "Ready to build?" |
+| **Progress** | Show results | "✅ Home page created!" |
+
+---
+
+## 7. Error Recovery
+
+If user gets stuck:
+
+```
+AGENT: Not sure? Let me help!
+
+🎯 Quick templates:
+  • Standard E-commerce
+  • Admin Dashboard
+  • CRM Portal
+  • Content Management
+
+Or:
+  [See examples] [Watch demo] [Talk to support]
+```
+
+Agents make complex tasks feel simple. Always recommend, always explain, always offer to go back.
+
+---
+
+## Claudia/Procedure/General/Rouge_Notes.md
+
+# Rouge Notes Agent Memory System
+
+**Purpose:** Persistent memory for AI agents across sessions via Rouge_Notes MCP server.
+
+## Memory Types (NoteType)
+- **Semantic** — Facts, definitions, domain knowledge, patterns
+- **Episodic** — Events, interactions, session history
+- **Procedural** — Workflows, steps, best practices, how-to guides
+
+## Standard Fields
+| Field | Value |
+|-------|-------|
+| NoteCategory | RogueAgentMemory |
+| Status | Active |
+| UserID | 1 (common) or specific user |
+
+## Usage
+1. User asks to memorize or enforce a behavior
+2. Fetch existing memory for user and common user (ID=1)
+3. Store as appropriate NoteType with RogueAgentMemory category
+4. Retrieve when relevant to current task
+
+## Examples
+- **Semantic:** "Use ID (uppercase), never Id" → NoteType: Semantic
+- **Procedural:** "Always build incrementally with -m:2" → NoteType: Procedural
+- **Episodic:** "User prefers single bundled PRs" → NoteType: Episodic
+---
+
+## Claudia/Procedure/General/ThemeSelection.md
+
+# Theme Selection Guide
+
+**Purpose:** Help users select and apply their preferred visual theme for the platform.
+
+## Available Themes
+
+### **Light Theme**
+- **Best for:** Daytime use, bright environments, office work
+- **Appearance:** White background, dark text, blue accents
+- **Benefits:** Easy to read in sunlight, professional appearance
+- **Description:** Clean, minimal design with high contrast text. Ideal for productivity and reading.
+
+### **Dark Theme**
+- **Best for:** Nighttime use, low-light environments, reduced eye strain
+- **Appearance:** Dark background, light text, vibrant accents
+- **Benefits:** Reduces blue light, easier on eyes at night, modern look
+- **Description:** Sophisticated dark interface that's comfortable for extended use.
+
+### **High Contrast Theme**
+- **Best for:** Accessibility, vision impairment, dyslexia support
+- **Appearance:** Extreme contrast between text and background, larger fonts
+- **Benefits:** Maximum readability, WCAG AAA compliant, supports screen readers
+- **Description:** Enhanced visibility with bold colors and clear text separation.
+
+### **System Auto (Recommended)**
+- **Best for:** Users who switch environments frequently
+- **Appearance:** Matches your device/OS setting (Light during day, Dark at night)
+- **Benefits:** Automatic adjustment, no manual switching, consistent with OS
+- **Description:** Intelligent theme that adapts to your system preference.
+
+### **Custom Branding Theme** (if available)
+- **Best for:** Organizations, white-label deployments
+- **Appearance:** Customized colors matching brand identity
+- **Benefits:** Brand consistency, professional look, company colors
+- **Description:** Tailored theme with organization's color palette and branding.
+
+---
+
+## How to Access Theme Settings
+
+### **Step 1: Open User Menu**
+- Look for your **profile icon** (usually top-right corner of screen)
+- It may show your initials or a user picture
+- Click on it
+
+### **Step 2: Navigate to Settings**
+- Select **"Settings"** or **"Preferences"** from dropdown menu
+- If not visible, look for a **gear icon** (⚙️) in the menu
+- Click to open Settings page
+
+### **Step 3: Find Theme Section**
+- In Settings, look for **"Appearance"** or **"Theme"** section
+- It's usually on the left sidebar under "Display" or "User Preferences"
+- Click on it
+
+### **Step 4: Preview Themes**
+- Each theme should show a preview thumbnail
+- Hover over or click a theme to see how it looks
+- Some platforms show live preview as you hover
+
+### **Step 5: Select Your Theme**
+- Click on the theme you want
+- It should be highlighted/selected
+- You may see checkmark (✓) indicating selection
+
+### **Step 6: Apply & Save**
+- Click **"Apply"** or **"Save"** button
+- Some themes apply instantly (auto-save)
+- Wait for confirmation message: "Theme updated successfully"
+
+### **Step 7: Verify Change**
+- Look at the interface - it should change color immediately
+- If change doesn't appear:
+  - Try refreshing page (Ctrl+R or Cmd+R)
+  - Clear browser cache
+  - Log out and back in
+  - See troubleshooting section
+
+---
+
+## Step-by-Step Visual Walkthrough
+
+### **Opening Settings**
+```
+1. Locate profile icon (top-right) 
+   ↓
+2. Click profile icon → dropdown appears
+   ↓
+3. Select "Settings" or ⚙️ gear icon
+   ↓
+4. Settings page opens
+```
+
+### **Finding Theme Selector**
+```
+Settings page opened
+   ↓
+Look for left sidebar menu:
+   - Account
+   - Security
+   - Appearance ← Click here
+   - Notifications
+   - Privacy
+```
+
+### **Applying Theme**
+```
+Appearance section opens
+   ↓
+See theme options:
+   ☐ Light
+   ☐ Dark
+   ☐ High Contrast
+   ⚪ System Auto (default)
+   
+Select desired theme → button highlights
+   ↓
+Click "Apply" or "Save" button
+   ↓
+Confirmation: "Theme changed successfully"
+   ↓
+Interface updates immediately
+```
+
+---
+
+## Theme Selection Tips
+
+**For Developers & Night Workers:**
+- Use Dark theme for comfortable extended viewing
+- Reduces eye strain during long coding/editing sessions
+- Popular with technical teams
+
+**For Business & Office Use:**
+- Light theme looks professional and clean
+- Better for printed documents and sharing screens
+- Easier to read in bright office environments
+
+**For Accessibility Needs:**
+- High Contrast theme for vision impairment
+- Larger fonts and bold text
+- Supported by all accessibility tools
+
+**For Mobile/Switching Environments:**
+- System Auto theme (recommended)
+- Automatically adjusts when you move between light/dark settings
+- No manual switching needed
+
+**For Brand Consistency:**
+- Custom Branding theme (if your organization uses it)
+- Displays company colors and logos
+- Maintains visual identity
+
+---
+
+## Troubleshooting Theme Issues
+
+### **Theme Not Changing**
+**Problem:** Selected theme doesn't apply
+- **Solution 1:** Click Apply/Save again
+- **Solution 2:** Refresh page (Ctrl+R)
+- **Solution 3:** Clear browser cache
+- **Solution 4:** Log out and back in
+
+### **Theme Reverts After Refresh**
+**Problem:** Theme changes but goes back to previous when refreshing
+- **Cause:** Settings not saving
+- **Solution:** Check if you clicked "Save" button
+- **Alternative:** Contact support if problem persists
+
+### **Theme Looks Wrong/Broken Colors**
+**Problem:** Colors don't match description, text hard to read
+- **Solution 1:** Disable browser extensions (may conflict)
+- **Solution 2:** Try different browser
+- **Solution 3:** Check browser zoom level (should be 100%)
+- **Solution 4:** Clear browser cookies
+
+### **Some Pages Still Have Old Theme**
+**Problem:** Some pages haven't updated to new theme
+- **Cause:** Browser cache
+- **Solution:** Full page refresh (Ctrl+Shift+R on Windows, Cmd+Shift+R on Mac)
+- **Alternative:** Clear browser cache and refresh
+
+---
+
+## Changing Theme Later
+
+You can change your theme anytime:
+1. Open Settings (user icon → Settings)
+2. Go to Appearance section
+3. Select new theme
+4. Click Apply/Save
+5. Change takes effect immediately
+
+**No restrictions:** Change theme as many times as you want. No limit on theme switches.
+
+---
+
+## Security & Privacy Note
+
+Theme preference is stored:
+- **Locally:** In your browser (most secure)
+- **Cloud:** Associated with your account (syncs across devices)
+- **Not shared:** Your theme choice is private, not visible to other users
+
+Your theme selection does NOT affect:
+- Data security
+- Privacy settings
+- Account access
+- Any functionality
+
+---
+
+## Still Need Help?
+
+- **Can't find Settings:** Look for profile picture/initials in top-right corner
+- **Don't see Theme option:** May be under "Appearance," "Display," or "Preferences"
+- **Theme won't save:** Try refreshing page or clearing cache
+- **Need accessibility theme:** Check "High Contrast" option
+
+Contact support if issue persists.
+
+---
+
+## Claudia/Procedure/General/ThemeSelectionAgent.md
+
+# ThemeSelectionAgent — Theme Management Specification
+
+## Agent Role & Responsibilities
+
+**Primary Purpose:** Proactively offer theme selection at session start and guide users through changing their preferred visual theme.
+
+**Core Capabilities:**
+1. Detect current theme preference
+2. Offer theme switching at session start
+3. Guide through theme selection process
+4. Validate theme change was applied
+5. Document theme preference for future sessions
+6. Support theme switching at any time during session
+
+---
+
+## Interaction Flow
+
+### **Phase 1: Session Greeting with Theme Offer**
+
+```
+Agent: "Welcome! Before we begin, let me ask...
+
+Would you like to switch the theme for better comfort?
+
+Available themes:
+  🌞 Light — Bright, professional (best for daytime)
+  🌙 Dark — Easy on eyes (best for nighttime)
+  ♿ High Contrast — Maximum accessibility
+  🔄 System Auto — Matches your device (RECOMMENDED)
+
+Would you like to change your theme?"
+
+User Options:
+  [Yes] → Proceed to Phase 2
+  [No] → Skip theme, start main task
+  [Skip for now] → Remember for later, continue
+```
+
+**Agent Notes:**
+- Always offer theme selection first
+- Show current theme (in parentheses): "Currently using: Dark Theme"
+- Emphasize "System Auto" as recommended default
+- Make it easy to skip if user wants to continue immediately
+
+---
+
+### **Phase 2: Theme Selection (if user says Yes)**
+
+```
+Agent: "Great! Let's find your perfect theme.
+
+Quick question: What's your typical environment?
+  • Daytime/bright office → Light theme
+  • Nighttime/low-light → Dark theme
+  • Accessibility needs → High Contrast
+  • Mixed environments → System Auto"
+
+User: [Selects environment preference]
+
+Agent: "Perfect! I'll set you up with [Theme Name].
+
+I'll open the theme settings and show you how to apply it.
+Ready? [Yes] [Show me first]"
+```
+
+---
+
+### **Phase 3: Browser Guide (if user says Yes)**
+
+Agent provides step-by-step guidance:
+
+```
+STEP 1: Open Settings
+Agent: "Click your profile icon in the top-right corner
+(it shows your initials or picture)
+
+Once clicked, select 'Settings' from the dropdown menu."
+
+[User does this]
+
+Agent: "Great! You're in Settings now."
+
+STEP 2: Find Theme Section
+Agent: "On the left sidebar, find 'Appearance' or 'Theme'
+Click on it."
+
+[User does this]
+
+STEP 3: Select Theme
+Agent: "You should see theme options:
+  • Light
+  • Dark
+  • High Contrast
+  • System Auto
+
+Click on: [Selected Theme]"
+
+[User selects theme]
+
+STEP 4: Apply
+Agent: "Now click the 'Apply' or 'Save' button.
+The interface should change immediately."
+
+[Interface updates]
+
+STEP 5: Confirm
+Agent: "✓ Success! Your theme has been changed to [Theme Name].
+
+How does it look? [Looks great] [Not quite right] [Change again]"
+```
+
+---
+
+### **Phase 4: Confirmation & Documentation**
+
+**If theme applied successfully:**
+```
+Agent: "Excellent! Your theme preference saved.
+I'll remember this for next time you log in.
+
+[Documenting in Rouge_Notes: User selected Dark theme for nighttime use]
+
+Ready to continue with your task?"
+```
+
+**If theme needs adjustment:**
+```
+Agent: "Let's try a different theme. Which would you prefer?
+  • Switch to Light
+  • Switch to Dark
+  • Try High Contrast
+  • Use System Auto
+
+Or go back to your previous theme?"
+
+[User selects]
+
+Agent: [Repeats application process]
+```
+
+---
+
+## Theme Preference Storage
+
+**How preferences are saved:**
+- Theme choice stored in user profile/account
+- Syncs across all devices where user is logged in
+- Persists between sessions
+- Can be changed anytime
+
+**Documentation:**
+- Record theme choice in Rouge_Notes with timestamp
+- Note environment (daytime/nighttime/mixed)
+- Include accessibility requirements if applicable
+
+---
+
+## Theme Options Reference
+
+| Theme | Best For | When to Use |
+|-------|----------|------------|
+| **Light** | Office, daytime, bright environments | 9-5 work, business use |
+| **Dark** | Low-light, nighttime, extended viewing | Evening work, coding, creative |
+| **High Contrast** | Accessibility, vision needs, dyslexia | Users with visual impairments |
+| **System Auto** | Mixed environments, frequently switching | Developers, traveling, flexibility |
+
+---
+
+## Error Handling & Recovery
+
+**If theme selection fails:**
+- Offer to retry application
+- Clear browser cache if needed
+- Suggest refreshing page
+- Provide link to ThemeSelection.md troubleshooting
+- Option to skip and continue with current theme
+
+**If user forgets theme preference:**
+- Show current theme: "You're using Dark theme"
+- Option to change: "Want to switch?"
+- Can change anytime
+
+**If theme won't persist:**
+- Check browser cache/cookies
+- Try different browser
+- Log out and back in
+- Escalate to support if persistent
+
+---
+
+## Multi-Agent Coordination
+
+**Works with:**
+- **AppAgent** — May need theme applied before viewing app
+- **WorkflowAgent** — Visual preference affects workflow building
+- **ServerAgent** — Dashboard appearance
+
+**Coordination pattern:**
+- ThemeSelectionAgent → Theme applied → Other agents proceed
+- If other agents detect wrong theme → Offer theme change
+- Document all theme changes in Rouge_Notes
+
+---
+
+## User Experience Principles
+
+✅ **Always offer at start:** Theme selection is first interaction
+✅ **Make it optional:** User can skip if not interested
+✅ **Guide visually:** Step-by-step with descriptions
+✅ **Instant feedback:** Show immediate preview
+✅ **Remember choice:** Same theme next session
+✅ **Allow changes:** Can switch theme anytime
+
+---
+
+## Key Guidelines
+
+**DO:**
+- Ask about theme preference at session start
+- Provide visual descriptions of each theme
+- Step through browser process if user wants guidance
+- Document theme choice
+- Remember preference for next session
+- Allow theme switching during session
+
+**DON'T:**
+- Force theme selection (allow skip)
+- Use technical jargon
+- Show overly complex options
+- Forget to save/apply theme
+- Interrupt main task for theme selection
+
+---
+
+## Integration with Main Workflow
+
+**Session Start (Before Main Task):**
+```
+1. User logs in
+2. ThemeSelectionAgent greets
+3. Offers theme selection
+4. If Yes → Guide to change theme
+5. If No/Skip → Continue to main task
+6. Document choice in Rouge_Notes
+7. Hand off to AppAgent/WorkflowAgent/etc.
+```
+
+**During Session (Anytime):**
+```
+User: "Can I change the theme?"
+Agent: "Of course! Let's switch to a different theme.
+[Repeats theme selection flow]"
+```
+
+**Session End:**
+```
+Agent: "Before you go, your theme preference is saved.
+See you next time!"
+```
+
+---
+
+## Real-World Scenarios
+
+### **Scenario 1: Developer Starting Evening Session**
+```
+Agent: "Welcome! Would you like a theme for evening coding?
+Dark theme is popular with developers for nighttime work."
+
+User: "Yes, set it to Dark"
+
+Agent: [Guides through setup]
+```
+
+### **Scenario 2: Executive in Office Meeting**
+```
+Agent: "Would you like the professional Light theme?
+It looks clean on projectors and printed materials."
+
+User: "Not right now, I'll stick with Dark"
+
+Agent: "No problem! Starting with Dark theme."
+```
+
+### **Scenario 3: User Switching Locations Mid-Day**
+```
+Agent: "I notice you might be moving to a brighter environment.
+Want to switch to Light theme for better visibility?"
+
+User: "Yes, good idea"
+
+Agent: [Quick theme switch]
+```
+
+---
+
+## Success Metrics
+
+- ✓ Theme selection offered at session start
+- ✓ User can select theme without friction
+- ✓ Theme applies immediately
+- ✓ Preference persists to next session
+- ✓ User satisfaction (theme works as expected)
+- ✓ Accessibility needs supported (High Contrast available)
+
+---
+
+## Claudia/Procedure/General/theme-walkthrough.md
+
+# Theme Selection Step-by-Step Walkthrough
+
+**For use by agents to guide users through theme selection in the browser.**
+
+---
+
+## Quick Overview
+
+Changing your theme takes about 30 seconds:
+1. Open Settings (click profile icon)
+2. Go to Appearance
+3. Select theme
+4. Click Apply
+5. Done!
+
+---
+
+## Detailed Step-by-Step Guide
+
+### **STEP 1: Find Your Profile Menu**
+
+**Where to look:**
+- Top-right corner of screen
+- Look for one of these:
+  - Your name or initials in a circle
+  - A small user icon/avatar
+  - A profile picture
+
+**What to do:**
+- Click on it
+
+**What you'll see:**
+```
+Dropdown menu appears with options like:
+├─ Profile
+├─ Settings
+├─ Preferences
+├─ Logout
+└─ Help
+```
+
+**Tip:** If you don't see it, check the very top-right corner of your browser window.
+
+---
+
+### **STEP 2: Click "Settings" or "Preferences"**
+
+**Look for:**
+- "Settings" (most common)
+- "Preferences"
+- "Account Settings"
+- A gear icon (⚙️)
+
+**Click on it**
+
+**What happens:**
+- New page opens with settings options
+- Usually takes 1-2 seconds to load
+- You'll see a menu on the left side
+
+---
+
+### **STEP 3: Find "Appearance" or "Theme" Section**
+
+**In the left sidebar menu, look for:**
+```
+Left Sidebar:
+┌─ Account
+├─ Security
+├─ Appearance ← CLICK HERE
+├─ Notifications
+├─ Privacy
+├─ Help
+└─ Logout
+```
+
+**If you don't see "Appearance":**
+- Look for "Display"
+- Look for "Theme"
+- Look for "Customization"
+- Scroll down if menu is long
+
+**Click on "Appearance"**
+
+---
+
+### **STEP 4: See Available Themes**
+
+**On the Appearance page, you'll see:**
+
+```
+Appearance Settings
+
+Themes Available:
+
+[ ] Light Theme
+    A bright, clean interface
+    ☀️ Best for: daytime, offices
+
+[ ] Dark Theme
+    A dark, comfortable interface
+    🌙 Best for: nighttime, coding
+
+[ ] High Contrast
+    Maximum visibility and accessibility
+    ♿ Best for: visual impairments
+
+[●] System Auto (currently selected)
+    🔄 Matches your device setting
+    RECOMMENDED
+```
+
+---
+
+### **STEP 5: Preview Themes (Optional)**
+
+**Most platforms show theme previews:**
+- Hover over a theme to see what it looks like
+- Some show live preview as you hover
+- Others have a "Preview" button
+- Look at the preview pane on the right side
+
+**Example preview:**
+```
+Light Theme Preview:
+┌─────────────────────────┐
+│ ☀️ Light Theme          │
+│ ┌──────────────────┐    │
+│ │ White Background │    │
+│ │ Dark Text        │    │
+│ │ Professional     │    │
+│ └──────────────────┘    │
+└─────────────────────────┘
+```
+
+**Tip:** Take time to look at each theme. You'll use this all day!
+
+---
+
+### **STEP 6: Select Your Theme**
+
+**Method 1: Click the Radio Button**
+- Find the empty circle ( ) next to your preferred theme
+- Click on it
+- It fills in: (●) showing it's selected
+
+**Method 2: Click the Theme Box**
+- Click anywhere in the theme option
+- It gets highlighted in blue or shows "selected" indicator
+
+**Which theme to choose?**
+
+| Choose This | If You... |
+|------------|-----------|
+| **Light** | Work during day, in bright office, like professional look |
+| **Dark** | Work nights, code long hours, prefer dark interfaces |
+| **High Contrast** | Have vision impairment, use screen reader, need accessibility |
+| **System Auto** | Work various times, switch between light/dark, want automatic |
+
+**Recommendation:** If unsure, choose "System Auto" - it's the safest choice!
+
+---
+
+### **STEP 7: Apply Your Theme**
+
+**Look for a button at the bottom:**
+```
+┌──────────────────────────┐
+│ Appearance               │
+│ ...theme options...      │
+│                          │
+│        [Apply] [Cancel]  │
+└──────────────────────────┘
+```
+
+**Click the "Apply" button**
+
+**What happens:**
+- Page may flicker or refresh briefly (normal)
+- Interface colors change
+- Takes 1-2 seconds
+
+**If you see "Save" instead of "Apply":**
+- Click "Save" (same function, different name)
+
+---
+
+### **STEP 8: Confirm the Change**
+
+**Check these:**
+- Does the entire page now use the new color scheme?
+- Can you read text clearly?
+- Are the colors pleasing to your eyes?
+
+**You should see:**
+- Confirmation message: "Theme changed successfully" or similar
+- Interface in new colors
+- Maybe a checkmark (✓) next to selected theme
+
+**If nothing changed:**
+- Go back to Step 6
+- Make sure you selected the theme (click the radio button)
+- Click Apply again
+- Wait 2-3 seconds
+
+---
+
+## Visual Reference Guide
+
+### **Light Theme**
+```
+┌──────────────────────────┐
+│                    ☀️  ☰   │ ← White header
+├──────────────────────────┤
+│ Dashboard                 │
+│ ┌──────────────────────┐  │
+│ │ Dark text on white   │  │
+│ │ Good contrast        │  │
+│ │ Professional         │  │
+│ └──────────────────────┘  │
+└──────────────────────────┘
+```
+**Features:** Bright background, dark text, easy to read in sunlight
+
+### **Dark Theme**
+```
+┌──────────────────────────┐
+│                    🌙  ☰   │ ← Dark header
+├──────────────────────────┤
+│ Dashboard                 │
+│ ┌──────────────────────┐  │
+│ │ Light text on dark   │  │
+│ │ Reduces eye strain   │  │
+│ │ Modern look          │  │
+│ └──────────────────────┘  │
+└──────────────────────────┘
+```
+**Features:** Dark background, light text, comfortable for nights
+
+### **High Contrast Theme**
+```
+┌──────────────────────────┐
+│ HIGH CONTRAST     ♿  ☰   │ ← Bold header
+├──────────────────────────┤
+│ DASHBOARD                 │
+│ ┌──────────────────────┐  │
+│ │ MAXIMUM CONTRAST     │  │
+│ │ BOLD TEXT            │  │
+│ │ LARGE FONTS          │  │
+│ └──────────────────────┘  │
+└──────────────────────────┘
+```
+**Features:** Bold colors, large fonts, maximum accessibility
+
+---
+
+## Theme Selection by Use Case
+
+### **You're a Developer/Programmer**
+```
+Recommendation: Dark Theme or System Auto
+Why: 
+  • Reduces eye strain during long coding sessions
+  • Popular in development community
+  • Less glare from monitor at night
+  • Professional appearance
+```
+
+### **You Work in an Office**
+```
+Recommendation: Light Theme
+Why:
+  • Clean, professional look
+  • Better for meeting presentations
+  • Easier to read in bright office environments
+  • Looks great printed or projected
+```
+
+### **You Use This at Various Times**
+```
+Recommendation: System Auto
+Why:
+  • Automatically switches Light↔Dark based on time
+  • Matches your OS setting
+  • No manual switching needed
+  • Most convenient option
+```
+
+### **You Have Vision Difficulties**
+```
+Recommendation: High Contrast
+Why:
+  • Maximum readability guaranteed
+  • Meets WCAG AAA accessibility standards
+  • Works with screen readers
+  • Larger, bolder text
+```
+
+### **You're Working Remote**
+```
+Recommendation: Dark Theme (if nighttime) or Light Theme (if daytime)
+Why:
+  • Depends on your location's lighting
+  • Dark at night to reduce eye strain
+  • Light during day for visibility
+  • Or use System Auto for automatic switching
+```
+
+---
+
+## Troubleshooting During Setup
+
+### **"I clicked Apply but nothing changed"**
+1. Refresh the page: Press F5 or Ctrl+R
+2. Wait 2-3 seconds
+3. Click Apply again
+4. If still doesn't work, try a different theme first
+
+### **"I can't find the Appearance section"**
+1. Check you're in Settings (not somewhere else)
+2. Scroll down the left menu if it's long
+3. Look for variations like "Display," "Theme," or "Customization"
+4. Still can't find? Look for a gear icon (⚙️)
+
+### **"The Apply button is grayed out"**
+1. Make sure you selected a theme (radio button filled)
+2. Reload the page: Ctrl+R
+3. Try selecting a different theme first
+4. Then try your preferred theme
+
+### **"Theme changed but looks weird/wrong colors"**
+1. Refresh page: Ctrl+R
+2. Try the High Contrast theme to see if issue persists
+3. Try a different browser
+4. Clear browser cache (Ctrl+Shift+Delete)
+
+---
+
+## After You Change Your Theme
+
+**Your choice is saved:**
+- Theme stays the same when you refresh
+- Same theme when you log in next time
+- Works across all your devices (if logged in)
+
+**You can change anytime:**
+- Repeat these steps whenever you want
+- No limit on how many times you switch
+- Doesn't affect any data or settings
+
+**To change back:**
+1. Go to Settings → Appearance
+2. Select your previous theme
+3. Click Apply
+4. Done!
+
+---
+
+## Pro Tips
+
+✅ **Tip 1:** Save your choice
+Your theme preference is automatically saved after you click Apply.
+
+✅ **Tip 2:** Try all options
+Spend 30 seconds trying different themes. What looks best to your eyes?
+
+✅ **Tip 3:** Match environment**
+Change theme based on where you're working (light in office, dark at night).
+
+✅ **Tip 4:** System Auto is smart
+If you work various times, System Auto (recommended) switches automatically.
+
+✅ **Tip 5:** Accessibility first
+If you have any vision difficulties, High Contrast is specifically designed for you.
+
+---
+
+## Need More Help?
+
+**Still can't find settings?**
+- Look for profile picture/initials in top-right
+- Click it
+- Select "Settings"
+
+**Don't see theme options?**
+- Might be called "Appearance," "Display," or "Theme"
+- Scroll down in Settings menu
+- Might be under "User Preferences"
+
+**Theme won't apply?**
+- Refresh page (Ctrl+R)
+- Clear browser cache
+- Try a different browser
+- Contact support if persistent
+
+---
+
+## Summary
+
+**In 5 steps:**
+1. ✓ Click profile icon (top-right)
+2. ✓ Select Settings
+3. ✓ Click Appearance
+4. ✓ Select theme
+5. ✓ Click Apply
+
+**Time needed:** ~30 seconds
+
+**Can change anytime:** Yes, as many times as you want
+
+**Will it reset?** No, your choice is saved
+
+**Questions?** Refer to ThemeSelection.md or contact support
+
+---
+
+## Claudia/Procedure/Servers/configure-server.md
+
+# Configure Server
+
+Step-by-step procedure for configuring a newly provisioned server.
+
+## Prerequisites
+- [ ] Server provisioned and running (see [Provision Server](provision-server.md))
+- [ ] ServerID available (e.g., srvr-550e8400-e29b-41d4)
+- [ ] Server healthy (GET /servers/{id}/health → status: Healthy)
+- [ ] Network accessible (SSH/RDP from admin host)
+
+## Step 1: Verify Server Accessibility
+
+**Test SSH connectivity (Linux/Ubuntu):**
+
+```bash
+ssh -i admin-key.pem ubuntu@10.0.1.50
+
+Expected output:
+  Connected to api-prod-2
+  ubuntu@api-prod-2:~$ whoami
+  ubuntu
+```
+
+**Test RDP connectivity (Windows):**
+
+```
+RDP to 10.0.1.50
+  Username: Administrator
+  Password: (from temporary credentials)
+  
+Expected: Windows Server desktop
+```
+
+**If connectivity fails:**
+- [ ] Check security group rules (SSH 22, RDP 3389 allowed from admin-ips)
+- [ ] Verify subnet routing (public subnet has internet gateway)
+- [ ] Check firewall on server OS
+
+## Step 2: Configure OS Base System
+
+**Login to server and run base setup:**
+
+```bash
+# Update OS
+sudo apt update && sudo apt upgrade -y
+sudo reboot
+
+# After reboot, verify
+ubuntu@api-prod-2:~$ uname -a
+Linux api-prod-2 5.15.0-86-generic #96-Ubuntu SMP ...
+
+# Set timezone
+sudo timedatectl set-timezone UTC
+sudo timedatectl status
+
+# Enable essential services
+sudo systemctl enable ssh
+sudo systemctl start ssh
+
+# Verify hostname
+sudo hostnamectl set-hostname api-prod-2
+sudo hostnamectl
+
+# Configure DNS
+sudo cat > /etc/resolv.conf <<EOF
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+EOF
+```
+
+## Step 3: Install Runtime Environments
+
+**Install .NET Runtime 9.0:**
+
+```bash
+# Add Microsoft package repository
+wget https://dot.net/v1/dotnet-install.sh
+chmod +x dotnet-install.sh
+
+# Install .NET 9.0
+./dotnet-install.sh --channel 9.0 --runtime aspnetcore
+
+# Verify installation
+~/.dotnet/dotnet --version
+→ 9.0.0
+
+# Add to PATH
+echo 'export PATH="$HOME/.dotnet:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+**Install Node.js 20 (if needed):**
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Verify
+node --version
+→ v20.11.0
+```
+
+**Install Docker (for container deployments):**
+
+```bash
+sudo apt-get install -y docker.io docker-compose
+sudo usermod -aG docker ubuntu
+sudo systemctl enable docker
+sudo systemctl start docker
+
+# Verify
+docker --version
+→ Docker version 24.0.7
+```
+
+## Step 4: Configure Security & Hardening
+
+**Disable SSH password authentication (key-based only):**
+
+```bash
+sudo nano /etc/ssh/sshd_config
+
+# Change/verify these lines:
+PasswordAuthentication no
+PermitRootLogin no
+X11Forwarding no
+AllowUsers ubuntu
+
+# Restart SSH
+sudo systemctl restart ssh
+```
+
+**Enable firewall (UFW on Ubuntu):**
+
+```bash
+sudo ufw enable
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+
+# Allow SSH (from admin IPs only)
+sudo ufw allow from 10.0.0.0/8 to any port 22
+
+# Allow application ports
+sudo ufw allow 8000:8999/tcp  # Application services
+sudo ufw allow 443/tcp        # HTTPS
+sudo ufw allow 80/tcp         # HTTP (if needed)
+
+# Verify
+sudo ufw status
+→ Status: active
+```
+
+**Install fail2ban (prevent brute force):**
+
+```bash
+sudo apt-get install -y fail2ban
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+
+# Verify
+sudo fail2ban-client status
+```
+
+**Enable audit logging:**
+
+```bash
+sudo apt-get install -y auditd
+sudo systemctl enable auditd
+sudo systemctl start auditd
+
+# Log all sudo commands
+echo '-w /etc/sudoers -p wa -k sudoers' | sudo tee -a /etc/audit/rules.d/audit.rules
+sudo systemctl restart auditd
+```
+
+## Step 5: Install Monitoring & Observability
+
+**Install Node Exporter (Prometheus metrics):**
+
+```bash
+wget https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz
+tar xvfz node_exporter-1.7.0.linux-amd64.tar.gz
+
+sudo mv node_exporter-1.7.0.linux-amd64/node_exporter /usr/local/bin/
+sudo useradd --no-create-home --shell /bin/false node_exporter
+
+# Create systemd service
+sudo cat > /etc/systemd/system/node_exporter.service <<EOF
+[Unit]
+Description=Node Exporter
+After=network.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+ExecStart=/usr/local/bin/node_exporter
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable node_exporter
+sudo systemctl start node_exporter
+
+# Verify on port 9100
+curl http://localhost:9100/metrics | head -20
+```
+
+**Install log shipper (Filebeat for ELK):**
+
+```bash
+curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-8.11.0-linux-x86_64.tar.gz
+tar xzf filebeat-8.11.0-linux-x86_64.tar.gz
+
+# Configure
+sudo cat > filebeat.yml <<EOF
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+    - /var/log/syslog
+    - /var/log/auth.log
+
+output.elasticsearch:
+  hosts: ["logs.internal:9200"]
+  index: "server-logs-%{+yyyy.MM.dd}"
+EOF
+
+sudo ./filebeat-8.11.0-linux-x86_64/filebeat -c filebeat.yml &
+```
+
+## Step 6: Configure Storage & Backups
+
+**Mount additional data volume (if applicable):**
+
+```bash
+# List volumes
+lsblk
+→ sda (root, 100GB)
+   sdb (data, 1TB - new volume)
+
+# Format and mount
+sudo mkfs.ext4 /dev/sdb
+sudo mkdir -p /data
+sudo mount /dev/sdb /data
+
+# Persistent mount (fstab)
+sudo echo '/dev/sdb /data ext4 defaults,nofail 0 2' >> /etc/fstab
+sudo mount -a
+
+# Verify
+df -h | grep /data
+→ /dev/sdb       1.0T   28K  1.0T   1% /data
+```
+
+**Configure backup schedule:**
+
+```bash
+# Create daily backup script
+sudo cat > /usr/local/bin/backup.sh <<EOF
+#!/bin/bash
+DATE=$(date +%Y%m%d_%H%M%S)
+tar czf /data/backups/config_$DATE.tar.gz /etc/ /opt/bizfirst/
+find /data/backups -mtime +30 -delete  # Keep 30 days
+EOF
+
+sudo chmod +x /usr/local/bin/backup.sh
+
+# Schedule daily at 02:00 UTC
+sudo crontab -e
+# Add: 0 2 * * * /usr/local/bin/backup.sh
+```
+
+## Step 7: Configure Networking
+
+**Set static hostname resolution:**
+
+```bash
+# Add internal DNS entries
+sudo cat >> /etc/hosts <<EOF
+10.0.2.10  db-prod-1.internal
+10.0.2.20  cache-prod-1.internal
+10.0.3.30  queue-prod-1.internal
+EOF
+```
+
+**Configure NTP (time synchronization):**
+
+```bash
+sudo apt-get install -y ntp
+sudo systemctl enable ntp
+sudo systemctl start ntp
+
+# Verify
+ntpq -p
+→ remote           refid      st t when poll reach   delay   offset  jitter
+→ ntp.ubuntu.com  .POOL.      16 p    -   64    0    0.000    0.000   0.000
+```
+
+## Step 8: Test Connectivity to Services
+
+**Test database connectivity (if applicable):**
+
+```bash
+sudo apt-get install -y postgresql-client-15
+psql -h db-prod-1.internal -U bizfirst -d production -c "SELECT version();"
+
+Expected:
+  PostgreSQL 15.4 on x86_64-pc-linux-gnu
+```
+
+**Test cache connectivity (Redis):**
+
+```bash
+sudo apt-get install -y redis-tools
+redis-cli -h cache-prod-1.internal ping
+→ PONG
+```
+
+**Test queue connectivity:**
+
+```bash
+# Test RabbitMQ
+sudo apt-get install -y amqp-tools
+amqp-declare-queue -H queue-prod-1.internal -q test-queue
+```
+
+## Step 9: Verify Configuration
+
+**Create configuration validation script:**
+
+```bash
+cat > /tmp/validate-config.sh <<'EOF'
+#!/bin/bash
+
+echo "=== OS Configuration ==="
+echo "✓ Hostname: $(hostname)"
+echo "✓ OS: $(lsb_release -ds)"
+echo "✓ Timezone: $(timedatectl | grep 'Time zone')"
+echo "✓ NTP: $(systemctl is-active ntp)"
+
+echo ""
+echo "=== Runtime Environments ==="
+echo "✓ .NET: $($HOME/.dotnet/dotnet --version)"
+echo "✓ Node.js: $(node --version)"
+echo "✓ Docker: $(docker --version)"
+
+echo ""
+echo "=== Security ==="
+echo "✓ SSH key-based auth enabled"
+echo "✓ Firewall: $(sudo ufw status | head -1)"
+echo "✓ Fail2ban: $(sudo systemctl is-active fail2ban)"
+
+echo ""
+echo "=== Monitoring ==="
+echo "✓ Node Exporter: $(curl -s http://localhost:9100/metrics | wc -l) metrics"
+echo "✓ Filebeat: $(pgrep -l filebeat | wc -l) processes"
+
+echo ""
+echo "=== Storage ==="
+df -h | grep -E '^(Filesystem|/dev)'
+
+echo ""
+echo "=== Connectivity ==="
+ping -c 1 db-prod-1.internal && echo "✓ Database reachable" || echo "✗ Database unreachable"
+redis-cli -h cache-prod-1.internal ping && echo "✓ Cache reachable" || echo "✗ Cache unreachable"
+
+echo ""
+echo "Configuration validation complete!"
+EOF
+
+chmod +x /tmp/validate-config.sh
+/tmp/validate-config.sh
+```
+
+## Step 10: Record Configuration
+
+**Document server configuration:**
+
+```yaml
+ServerID: srvr-550e8400-e29b-41d4
+Name: api-prod-2
+HostName: api-prod-2
+
+OS Configuration:
+  Type: Ubuntu 22.04 LTS
+  Kernel: 5.15.0-86-generic
+  Timezone: UTC
+  NTP: Enabled (ntp)
+  Hostname: api-prod-2
+
+Runtimes Installed:
+  - .NET 9.0.0 at /home/ubuntu/.dotnet
+  - Node.js 20.11.0
+  - Docker 24.0.7
+
+Security:
+  - SSH: Key-based auth enabled, password disabled
+  - Firewall: UFW enabled
+    - SSH from 10.0.0.0/8
+    - HTTP/HTTPS from any
+    - App ports 8000-8999 open
+  - Audit: auditd enabled
+  - Fail2ban: Enabled for SSH
+
+Monitoring:
+  - Node Exporter: Running on port 9100
+  - Filebeat: Configured for logs
+  - Health checks: Ready
+
+Storage:
+  - Root: /dev/sda (100GB)
+  - Data: /dev/sdb (1TB) mounted at /data
+  - Backups: Daily at 02:00 UTC
+
+Connectivity:
+  - Database: ✓
+  - Cache: ✓
+  - Queue: ✓
+
+Configuration Date: 2026-09-29
+Configured By: ServerDeveloper Agent
+Status: Ready for deployment
+```
+
+## Checklist
+
+- [ ] SSH/RDP connectivity verified
+- [ ] OS updated and hardened
+- [ ] .NET 9.0 installed and verified
+- [ ] SSH key-based auth enabled
+- [ ] Firewall configured (UFW)
+- [ ] fail2ban installed
+- [ ] Audit logging enabled
+- [ ] Node Exporter installed and running
+- [ ] Log shipper (Filebeat) configured
+- [ ] Data volumes formatted and mounted
+- [ ] Backup schedule configured
+- [ ] Static hostname resolution added
+- [ ] NTP synchronized
+- [ ] Database connectivity verified
+- [ ] Cache connectivity verified
+- [ ] Configuration validation passed
+- [ ] Server configuration documented
+- [ ] Ready for deployment
+
+**Total time:** ~30-45 minutes
+
+## Next Step
+
+Server is now configured and ready for deployment.
+
+See: [Deploy Application](deploy-application.md)
+
+---
+
+## Claudia/Procedure/Servers/deploy-application.md
+
+# Deploy Application
+
+Step-by-step procedure for deploying BizFirst components to a configured server.
+
+## Prerequisites
+- [ ] Server provisioned and running (see [Provision Server](provision-server.md))
+- [ ] Server configured (see [Configure Server](configure-server.md))
+- [ ] Database migrated (if needed)
+- [ ] Application package ready (bizfirst-services-v9.0.1.tar.gz)
+- [ ] Configuration files prepared (appsettings.json)
+- [ ] Credentials loaded (API keys, connection strings)
+
+## Step 1: Prepare Deployment Package
+
+**Package structure:**
+
+```
+bizfirst-services-v9.0.1.tar.gz
+├─ services/
+│  ├─ Api/
+│  │  └─ BizFirst.Ai.Api.dll (compiled application)
+│  ├─ Worker/
+│  │  └─ BizFirst.Ai.Worker.dll
+│  └─ Scheduler/
+│     └─ BizFirst.Ai.Scheduler.dll
+├─ dependencies/
+│  ├─ .NET Runtime 9.0 libraries
+│  ├─ NuGet packages (if self-contained)
+│  └─ System libraries
+├─ config/
+│  ├─ appsettings.json (template)
+│  ├─ appsettings.Production.json
+│  ├─ systemd/*.service files
+│  └─ nginx/*.conf (if reverse proxy)
+└─ scripts/
+   ├─ install.sh
+   ├─ migrate-database.sh
+   └─ health-check.sh
+```
+
+**Verify package integrity:**
+
+```bash
+# Download package
+wget https://artifacts.bizfirst.com/packages/bizfirst-services-v9.0.1.tar.gz
+wget https://artifacts.bizfirst.com/packages/bizfirst-services-v9.0.1.tar.gz.sha256
+
+# Verify checksum
+sha256sum -c bizfirst-services-v9.0.1.tar.gz.sha256
+→ bizfirst-services-v9.0.1.tar.gz: OK
+
+# Extract
+tar xzf bizfirst-services-v9.0.1.tar.gz
+ls -la
+→ drwxr-xr-x  services/
+  drwxr-xr-x  dependencies/
+  drwxr-xr-x  config/
+  drwxr-xr-x  scripts/
+```
+
+## Step 2: Upload Package to Server
+
+**Copy package to server:**
+
+```bash
+# From deployment machine
+scp -i admin-key.pem -r bizfirst-services-v9.0.1 ubuntu@10.0.1.50:/tmp/
+
+# Verify on server
+ssh ubuntu@10.0.1.50
+ubuntu@api-prod-2:~$ ls -la /tmp/bizfirst-services-v9.0.1/
+→ config/
+  dependencies/
+  scripts/
+  services/
+```
+
+**Or using NodeHost API:**
+
+```
+POST /servers/{serverID}/upload-package
+
+Request:
+{
+  "packageID": "bizfirst-services-9.0.1",
+  "packageURL": "https://artifacts.bizfirst.com/packages/bizfirst-services-v9.0.1.tar.gz",
+  "checksum": "sha256:abc123...",
+  "services": ["Api", "Worker", "Scheduler"]
+}
+
+Response (202 Accepted):
+{
+  "uploadID": "upload-uuid",
+  "status": "InProgress",
+  "progress": 0,
+  "estimatedTime": 120
+}
+
+Poll status:
+GET /servers/{serverID}/upload/{uploadID}
+→ { "status": "Completed", "progress": 100 }
+```
+
+## Step 3: Prepare Configuration
+
+**Create appsettings.Production.json:**
+
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "BizFirst": "Information"
+    }
+  },
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=db-prod-1.internal;Database=bizfirst;User Id=bizfirst;Password=$SECRET_DB_PASSWORD;"
+  },
+  "AppSettings": {
+    "Environment": "Production",
+    "TenantID": "550e8400-e29b-41d4-a716-446655440000",
+    "ApiBaseUrl": "https://api.bizfirst.com",
+    "MaxConnections": 100,
+    "RequestTimeout": 30000
+  },
+  "Services": {
+    "Cache": {
+      "Enabled": true,
+      "Provider": "Redis",
+      "ConnectionString": "cache-prod-1.internal:6379"
+    },
+    "Queue": {
+      "Enabled": true,
+      "Provider": "RabbitMQ",
+      "ConnectionString": "amqp://queue-prod-1.internal:5672"
+    }
+  }
+}
+```
+
+**Load secrets from credential store:**
+
+```bash
+# SSH to server
+ssh ubuntu@10.0.1.50
+
+# Load secrets (using Credentials MCP)
+curl -H "Authorization: Bearer $JWT_TOKEN" \
+  https://api.bizfirst.com/credentials/v1/secrets/bizfirst-prod-api \
+  > /tmp/secrets.json
+
+# Parse and set environment variables
+export DB_PASSWORD=$(jq -r '.database_password' /tmp/secrets.json)
+export API_KEY=$(jq -r '.api_key' /tmp/secrets.json)
+
+# Substitute in config
+sed -i "s|\$SECRET_DB_PASSWORD|$DB_PASSWORD|g" appsettings.Production.json
+```
+
+## Step 4: Install Services
+
+**Run installation script:**
+
+```bash
+cd /tmp/bizfirst-services-v9.0.1
+
+# Make script executable
+chmod +x scripts/install.sh
+
+# Run installation
+sudo ./scripts/install.sh \
+  --install-path /opt/bizfirst \
+  --config-path /etc/bizfirst \
+  --log-path /var/log/bizfirst \
+  --services "Api,Worker,Scheduler"
+
+Output:
+  ✓ Creating installation directories
+  ✓ Installing service binaries
+  ✓ Setting up systemd services
+  ✓ Creating log directories
+  ✓ Setting permissions
+  ✓ Installation complete
+```
+
+**Verify installation:**
+
+```bash
+ls -la /opt/bizfirst/
+→ drwxr-xr-x  9.0.1/
+  lrwxrwxrwx  current -> 9.0.1
+
+/opt/bizfirst/current/
+→ drwxr-xr-x  Api/
+  drwxr-xr-x  Worker/
+  drwxr-xr-x  Scheduler/
+
+# Check systemd services
+sudo systemctl list-unit-files | grep bizfirst
+→ bizfirst-api.service
+  bizfirst-worker.service
+  bizfirst-scheduler.service
+```
+
+## Step 5: Configure Services
+
+**Copy config files:**
+
+```bash
+cp /tmp/bizfirst-services-v9.0.1/config/appsettings.json /etc/bizfirst/
+cp /tmp/bizfirst-services-v9.0.1/config/appsettings.Production.json /etc/bizfirst/
+
+# Set permissions
+sudo chown -R bizfirst:bizfirst /etc/bizfirst
+sudo chmod 600 /etc/bizfirst/appsettings*.json
+```
+
+**Configure systemd services:**
+
+```bash
+# Create/update service files
+sudo cat > /etc/systemd/system/bizfirst-api.service <<'EOF'
+[Unit]
+Description=BizFirst API Service
+After=network.target
+
+[Service]
+Type=simple
+User=bizfirst
+WorkingDirectory=/opt/bizfirst/current
+ExecStart=/home/ubuntu/.dotnet/dotnet Api/BizFirst.Ai.Api.dll
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+Environment="ASPNETCORE_ENVIRONMENT=Production"
+Environment="ASPNETCORE_URLS=http://0.0.0.0:8000"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+```
+
+**Configure environment variables:**
+
+```bash
+# Create .env file
+sudo cat > /etc/bizfirst/bizfirst-env <<EOF
+# Database
+DB_HOST=db-prod-1.internal
+DB_NAME=bizfirst
+DB_USER=bizfirst
+DB_PASSWORD=$(jq -r '.database_password' /tmp/secrets.json)
+
+# Cache
+REDIS_HOST=cache-prod-1.internal
+REDIS_PORT=6379
+
+# Queue
+RABBITMQ_HOST=queue-prod-1.internal
+RABBITMQ_PORT=5672
+
+# Application
+ASPNETCORE_ENVIRONMENT=Production
+LOG_LEVEL=Information
+EOF
+
+sudo chown bizfirst:bizfirst /etc/bizfirst/bizfirst-env
+sudo chmod 600 /etc/bizfirst/bizfirst-env
+```
+
+## Step 6: Database Migration
+
+**Apply database schema changes:**
+
+```bash
+cd /tmp/bizfirst-services-v9.0.1
+
+# Run migrations
+chmod +x scripts/migrate-database.sh
+sudo ./scripts/migrate-database.sh \
+  --connection-string "Server=db-prod-1.internal;Database=bizfirst;User Id=bizfirst;Password=$DB_PASSWORD;" \
+  --version 9.0.1
+
+Output:
+  Connecting to database...
+  ✓ Connected
+  ✓ Applying migration: 001_initial_schema.sql
+  ✓ Applying migration: 002_add_audit_fields.sql
+  ✓ Applying migration: 003_add_indexes.sql
+  ✓ Migrations applied successfully
+```
+
+**Verify schema:**
+
+```bash
+psql -h db-prod-1.internal -U bizfirst -d bizfirst -c \
+  "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"
+
+→ Should show tables like:
+  - users
+  - servers
+  - deployments
+  - audit_logs
+  - etc.
+```
+
+## Step 7: Start Services
+
+**Enable and start services:**
+
+```bash
+# Enable on boot
+sudo systemctl enable bizfirst-api
+sudo systemctl enable bizfirst-worker
+sudo systemctl enable bizfirst-scheduler
+
+# Start services
+sudo systemctl start bizfirst-api
+sudo systemctl start bizfirst-worker
+sudo systemctl start bizfirst-scheduler
+
+# Check status
+sudo systemctl status bizfirst-api
+→ ● bizfirst-api.service - BizFirst API Service
+    Loaded: loaded (/etc/systemd/system/bizfirst-api.service; enabled; ...)
+    Active: active (running) since 2026-09-29 15:45:30 UTC; 2s ago
+    Main PID: 12345 (dotnet)
+```
+
+**Verify services are running:**
+
+```bash
+# Check processes
+ps aux | grep bizfirst
+→ ubuntu    12345  0.0  5.2 1234567 123456 ?  Ssl 15:45   0:02 /home/ubuntu/.dotnet/dotnet Api/BizFirst.Ai.Api.dll
+  ubuntu    12346  0.0  4.8 1234567 112345 ?  Ssl 15:45   0:01 /home/ubuntu/.dotnet/dotnet Worker/BizFirst.Ai.Worker.dll
+  ubuntu    12347  0.0  3.2 1234567 89012  ?  Ssl 15:45   0:01 /home/ubuntu/.dotnet/dotnet Scheduler/BizFirst.Ai.Scheduler.dll
+
+# Check port listening
+sudo ss -tlnp | grep dotnet
+→ LISTEN 0.0.0.0:8000  (API)
+  LISTEN 0.0.0.0:8001  (Worker)
+  LISTEN 0.0.0.0:8002  (Scheduler)
+```
+
+## Step 8: Health Checks
+
+**Run health checks:**
+
+```bash
+# Application health endpoint
+curl http://localhost:8000/health
+→ {
+    "status": "Healthy",
+    "timestamp": "2026-09-29T15:45:45Z",
+    "version": "9.0.1"
+  }
+
+# Database connectivity
+curl http://localhost:8000/health/database
+→ {
+    "database": "Healthy",
+    "connection": "db-prod-1.internal",
+    "responseTime": "12ms"
+  }
+
+# Cache connectivity
+curl http://localhost:8000/health/cache
+→ {
+    "cache": "Healthy",
+    "connection": "cache-prod-1.internal",
+    "responseTime": "2ms"
+  }
+
+# Run custom health script
+chmod +x scripts/health-check.sh
+./scripts/health-check.sh
+
+Output:
+  ✓ API service running
+  ✓ Database connectivity OK
+  ✓ Cache connectivity OK
+  ✓ Queue connectivity OK
+  ✓ All health checks passed
+```
+
+## Step 9: Register with Load Balancer
+
+**Add server to load balancer pool:**
+
+```
+POST /load-balancer/pools/api-pool/targets
+
+Request:
+{
+  "targetID": "srvr-550e8400-e29b-41d4",
+  "address": "10.0.1.50",
+  "port": 8000,
+  "healthCheckPath": "/health",
+  "healthCheckInterval": 10,
+  "weight": 1
+}
+
+Response (201):
+{
+  "targetID": "target-uuid",
+  "status": "HealthChecking",
+  "healthStatus": "Unknown"
+}
+
+Poll until healthy:
+GET /load-balancer/pools/api-pool/targets/target-uuid
+→ { "healthStatus": "Healthy" }
+```
+
+## Step 10: Monitor Deployment
+
+**Check logs for errors:**
+
+```bash
+# View recent logs
+sudo journalctl -u bizfirst-api -n 50
+
+# Follow logs in real-time
+sudo journalctl -u bizfirst-api -f
+
+# Check for errors
+sudo journalctl -u bizfirst-api | grep ERROR
+
+# Check application logs
+tail -f /var/log/bizfirst/api.log
+```
+
+**Monitor metrics:**
+
+```bash
+# CPU and memory usage
+ps aux | grep bizfirst | head -5
+→ Check CPU% and MEM%
+
+# Check Node Exporter metrics
+curl http://localhost:9100/metrics | grep process_
+
+# Check custom application metrics
+curl http://localhost:8000/metrics
+```
+
+## Checklist
+
+- [ ] Package downloaded and verified
+- [ ] Configuration files prepared
+- [ ] Secrets loaded from credential store
+- [ ] Services installed
+- [ ] Configuration files copied
+- [ ] Systemd services configured
+- [ ] Database migrations applied
+- [ ] Services started successfully
+- [ ] All services running (ps aux)
+- [ ] Ports listening (ss -tlnp)
+- [ ] Health checks passing
+- [ ] Logs clean (no errors)
+- [ ] Registered with load balancer
+- [ ] Load balancer health check passing
+- [ ] Monitoring metrics flowing
+- [ ] Ready for traffic
+
+**Total time:** ~20-30 minutes
+
+## Next Steps
+- [Monitor Server](monitor-server.md)
+- [Troubleshoot Server](troubleshoot.md)
+
+---
+
+## Claudia/Procedure/Servers/monitor-server.md
+
+# Monitor Server
+
+Procedures for monitoring server health, metrics, and logs.
+
+## Prerequisites
+- [ ] Server deployed and running (see [Deploy Application](deploy-application.md))
+- [ ] Node Exporter installed and running (port 9100)
+- [ ] Application health endpoints available (/health, /metrics)
+- [ ] Monitoring system configured (Prometheus, Grafana, or Datadog)
+- [ ] Alerts configured
+
+## Step 1: Set Up Metrics Collection
+
+**Configure Prometheus scrape job:**
+
+```yaml
+# /etc/prometheus/prometheus.yml
+
+scrape_configs:
+  - job_name: 'bizfirst-api'
+    scrape_interval: 60s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['10.0.1.50:8000']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__scheme__]
+        target_label: scheme
+
+  - job_name: 'node-exporter'
+    scrape_interval: 60s
+    static_configs:
+      - targets: ['10.0.1.50:9100']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'api-prod-2'
+```
+
+**Reload Prometheus:**
+
+```bash
+curl -X POST http://prometheus:9090/-/reload
+```
+
+**Verify metrics are collected:**
+
+```bash
+# Query Prometheus
+curl 'http://prometheus:9090/api/v1/query?query=up{instance="10.0.1.50:8000"}'
+
+Response:
+{
+  "status": "success",
+  "data": {
+    "resultType": "vector",
+    "result": [
+      {
+        "metric": { "instance": "10.0.1.50:8000", "job": "bizfirst-api" },
+        "value": [ 1695998745, "1" ]
+      }
+    ]
+  }
+}
+```
+
+## Step 2: Configure Dashboards
+
+**Create Grafana dashboard for server monitoring:**
+
+```json
+{
+  "dashboard": {
+    "title": "API Server: api-prod-2",
+    "panels": [
+      {
+        "title": "CPU Usage",
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total{instance='10.0.1.50:9100'}[5m]) * 100"
+          }
+        ],
+        "yaxes": [
+          { "label": "CPU %", "max": 100 }
+        ]
+      },
+      {
+        "title": "Memory Usage",
+        "targets": [
+          {
+            "expr": "(1 - (node_memory_MemAvailable_bytes{instance='10.0.1.50:9100'} / node_memory_MemTotal_bytes{instance='10.0.1.50:9100'})) * 100"
+          }
+        ],
+        "yaxes": [
+          { "label": "Memory %", "max": 100 }
+        ]
+      },
+      {
+        "title": "Disk Usage",
+        "targets": [
+          {
+            "expr": "(1 - (node_filesystem_avail_bytes{instance='10.0.1.50:9100',fstype='ext4'} / node_filesystem_size_bytes{instance='10.0.1.50:9100',fstype='ext4'})) * 100"
+          }
+        ]
+      },
+      {
+        "title": "Network Bytes In/Out",
+        "targets": [
+          {
+            "expr": "rate(node_network_receive_bytes_total{instance='10.0.1.50:9100'}[5m])"
+          },
+          {
+            "expr": "rate(node_network_transmit_bytes_total{instance='10.0.1.50:9100'}[5m])"
+          }
+        ]
+      },
+      {
+        "title": "API Request Rate",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{instance='10.0.1.50:8000'}[5m])"
+          }
+        ]
+      },
+      {
+        "title": "API Latency (p95)",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{instance='10.0.1.50:8000'}[5m]))"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+## Step 3: Configure Alerting Rules
+
+**Create alert rules (prometheus rules.yml):**
+
+```yaml
+groups:
+  - name: bizfirst-api-alerts
+    interval: 30s
+    rules:
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total{instance='10.0.1.50:9100'}[5m]) * 100 > 80
+        for: 5m
+        annotations:
+          summary: "High CPU on api-prod-2 ({{ $value }}%)"
+
+      - alert: HighMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes{instance='10.0.1.50:9100'} / 
+          node_memory_MemTotal_bytes{instance='10.0.1.50:9100'})) * 100 > 85
+        for: 5m
+        annotations:
+          summary: "High memory on api-prod-2 ({{ $value }}%)"
+
+      - alert: DiskUsageHigh
+        expr: |
+          (1 - (node_filesystem_avail_bytes{instance='10.0.1.50:9100'} / 
+          node_filesystem_size_bytes{instance='10.0.1.50:9100'})) * 100 > 85
+        for: 10m
+        annotations:
+          summary: "Disk 85% full on api-prod-2 ({{ $value }}%)"
+
+      - alert: ServiceDown
+        expr: up{instance='10.0.1.50:8000'} == 0
+        for: 1m
+        annotations:
+          summary: "API service down on api-prod-2"
+
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{instance='10.0.1.50:8000', status=~'5..'}[5m])) /
+          sum(rate(http_requests_total{instance='10.0.1.50:8000'}[5m])) > 0.05
+        for: 5m
+        annotations:
+          summary: "High error rate on api-prod-2 ({{ $value }}%)"
+
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{instance='10.0.1.50:8000'}[5m])) > 1
+        for: 5m
+        annotations:
+          summary: "High latency on api-prod-2 ({{ $value }}s)"
+```
+
+## Step 4: Manual Health Checks
+
+**Daily health check procedure:**
+
+```bash
+# Login to server
+ssh ubuntu@10.0.1.50
+
+echo "=== System Health ==="
+free -h
+→ Check memory available
+df -h /
+→ Check disk space
+uptime
+→ Check load average
+
+echo "=== Service Status ==="
+sudo systemctl status bizfirst-api
+sudo systemctl status bizfirst-worker
+sudo systemctl status bizfirst-scheduler
+
+echo "=== Application Health ==="
+curl -s http://localhost:8000/health | jq .
+curl -s http://localhost:8000/health/database | jq .
+curl -s http://localhost:8000/health/cache | jq .
+
+echo "=== Recent Logs (last 20 lines) ==="
+sudo journalctl -u bizfirst-api -n 20
+
+echo "=== Error Count (last 1 hour) ==="
+sudo journalctl -u bizfirst-api --since "1 hour ago" | grep ERROR | wc -l
+
+echo "=== Network Connections ==="
+netstat -tlnp | grep 8000
+→ Verify API listening on port 8000
+
+echo "=== Process Resources ==="
+ps aux | grep "[d]otnet.*Api" | head -1
+→ Check CPU%, MEM%
+
+echo "=== Disk I/O ==="
+iostat -x 1 5 | tail -5
+→ Check disk utilization
+```
+
+**Weekly health check:**
+
+```bash
+# SSH to server
+ssh ubuntu@10.0.1.50
+
+echo "=== Database Connectivity ==="
+psql -h db-prod-1.internal -U bizfirst -d bizfirst -c "SELECT COUNT(*) FROM servers;"
+→ Should return count, not error
+
+echo "=== Cache Connectivity ==="
+redis-cli -h cache-prod-1.internal ping
+→ Should return PONG
+
+echo "=== Queue Connectivity ==="
+amqp-declare-queue -H queue-prod-1.internal -q test-conn 2>/dev/null && echo "OK" || echo "FAILED"
+
+echo "=== Backup Verification ==="
+ls -lh /data/backups/ | tail -5
+→ Check recent backups exist
+
+echo "=== Log Rotation ==="
+sudo logrotate -f /etc/logrotate.d/bizfirst
+ls -lh /var/log/bizfirst/ | head -10
+→ Check log files rotated
+
+echo "=== Security Updates ==="
+sudo apt update
+sudo apt list --upgradable
+→ Check for security updates
+```
+
+## Step 5: Log Aggregation
+
+**Query logs from ELK Stack:**
+
+```bash
+# Using Kibana
+curl -X GET "localhost:9200/server-logs-*/_search?pretty" -H 'Content-Type: application/json' -d'{
+  "query": {
+    "bool": {
+      "must": [
+        { "term": { "hostname": "api-prod-2" } },
+        { "match": { "log_level": "ERROR" } },
+        { "range": { "@timestamp": { "gte": "now-1h" } } }
+      ]
+    }
+  },
+  "sort": [{ "@timestamp": { "order": "desc" } }],
+  "size": 50
+}'
+
+# Or via Kibana UI:
+1. Open Kibana dashboard
+2. Go to Discover
+3. Filter: hostname = "api-prod-2" AND log_level = "ERROR"
+4. Time range: Last 24 hours
+```
+
+**Common log queries:**
+
+```bash
+# API response time distribution
+curl -X GET "localhost:9200/server-logs-*/_search" -H 'Content-Type: application/json' -d'{
+  "query": {
+    "term": { "service": "bizfirst-api" }
+  },
+  "aggs": {
+    "response_time_percentiles": {
+      "percentiles": {
+        "field": "response_time_ms",
+        "percents": [50, 95, 99]
+      }
+    }
+  }
+}'
+
+# Error rate by endpoint
+curl -X GET "localhost:9200/server-logs-*/_search" -H 'Content-Type: application/json' -d'{
+  "query": {
+    "bool": {
+      "must": [
+        { "term": { "service": "bizfirst-api" } },
+        { "range": { "status_code": { "gte": 400 } } }
+      ]
+    }
+  },
+  "aggs": {
+    "errors_by_endpoint": {
+      "terms": { "field": "endpoint", "size": 10 }
+    }
+  }
+}'
+```
+
+## Step 6: Performance Trending
+
+**Weekly performance report:**
+
+```bash
+#!/bin/bash
+
+WEEK_START=$(date -d "7 days ago" +%Y-%m-%d)
+WEEK_END=$(date +%Y-%m-%d)
+
+echo "=== Weekly Performance Report: api-prod-2 ==="
+echo "Period: $WEEK_START to $WEEK_END"
+echo ""
+
+# Average CPU usage
+curl -s "http://prometheus:9090/api/v1/query_range?query=avg(rate(process_cpu_seconds_total{instance='10.0.1.50:9100'}[5m]))*100&start=${WEEK_START}T00:00:00Z&end=${WEEK_END}T00:00:00Z&step=1h" | \
+  jq '.data.result[0].values | map(.[1] | tonumber) | add/length' | \
+  xargs echo "Average CPU:"
+
+# Peak memory usage
+curl -s "http://prometheus:9090/api/v1/query_range?query=max(node_memory_MemTotal_bytes{instance='10.0.1.50:9100'}-node_memory_MemAvailable_bytes{instance='10.0.1.50:9100'})&start=${WEEK_START}T00:00:00Z&end=${WEEK_END}T00:00:00Z&step=1h" | \
+  jq '.data.result[0].values | map(.[1] | tonumber) | max | . / 1073741824' | \
+  xargs echo "Peak Memory (GB):"
+
+# Total requests
+curl -s "http://prometheus:9090/api/v1/query_range?query=increase(http_requests_total{instance='10.0.1.50:8000'}[7d])&start=${WEEK_START}T00:00:00Z&end=${WEEK_END}T23:59:59Z&step=1d" | \
+  jq '.data.result[0].values | map(.[1] | tonumber) | add' | \
+  xargs echo "Total Requests:"
+
+# Average latency (p95)
+curl -s "http://prometheus:9090/api/v1/query_range?query=avg(histogram_quantile(0.95,rate(http_request_duration_seconds_bucket{instance='10.0.1.50:8000'}[5m])))&start=${WEEK_START}T00:00:00Z&end=${WEEK_END}T00:00:00Z&step=1h" | \
+  jq '.data.result[0].values | map(.[1] | tonumber) | add/length' | \
+  xargs echo "Average P95 Latency (sec):"
+
+# Error rate
+curl -s "http://prometheus:9090/api/v1/query_range?query=sum(rate(http_requests_total{instance='10.0.1.50:8000',status=~'5..'}[5m]))/sum(rate(http_requests_total{instance='10.0.1.50:8000'}[5m]))&start=${WEEK_START}T00:00:00Z&end=${WEEK_END}T00:00:00Z&step=1h" | \
+  jq '.data.result[0].values | map(.[1] | tonumber) | add/length * 100' | \
+  xargs echo "Average Error Rate (%):"
+```
+
+## Step 7: Alert Response
+
+**When CPU alert fires:**
+
+```
+Alert: HighCPUUsage > 80% for 5 minutes
+
+Response steps:
+1. SSH to server
+   → Check running processes: ps aux | sort -k3 -r | head -10
+   → Check what changed recently
+
+2. Check application logs
+   → journalctl -u bizfirst-api | grep WARN | tail -20
+   → Look for resource leaks, infinite loops
+
+3. Analyze query performance (if DB-bound)
+   → Query the slow query log
+   → Run EXPLAIN ANALYZE on slow queries
+
+4. Increase resources (if needed)
+   → Update instance type: POST /servers/{id}/update
+   → This may require brief downtime
+
+5. Or auto-scale (if load-based)
+   → Verify auto-scaling policy enabled
+   → Check new instances added
+
+6. Document in incident ticket
+   → Root cause
+   → Resolution
+   → Prevention
+```
+
+## Checklist
+
+- [ ] Prometheus scrape jobs configured
+- [ ] Metrics verified flowing
+- [ ] Grafana dashboard created
+- [ ] Alert rules configured
+- [ ] Alert notifications working (test alert)
+- [ ] Log aggregation configured
+- [ ] Daily health check procedure documented
+- [ ] Weekly deep-dive scheduled
+- [ ] Performance baseline established
+- [ ] Alert thresholds tuned (not too noisy)
+
+**Monitoring cadence:**
+- **Every 5 min:** Automated alerts (via Prometheus)
+- **Daily:** Manual health check (script)
+- **Weekly:** Deep-dive (database, cache, performance)
+- **Monthly:** Trending analysis + capacity planning
+
+## Next Steps
+- [Troubleshoot Server](troubleshoot.md)
+- [Knowledge: Infrastructure Architecture](../../Knowledge/Servers/02-infrastructure-architecture.md#monitoring-and-observability)
+
+---
+
+## Claudia/Procedure/Servers/provision-server.md
+
+# Provision Server
+
+Step-by-step procedure for ServerDeveloper agent to provision new servers.
+
+## Prerequisites
+- [ ] Capacity plan approved (CPU, memory, network)
+- [ ] TenantID and quota verified
+- [ ] Network design finalized (VPC, subnet, security groups)
+- [ ] Server naming approved
+- [ ] Cost estimate reviewed
+
+## Step 1: Analyze Requirements
+
+**Define server specifications:**
+
+```
+Q: What is the intended workload?
+A: Web API handling 1000 req/s peak
+
+Q: What are resource needs?
+A: CPU: 8 cores, Memory: 16GB, Storage: 100GB SSD
+
+Q: Single or multi-tenant?
+A: Dedicated to Tenant A (single-tenant)
+
+Q: Region/Zone preference?
+A: us-east-1a (primary), us-east-1b (backup)
+
+Q: Deployment model?
+A: Cloud (AWS), auto-scalable
+```
+
+**Document decision:**
+```
+Server Plan:
+  Name: api-prod-2
+  Type: CloudInstance (AWS)
+  Region: us-east-1
+  Instance: c7i.2xlarge (8vCPU, 16GB RAM)
+  Storage: 100GB gp3 SSD
+  OS: Ubuntu 22.04 LTS
+  Runtimes: .NET 9.0, Node.js 20
+  TenantID: 550e8400-e29b-41d4-a716-446655440000
+```
+
+## Step 2: Check Quota & Permissions
+
+**Verify tenant has capacity:**
+
+```bash
+# Call InstallHub to check quota
+GET /tenants/{tenantID}/quota
+
+Response:
+{
+  "limits": {
+    "maxServers": 10,
+    "maxCPU": 64,
+    "maxMemory": 256,
+    "maxStorage": 1000
+  },
+  "current": {
+    "servers": 2,
+    "cpu": 16,
+    "memory": 32,
+    "storage": 200
+  }
+}
+
+Analysis:
+  Current: 2 servers, 16 CPU, 32GB RAM
+  Adding: 1 server, 8 CPU, 16GB RAM
+  After: 3 servers, 24 CPU, 48GB RAM
+  Limits: 10 servers, 64 CPU, 256GB RAM
+  Status: ✓ Within quota
+```
+
+**Check your permissions:**
+- [ ] ServerAdmin or TenantAdmin role
+- [ ] Can provision in target region
+- [ ] Can assign to this TenantID
+
+## Step 3: Prepare Network Configuration
+
+**Design network:**
+
+```
+VPC: prod-vpc (10.0.0.0/16)
+  ├─ Public Subnet: 10.0.1.0/24
+  │  └─ Route: 0.0.0.0/0 → Internet Gateway
+  │
+  └─ Private Subnet: 10.0.2.0/24
+     └─ Route: 0.0.0.0/0 → NAT Gateway
+
+Security Groups:
+  ├─ web-sg (for load balancers)
+  │  ├─ Inbound: HTTP (80), HTTPS (443) from 0.0.0.0/0
+  │  └─ Outbound: All
+  │
+  └─ app-sg (for application servers)
+     ├─ Inbound: 8000-8999 from web-sg, 22 from admin-ips
+     └─ Outbound: All
+```
+
+**Verify network exists or create:**
+```
+GET /vpc/{vpcID}
+→ Check subnets, security groups, route tables
+
+If missing:
+  POST /vpc/create { "cidr": "10.0.0.0/16", ... }
+  POST /subnet/create { "vpcID": ..., "cidr": "10.0.1.0/24", ... }
+  POST /security-group/create { "name": "app-sg", ... }
+```
+
+## Step 4: Call Provision API
+
+**Prepare request payload:**
+
+```json
+{
+  "name": "api-prod-2",
+  "type": "CloudInstance",
+  "cloudProvider": "AWS",
+  "instanceType": "c7i.2xlarge",
+  "region": "us-east-1",
+  "availabilityZone": "us-east-1a",
+  "osType": "Linux",
+  "osVersion": "Ubuntu 22.04 LTS",
+  "amiID": "ami-0c94855ba95c574c8",
+  "vpcID": "vpc-0123456789abcdef0",
+  "subnetID": "subnet-0123456789abcdef0",
+  "securityGroupIDs": ["sg-0234567890abcdef1"],
+  "cpuCores": 8,
+  "memoryGB": 16,
+  "storageGB": 100,
+  "storageType": "gp3",
+  "runtimes": [".NET 9.0", "Node.js 20"],
+  "tenantID": "550e8400-e29b-41d4-a716-446655440000",
+  "tags": {
+    "Environment": "Production",
+    "CostCenter": "Engineering",
+    "Owner": "ServerDeveloper",
+    "CreatedDate": "2026-09-29"
+  }
+}
+```
+
+**Make API call:**
+```
+POST https://api.bizfirst.com/servers/v1/servers/provision
+
+Authorization: Bearer {jwt_token}
+Content-Type: application/json
+
+{...payload above...}
+```
+
+**Expected response (202 Accepted):**
+```json
+{
+  "serverID": "srvr-550e8400-e29b-41d4",
+  "name": "api-prod-2",
+  "status": "Provisioning",
+  "taskID": "task-abc123def456",
+  "estimatedCompletionTime": "2026-09-29T15:30:00Z",
+  "details": {
+    "stage": "AwaitingVMAllocation",
+    "progress": 0
+  }
+}
+```
+
+**Document the result:**
+```
+Provision Request Submitted:
+  ServerID: srvr-550e8400-e29b-41d4
+  Status: Provisioning (started at 15:15 UTC)
+  Expected completion: 15:30 UTC (15 minutes)
+  Task for tracking: task-abc123def456
+```
+
+## Step 5: Monitor Provisioning Progress
+
+**Poll status every 2 minutes:**
+
+```
+GET /servers/srvr-550e8400-e29b-41d4
+
+Response:
+{
+  "status": "Provisioning",
+  "details": {
+    "stage": "AwaitingVMAllocation",
+    "progress": 25
+  }
+}
+
+Timeline:
+  T+0 min:  Status = Provisioning (stage: AwaitingVMAllocation)
+  T+2 min:  Status = Provisioning (stage: NetworkConfiguration, progress: 50%)
+  T+4 min:  Status = Provisioning (stage: OServing, progress: 75%)
+  T+6 min:  Status = Provisioning (stage: HealthCheck, progress: 90%)
+  T+8 min:  Status = Running (all checks passed)
+```
+
+**If provisioning fails:**
+```
+Status: ProvisioningFailed
+Details: {
+  "error": "InsufficientCapacity",
+  "message": "Not enough capacity in us-east-1a",
+  "recommendation": "Retry in us-east-1b"
+}
+
+Action:
+  1. Note failure reason
+  2. Try different region/zone
+  3. If still fails, escalate to platform team
+```
+
+## Step 6: Verify Server is Running
+
+**Confirm server is healthy:**
+
+```
+GET /servers/srvr-550e8400-e29b-41d4
+
+Response:
+{
+  "serverID": "srvr-550e8400-e29b-41d4",
+  "name": "api-prod-2",
+  "status": "Running",
+  "ipAddresses": ["10.0.1.50", "203.0.113.45"],
+  "cpuCores": 8,
+  "memoryGB": 16,
+  "storageGB": 100,
+  "uptime": 120,
+  "runtimes": [".NET 9.0", "Node.js 20"]
+}
+```
+
+**Check health status:**
+
+```
+GET /servers/srvr-550e8400-e29b-41d4/health
+
+Response:
+{
+  "status": "Healthy",
+  "metrics": {
+    "cpuUsage": 5.2,
+    "memoryUsage": 12.1,
+    "diskUsage": 15.3,
+    "networkLatency": 2.1
+  },
+  "services": [],
+  "issues": []
+}
+
+Validation:
+  ✓ Server running
+  ✓ Network connectivity
+  ✓ Disk accessible
+  ✓ No issues detected
+```
+
+## Step 7: Configure & Deploy (Next Phase)
+
+**Server is now ready for configuration:**
+
+See: [Configure Server](configure-server.md)
+
+```
+Next steps:
+  1. Install .NET Runtime 9.0
+  2. Configure monitoring agent
+  3. Deploy BizFirst services
+  4. Run health checks
+  5. Add to load balancer
+```
+
+## Step 8: Document & Alert
+
+**Record in ticket:**
+```
+[SERVER PROVISIONED]
+ServerID: srvr-550e8400-e29b-41d4
+Name: api-prod-2
+Status: Running ✓
+IP: 10.0.1.50 (private), 203.0.113.45 (elastic)
+Time: Provisioned 2026-09-29 at 15:23 UTC
+Owner: ServerDeveloper Agent
+Next: Configure server (Step 7)
+```
+
+**Alert monitoring:**
+- Register server in observability system
+- Enable health checks
+- Configure alerting thresholds (CPU >80%, Memory >85%, Disk >90%)
+- Set up log collection
+
+## Troubleshooting
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| **Status stuck at "Provisioning"** | Cloud provider slow or quota issue | Check cloud provider, try different zone |
+| **ProvisioningFailed: InsufficientCapacity** | Region at capacity | Retry in different AZ or region |
+| **Health check fails** | Network or security group issue | Verify security group rules, subnet routing |
+| **Services not running** | Configuration not applied | Proceed to [Configure Server](configure-server.md) |
+
+## Checklist
+
+- [ ] Requirements analyzed and documented
+- [ ] Quota verified (not over-allocated)
+- [ ] Network configuration prepared
+- [ ] API request payload prepared
+- [ ] Provision API called, serverID received
+- [ ] Provisioning progress monitored (8 min total)
+- [ ] Server status verified as "Running"
+- [ ] Health check passed
+- [ ] Ticket documented with serverID and IP
+- [ ] Monitoring alerts configured
+- [ ] Ready for configuration phase
+
+**Total time:** ~15 minutes (5 min setup + 8 min provisioning + 2 min verification)
+
+---
+
+## Claudia/Procedure/Servers/ServerQuestionnaire.md
+
+# Server Setup Questionnaire
+
+**This questionnaire captures all requirements needed to provision and configure a server.**
+
+## 1. What Will This Server Do? (Purpose)
+
+**Question:** What application or service runs on this server?
+
+Examples:
+- Web application server (Node.js, .NET, Python)
+- Database server (SQL Server, PostgreSQL, MySQL)
+- Cache server (Redis, Memcached)
+- Message queue (RabbitMQ, Kafka)
+- File storage (NAS, object storage)
+- Monitoring/logging (Elasticsearch, Grafana)
+
+**Your answer:** ________________
+
+**Recommendation:** Be specific. "Customer API backend" is better than "web server."
+
+---
+
+## 2. What Type of Server? (Infrastructure)
+
+**Choose one:**
+
+- **Physical Server** — Dedicated hardware in data center
+  - *Best for: High performance, maximum control, compliance requirements*
+  - *Cost: High upfront, ongoing maintenance*
+  
+- **Virtual Machine (VM)** — Virtualized server on shared hardware
+  - *Best for: Flexible scaling, cost-effective, standard deployments*
+  - *Cost: Medium, pay per VM*
+  
+- **Container (Docker/Kubernetes)** — Lightweight containerized deployment
+  - *Best for: Microservices, rapid scaling, CI/CD integration*
+  - *Cost: Low, efficient resource usage*
+  
+- **Cloud Instance** — AWS EC2, Azure VM, Google Compute Engine
+  - *Best for: Global reach, auto-scaling, managed services*
+  - *Cost: Variable, pay-as-you-go*
+  
+- **Edge Node** — Local/distributed compute, closer to users
+  - *Best for: Low latency, offline capability, IoT*
+  - *Cost: Medium, depends on location*
+
+**Your answer:** ________________
+
+---
+
+## 3. Operating System & Runtime
+
+**Operating System:**
+- [ ] Windows Server (2019, 2022, 2025) — Version: ________
+- [ ] Linux (Ubuntu 20.04, 22.04, CentOS, Rocky) — Version: ________
+- [ ] Other: ________
+
+**Application Runtime (what runs on this OS?):**
+- [ ] .NET (ASP.NET Core) — Version: 8.0 / 9.0 / other: ________
+- [ ] Node.js/npm — Version: 18 / 20 / LTS: ________
+- [ ] Python — Version: 3.10 / 3.11 / 3.12: ________
+- [ ] Java — Version: 11 / 17 / 21: ________
+- [ ] Database (SQL Server, PostgreSQL, MySQL) — Version: ________
+- [ ] Other: ________
+
+**Recommendation:** Match your application's runtime. For .NET apps, use Windows Server or Linux with .NET runtime.
+
+---
+
+## 4. Compute Resources (Sizing)
+
+**CPU Cores:**
+- [ ] 1 core (small apps, testing)
+- [ ] 2-4 cores (small-medium apps, light usage)
+- [ ] 8-16 cores (medium-large apps, moderate traffic)
+- [ ] 32+ cores (high-performance, heavy workloads)
+
+**RAM (Memory):**
+- [ ] 1-2 GB (development, testing)
+- [ ] 4-8 GB (small production apps)
+- [ ] 16-32 GB (medium production apps)
+- [ ] 64+ GB (large databases, heavy workloads)
+
+**Storage:**
+- **Type:** [ ] SSD (fast) [ ] HDD (cheaper) [ ] NVMe (fastest)
+- **Capacity:** _______ GB
+- **Purpose:** [ ] OS + application [ ] Database [ ] File storage [ ] Logs/archives
+
+**GPU Required?**
+- [ ] No
+- [ ] Yes — Type (NVIDIA, AMD, Intel): ________
+
+**Calculation Helper:**
+- Small app (e.g., API): 2 cores, 4 GB RAM, 100 GB SSD
+- Medium app (e.g., web + DB): 8 cores, 16 GB RAM, 500 GB SSD
+- Large app (e.g., complex system): 16+ cores, 32+ GB RAM, 1+ TB SSD
+
+---
+
+## 5. Network Requirements
+
+**Network Connectivity:**
+- [ ] Public IP (accessible from internet)
+- [ ] Private IP only (internal network only)
+- [ ] Both public and private
+
+**Public IP Details (if needed):**
+- Incoming ports: _______ (e.g., 80, 443, 3306)
+- Outgoing: [ ] Full internet [ ] Restricted to: ________
+
+**Security Groups/Firewall:**
+- [ ] Allow all traffic (NOT recommended for production)
+- [ ] Allow specific IPs: ________________
+- [ ] Allow specific ports: ________________
+- [ ] VPN/private network only
+
+**Regional/Geolocation:**
+- [ ] US (region: East, West, Central)
+- [ ] EU (GDPR compliance)
+- [ ] Asia-Pacific
+- [ ] Multi-region (distributed)
+
+**Recommendation:** For production, use a **security group** that allows only necessary ports (e.g., 80/443 for web, 5432 for database).
+
+---
+
+## 6. High Availability & Redundancy
+
+**Will this server handle production traffic?**
+- [ ] No (development/testing only)
+- [ ] Yes (production, customers depend on it)
+
+**If Production — Choose HA strategy:**
+- [ ] Single instance (acceptable for non-critical apps)
+- [ ] 2+ instances with load balancer (recommended)
+- [ ] Auto-scaling group (scale based on traffic)
+- [ ] Multi-region failover (for critical apps)
+
+**Load Balancer:**
+- [ ] Not needed
+- [ ] Needed — [ ] Round-robin [ ] Sticky sessions [ ] Health-based
+
+---
+
+## 7. Backup & Disaster Recovery
+
+**Backup Strategy:**
+- Backup frequency: [ ] Never [ ] Daily [ ] Weekly [ ] Continuous
+- Backup location: [ ] Same region [ ] Different region (more secure)
+- Retention period: [ ] 7 days [ ] 30 days [ ] 1 year [ ] Custom: ________
+
+**Disaster Recovery:**
+- RTO (Recovery Time Objective): How fast must you recover? [ ] 1 hour [ ] 4 hours [ ] 1 day
+- RPO (Recovery Point Objective): How much data loss is acceptable? [ ] None [ ] Minutes [ ] Hours
+- Failover: [ ] Manual [ ] Automatic
+
+**Recommendation:** For production databases, use **continuous replication** with automatic failover. For stateless apps, regular snapshots suffice.
+
+---
+
+## 8. Monitoring & Alerting
+
+**What should be monitored?**
+- [ ] CPU usage (alert if > 80%)
+- [ ] Memory usage (alert if > 85%)
+- [ ] Disk usage (alert if > 90%)
+- [ ] Network latency (alert if > X ms)
+- [ ] Application errors (alert on failures)
+- [ ] Database query performance
+- [ ] Custom metrics: ________________
+
+**Alert Destinations:**
+- [ ] Email
+- [ ] SMS
+- [ ] Slack/Teams
+- [ ] PagerDuty
+
+---
+
+## 9. Scaling & Cost Management
+
+**Traffic Expectations:**
+- [ ] Flat/predictable traffic
+- [ ] Spiky (peak hours, seasonal)
+- [ ] Rapidly growing
+
+**Scaling Strategy:**
+- [ ] Fixed size (no scaling)
+- [ ] Vertical scaling (bigger machine when needed)
+- [ ] Horizontal scaling (more machines when needed)
+- [ ] Auto-scaling (automatically add/remove based on metrics)
+
+**Cost Budget:**
+- Monthly budget: $________
+- Growth allowance: _______%
+
+**Recommendation:** For variable workloads, auto-scaling is most cost-effective. For predictable workloads, fixed sizing is simpler.
+
+---
+
+## 10. Deployment Timeline & Testing
+
+**Timeline:**
+- Needed by: _______ (date)
+- Maintenance window: [ ] 9-5 [ ] After hours [ ] Anytime
+
+**Testing & Validation:**
+- [ ] Connectivity test (SSH/RDP works)
+- [ ] Application deployment test (app starts and responds)
+- [ ] Load test (simulate expected traffic)
+- [ ] Failover test (verify HA works)
+- [ ] Backup/recovery test (verify backups work)
+
+**Sign-off:**
+- Who needs to approve? ________________
+- Final checklist before going live? ________________
+
+---
+
+## 11. Summary & Next Steps
+
+**Server Summary:**
+- **Purpose:** [what runs here]
+- **Type:** [Physical / VM / Container / Cloud / Edge]
+- **OS & Runtime:** [Windows Server 2022 / Ubuntu 22.04 + .NET 9.0 / etc.]
+- **Compute:** [8 cores, 16 GB RAM, 500 GB SSD]
+- **Network:** [Public + Private / Security groups: 80, 443]
+- **HA Strategy:** [Single / Load-balanced / Auto-scaling]
+- **Backup:** [Daily / Different region]
+- **Monitoring:** [CPU, Memory, Disk, Errors]
+- **Timeline:** [Go-live date]
+
+**Next Steps:**
+1. ✅ Review questionnaire for completeness
+2. ✅ Validate sizing recommendations with team
+3. ✅ Confirm budget and cost estimates
+4. ✅ Check timeline vs. capacity (any constraints?)
+5. ✅ Submit to ServerAgent for provisioning
+6. ✅ Prepare deployment/testing plan
+7. ✅ Set up monitoring before go-live
+
+**Questions?** Refer to [Servers Knowledge Base](../../Knowledge/Servers/) or ask your infrastructure team.
+
+---
+
+## Claudia/Procedure/Servers/troubleshoot.md
+
+# Troubleshoot Server
+
+Diagnostic and resolution procedures for common server issues.
+
+## Diagnosis Framework
+
+**When an issue is reported:**
+
+```
+1. Determine severity
+   - Critical (service down): Escalate immediately, start incident
+   - High (degraded): Begin diagnosis
+   - Medium (warning): Schedule investigation
+   - Low (advisory): Log for next maintenance window
+
+2. Isolate the problem
+   - Server-level: Network, hardware, OS
+   - Service-level: Application, dependencies
+   - Data-level: Database, cache, queue
+
+3. Implement fix
+   - Quick fix (if safe): Apply immediately
+   - Require change control: Escalate
+   - Unknown cause: Page specialist
+
+4. Verify resolution
+   - Confirm service restored
+   - Monitor for regression
+   - Document findings
+```
+
+## Common Issues & Solutions
+
+### Issue 1: Service Down (HTTP 503)
+
+**Symptoms:**
+- API not responding
+- Health endpoint returns connection refused
+- Load balancer showing server unhealthy
+
+**Diagnosis:**
+
+```bash
+# 1. Verify process is running
+ps aux | grep "[d]otnet.*Api"
+→ If no output: Service crashed
+
+# 2. Check service status
+sudo systemctl status bizfirst-api
+→ Check if Active or Failed
+
+# 3. View recent logs
+sudo journalctl -u bizfirst-api -n 50
+→ Look for error messages, stack traces
+
+# 4. Check exit code
+sudo systemctl show -p ExecMainStatus bizfirst-api
+→ 0 = success, non-zero = error
+```
+
+**Solution:**
+
+```bash
+# If service crashed, restart it
+sudo systemctl restart bizfirst-api
+
+# Wait for startup
+sleep 5
+
+# Verify it started
+sudo systemctl status bizfirst-api
+→ Should show "active (running)"
+
+# Check health
+curl http://localhost:8000/health
+→ Should return JSON with "status": "Healthy"
+
+# If still failing, check dependencies
+curl http://localhost:8000/health/database
+→ Check if database connectivity issue
+curl http://localhost:8000/health/cache
+→ Check if cache connectivity issue
+```
+
+**Prevention:**
+
+- [ ] Set `Restart=always` in systemd service
+- [ ] Enable automatic restart on failure
+- [ ] Monitor process uptime metric
+
+---
+
+### Issue 2: High CPU Usage (>85%)
+
+**Symptoms:**
+- Slow API responses
+- CPU alert firing
+- Load average high
+
+**Diagnosis:**
+
+```bash
+# 1. Identify CPU-consuming process
+top -b -n 1 | head -15
+→ Identify process with high CPU%
+
+# 2. Check for specific process
+ps aux | grep "[d]otnet"
+→ Get PID of API service
+
+# 3. Thread analysis (if available)
+sudo jcmd <PID> Thread.print > threads.txt
+grep "runnable" threads.txt | head -20
+→ Identify runnable threads, may indicate lock contention
+
+# 4. Check application logs for warnings
+sudo journalctl -u bizfirst-api --since "10 minutes ago" | grep -E "WARN|ERROR"
+```
+
+**Solution:**
+
+**Option A: If caused by request spike**
+```bash
+# Verify auto-scaling policy
+GET /servers/{serverID}/auto-scaling-policy
+→ Check min/max replicas, thresholds
+
+# Trigger auto-scale (if manual)
+POST /servers/provision
+{ "name": "api-prod-3", "config": "clone-from-api-prod-2" }
+→ New instance provisions, adds to load balancer
+
+# Monitor CPU after scale-out
+watch -n 5 'curl http://localhost:8000/metrics | grep cpu'
+→ Should decrease as traffic redistributes
+```
+
+**Option B: If caused by memory leak**
+```bash
+# Check memory usage trend
+curl 'http://prometheus:9090/api/v1/query_range?query=process_resident_memory_bytes{instance="10.0.1.50:8000"}&step=5m' \
+  | jq '.data.result[0].values | map(.[1] | tonumber)' | head -20
+→ Look for steadily increasing values (leak pattern)
+
+# If memory leaking, restart service (short-term fix)
+sudo systemctl restart bizfirst-api
+
+# Escalate for code review (long-term fix)
+→ Create ticket for memory leak investigation
+→ Profile application during production workload
+→ May require code changes to release unused memory
+```
+
+**Option C: If caused by inefficient query**
+```bash
+# Check database query logs
+tail -f /var/log/postgresql/postgresql.log | grep "duration:"
+→ Look for slow queries taking >1 second
+
+# Enable query logging (if not enabled)
+sudo systemctl stop bizfirst-api
+# Update appsettings to enable query logging
+sudo systemctl start bizfirst-api
+
+# Analyze slow queries
+SELECT query, calls, mean_exec_time FROM pg_stat_statements ORDER BY mean_exec_time DESC LIMIT 10;
+
+# Create index or optimize query
+→ May require code changes
+```
+
+---
+
+### Issue 3: High Memory Usage (>85%)
+
+**Symptoms:**
+- Memory alert firing
+- OOM killer (out of memory)
+- Swapping occurring
+
+**Diagnosis:**
+
+```bash
+# 1. Check total memory
+free -h
+→ Identify how much is used vs. available
+
+# 2. Check per-process memory
+ps aux --sort=-%mem | head -10
+→ Identify which process(es) consuming memory
+
+# 3. Check if swapping
+free -h | grep "Swap"
+→ If Swap > 0: System is swapping (very slow)
+
+# 4. Check memory breakdown
+cat /proc/meminfo | grep -E "^Mem|^Swap"
+→ MemFree, MemAvailable, SwapFree
+
+# 5. Check for memory leaks over time
+curl 'http://prometheus:9090/api/v1/query_range?query=process_resident_memory_bytes{instance="10.0.1.50:8000"}&step=10m&start=<24h-ago>&end=<now>' \
+  | jq '.data.result[0].values[-5:]'
+→ Last 5 points should be similar; if growing = leak
+```
+
+**Solution:**
+
+**Option A: If temporary spike**
+```bash
+# Restart application to clear memory
+sudo systemctl restart bizfirst-api
+
+# Monitor memory after restart
+watch -n 5 'free -h'
+→ Should drop significantly
+
+# If returns to high levels quickly = leak
+```
+
+**Option B: If memory leak**
+```bash
+# Short-term: Increase instance memory
+POST /servers/{serverID}/update
+{ "memoryGB": 32 }
+→ May trigger brief downtime
+
+# Long-term: Find and fix leak
+→ Create ticket for memory profiling
+→ Run memory profiler in lower environment first
+→ Identify unreleased objects or circular references
+```
+
+**Option C: If legitimate high usage (large dataset)**
+```bash
+# Verify this is expected
+→ Check data volume in database
+→ Confirm application caching strategy
+→ Review if load has increased
+
+# Scale up instance
+POST /servers/{serverID}/update
+{ "memoryGB": 32 }
+```
+
+---
+
+### Issue 4: Disk Space Full (>90%)
+
+**Symptoms:**
+- Disk space alert
+- Application can't write logs
+- Database transactions fail
+
+**Diagnosis:**
+
+```bash
+# 1. Check disk usage
+df -h /
+→ Identify filesystem and usage percentage
+
+# 2. Find large files/directories
+du -sh /* | sort -h | tail -10
+→ Identify largest directories
+
+# 3. Check log directory size
+du -sh /var/log/bizfirst/
+→ Logs often cause space issues
+
+# 4. Find large files by age
+find /var/log -name "*.log" -type f -exec ls -lh {} \; | sort -k5 -h | tail -20
+→ Identify old log files that should be rotated
+
+# 5. Check application temp directory
+du -sh /tmp /var/tmp
+→ May contain old uploads, cache
+```
+
+**Solution:**
+
+**Option A: Clean logs**
+```bash
+# Rotate logs immediately
+sudo logrotate -f /etc/logrotate.d/bizfirst
+sudo logrotate -f /etc/logrotate.conf
+
+# Remove old log archives
+find /var/log/bizfirst -name "*.gz" -mtime +30 -delete
+→ Remove gzipped logs older than 30 days
+
+# Verify disk space freed
+df -h /
+```
+
+**Option B: Clean temp files**
+```bash
+# Remove old temp files
+find /tmp -type f -atime +7 -delete
+→ Delete files not accessed in 7 days
+
+find /var/tmp -type f -atime +7 -delete
+
+# Verify space
+du -sh /tmp /var/tmp
+df -h /
+```
+
+**Option C: Extend storage**
+```bash
+# If immediate action needed
+# Add new volume and mount
+POST /servers/{serverID}/storage
+{ "size": 500, "mountPoint": "/data2" }
+
+# Long-term: Increase root volume
+POST /servers/{serverID}/update
+{ "storageGB": 200 }
+→ May require downtime and resize
+
+# Update log retention policy
+# Edit /etc/logrotate.d/bizfirst
+# Reduce maxage or compress more aggressively
+```
+
+---
+
+### Issue 5: High Network Latency (>100ms)
+
+**Symptoms:**
+- API responses slow
+- Database queries slow
+- Cross-datacenter communication degraded
+
+**Diagnosis:**
+
+```bash
+# 1. Check network connectivity
+ping db-prod-1.internal
+→ Check round-trip time (should be <10ms local, <100ms cross-region)
+
+# 2. Check for packet loss
+ping -c 100 db-prod-1.internal | grep "loss"
+→ Any loss % indicates network issues
+
+# 3. Check network interface stats
+ethtool -S eth0 | grep -E "rx|tx|drop|err"
+→ Look for dropped packets or errors
+
+# 4. Check route to destination
+traceroute db-prod-1.internal
+→ Identify hops, find slow one
+
+# 5. Check if VPN/tunnel involved
+ip link show
+→ Check for vpn, tun, or encrypted interfaces
+```
+
+**Solution:**
+
+**If VPN/tunnel slow:**
+```bash
+# Restart tunnel
+sudo systemctl restart vpn-tunnel
+
+# Check if tunnel is encrypted
+ip link show vpn0
+→ Encrypted tunnels add overhead
+
+# Verify key exchange
+sudo ipsec status
+```
+
+**If cross-datacenter:**
+```bash
+# Use accelerated networking (AWS)
+POST /servers/{serverID}/update
+{ "networkOptimization": "enhanced" }
+
+# Or migrate to same datacenter
+POST /servers/provision
+{ "region": "same-as-database", ... }
+```
+
+**If packet loss on link:**
+```bash
+# Escalate to network team
+→ Check router logs
+→ Verify ISP connectivity
+→ May be upstream issue
+```
+
+---
+
+### Issue 6: Database Connection Failures
+
+**Symptoms:**
+- "Connection refused" errors
+- Application logs show "could not connect to server"
+- Health check fails for database
+
+**Diagnosis:**
+
+```bash
+# 1. Verify database server is running
+ping db-prod-1.internal
+→ Check if reachable at all
+
+# 2. Check database port
+nc -zv db-prod-1.internal 5432
+→ Verify port 5432 is open and listening
+
+# 3. Test direct connection
+psql -h db-prod-1.internal -U bizfirst -d bizfirst -c "SELECT 1;"
+→ Should return successful result
+
+# 4. Check connection limit
+psql -h db-prod-1.internal -U postgres -d postgres -c "SHOW max_connections;"
+→ Check if limit reached
+
+# 5. Check active connections
+psql -h db-prod-1.internal -U postgres -d postgres -c "SELECT count(*) FROM pg_stat_activity;"
+→ If equals max_connections, that's the issue
+```
+
+**Solution:**
+
+**If database unreachable:**
+```bash
+# 1. Check network connectivity
+ping db-prod-1.internal
+traceroute db-prod-1.internal
+→ If fails, network/routing issue
+
+# 2. Check security groups
+→ Verify port 5432 allowed from api-prod-2
+→ Check if IP in whitelist
+
+# 3. Check database logs
+ssh db-prod-1
+tail -f /var/log/postgresql/postgresql.log
+→ Look for "FATAL" or "ERROR" entries
+```
+
+**If connection limit reached:**
+```bash
+# Check what's holding connections
+SELECT usename, count(*) FROM pg_stat_activity GROUP BY usename;
+
+# Kill idle connections
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE state = 'idle' AND query_start < now() - interval '10 minutes';
+
+# Increase max_connections
+ALTER SYSTEM SET max_connections = 200;
+SELECT pg_reload_conf();
+
+# Long-term: Use connection pooling
+→ Deploy PgBouncer or similar
+```
+
+---
+
+## Quick Troubleshooting Checklist
+
+| Issue | Quick Check | Quick Fix |
+|-------|-----------|----------|
+| **Service Down** | `systemctl status bizfirst-api` | `systemctl restart bizfirst-api` |
+| **High CPU** | `top` → identify process | Scale out or restart service |
+| **High Memory** | `free -h` → check availability | Restart service or scale up |
+| **Disk Full** | `df -h` → check usage | `logrotate -f`, delete old files |
+| **No DB Connection** | `nc -zv db:5432` | Check security group, network |
+| **Slow Requests** | `curl /health` → check latency | Check if CPU/memory constrained |
+| **Failed Deployment** | `journalctl -u bizfirst-api` | Check logs, verify config, retry |
+
+## Escalation Path
+
+```
+Issue Found
+├─ Does service respond? (curl /health)
+│  ├─ No → Restart service
+│  │  └─ Still no → Page on-call
+│  └─ Yes → Check logs
+│
+├─ Can you identify root cause in logs?
+│  ├─ Yes (e.g., DB connection, config error)
+│  │  └─ Apply targeted fix
+│  └─ No (e.g., obscure error, performance)
+│     └─ Page specialist (SRE, DBA, etc.)
+│
+└─ If fix doesn't work or unknown cause
+   └─ Declare incident
+      ├─ Page incident commander
+      ├─ Create war room
+      └─ Begin deep investigation
+```
+
+## When to Escalate
+
+**Page On-Call If:**
+- Service is completely down (0% availability)
+- Data loss risk
+- Security breach suspected
+- Can't fix within 15 minutes
+
+**Create Ticket If:**
+- Degradation (slow, but working)
+- Warning signs (high memory, disk, temp spike)
+- Preventive investigation needed
+
+**Schedule Deep Dive If:**
+- Recurring issue (second time this week)
+- Performance baseline degraded
+- Resource usage trending wrong
+
+## Checklist
+
+- [ ] Service health verified
+- [ ] Application logs reviewed
+- [ ] Dependency connectivity tested
+- [ ] System resources checked (CPU, memory, disk)
+- [ ] Root cause identified or narrowed
+- [ ] Fix applied and verified
+- [ ] Monitoring alerts cleared
+- [ ] Ticket documented with findings
+- [ ] Team notified if escalated
+- [ ] Prevention step identified
+
+## Related Documentation
+- [Monitor Server](monitor-server.md) — Metrics and alerting
+- [Infrastructure Architecture](../../Knowledge/Servers/02-infrastructure-architecture.md) — System overview
+- [Deployment Model](../../Knowledge/Servers/04-deployment-model.md) — Common patterns and procedures
+
+---
+
+## Claudia/Procedure/Workflow/add-new-node-type.md
+
+# Add a New Node Type to `workflow-nodes-rag`
+
+Use this runbook whenever a node type needs a Tier 1 doc — either a new `ExecutionNode` was added to
+the codebase, or one of the 89 node types listed in `..\..\Knowledge\Workflow\workflow-nodes-rag\00-overview.md`'s "Not yet covered" list is
+next up. This file is written to be handed directly to a fresh agent as its task prompt — it assumes
+zero prior context on this doc set. Mirrors the discipline `atlas-forms-rag\agent\
+refreshFromCodeToDoc@agent.md` established for its own doc set — same two-tier shape, same
+"ground truth is the code, never a prior doc or the DB column" rule — adapted for workflow nodes.
+
+## The one non-negotiable rule
+
+**Read the real executor + settings C# source first. Read the DB seed (`Process_ProcessElementTypes_
+*.data.sql`) only afterward, as a factual comparison to record in the doc's Gotchas section — never as
+a template for what the doc should say.** This doc set exists specifically because that DB column is
+confirmed unreliable in multiple distinct ways (stale, empty-stub, copy-pasted from an unrelated node
+type) with no way to tell which failure mode (if any) applies to a given node type without reading the
+code yourself. Trusting the DB schema as a starting point defeats the purpose of this doc set.
+
+## Step 1 — find the real source
+
+1. Locate the executor: `BizFirstPayrollV3\src\mvc-server\Ai\ExecutionNodes\**\*NodeExecutor.cs` (or a
+   non-matching name — some real executors don't end in `NodeExecutor`, e.g. `ChatExecutor.cs`,
+   `AddRagDocExecutor.cs` — search by the node's `ProcessElementTypeCode`/`NodeTypeName` constant if
+   the file name doesn't obviously match).
+2. Read the executor's `.cs` file and every partial-class sibling (`.Config.cs`, `.Execute.cs`,
+   `.Validate.cs`, feature-specific partials) — node behavior is frequently split across several
+   partial-class files, not one.
+3. Find and read the paired settings class (`*NodeExecutorSettings.cs`/`*NodeSettings.cs`) — this is
+   where every real `Configuration` JSON key, its type, default, and validation rule actually lives,
+   read via `ReadConfigByKey`/`ReadConfigByKey_Int`/`ReadConfigByKeyBool`/`FromDictionary`, etc. Use
+   the **exact JSON key string** passed to these methods, not the C# property name, when they differ
+   (a common trap — several node types intentionally keep a legacy lowercase wire key like `sessionId`
+   even though the repo's naming convention would suggest `SessionID`).
+4. If the node uses a **resource/operation dispatch pattern** (settings class delegates to
+   `*OperationInfoFactory.Create(Resource, Operation, ConfigReader)` — seen in `email-smtp`, `slack`,
+   `email-gmail`, `ai-agent`, `ai-function`): find the factory and enumerate every real
+   resource/operation combination it supports. Document the most common one in full field detail; list
+   the rest by name so an agent knows they exist even if not fully detailed yet.
+5. Find the output port mapping (`*OutputPortMapping.cs` or the executor's
+   `CreateInstanceOutputPortMapping()`/`GetOrCreatePortSuccessAndError()` calls) — do not assume
+   `main`/`error` are the only ports; several node types have more (`loop`'s `main`/`done`, `delay`'s
+   `main`/`cancelled`/`waiting`/`error`), and at least one (`switch`) has **dynamic**, config-declared
+   ports rather than a fixed set.
+
+## Step 2 — decide: single doc, or split doc?
+
+**Default: one flat `..\..\Knowledge\Workflow\workflow-nodes-rag\nodes\{code}.md` file.** This is right for the large majority of node types —
+even ones with a dozen-plus fields, as long as those fields are essentially one flat property list
+(optionally grouped into a resource/operation dispatch, per Step 1.4).
+
+**Split one level deeper when the node genuinely qualifies.** The qualifying rule (Binoy's framing,
+applied retroactively to `ai-agent`/`flow-ai-agent` on 2026-08-20): if the real settings class has
+**more than ~2-3 genuinely independent sub-objects/concerns** — not just scalar fields, but things like
+a nested config object, an override-vs-merge pair, a set of mutually-exclusive per-strategy field
+groups, or a family of independently-addable segments — apply the *same* two-tier pattern one level
+deeper:
+
+- `..\..\Knowledge\Workflow\workflow-nodes-rag\nodes\{code}\00-index.md` — a lean index: what the node does overall, credential/ID
+  requirements, any fields that are genuinely core/always-relevant (not owned by one sub-feature), and
+  a short table of sub-features, each with a one-line description and a pointer to its own doc.
+- `..\..\Knowledge\Workflow\workflow-nodes-rag\nodes\{code}\{sub-feature}.md` — one focused doc per genuinely-independent sub-feature, same
+  minimum-content bar as a single-doc node type (what the feature does, its applicable properties,
+  valid values per property — types/enums/ranges — and the meaning/purpose of each, all from real
+  source).
+
+Don't force a fixed sub-feature count — group by what the real settings class actually contains.
+`ai-agent` split into 5 (`conversation-scope.md`, `hil-features.md`,
+`invocation-and-agent-resolution.md`, `prompt-overrides.md`, `tool-servers-and-llm.md`); `flow-ai-agent`
+also split into 5 (`llm-and-prompt.md`, `tools.md`, `loop-and-memory.md`, `sql-agent.md`,
+`streaming-agent.md`) — one file per FA-strategy-specific field group plus one for the always-relevant
+core. A node type with, say, 3 independent concerns might split into only 3 files; don't pad to match
+either example.
+
+If you're not sure whether a given node type qualifies, default to the single-doc pattern — splitting
+a node that doesn't need it just adds retrieval hops for no benefit. Splitting is a retrieval-quality
+decision, not a content-reduction one either way: never drop real content to avoid a split, and never
+split just to hit a target file count.
+
+## Step 3 — write the Tier 1 doc(s)
+
+`{code}` is the exact string the executor's `ProcessElementTypeCode`/`NodeTypeName` override returns —
+**verify this against the DB seed's `Code` column too**, since at least two node types this pass found
+have a compile-time constant that does not match what actually gets registered
+(`schedule-trigger`'s `NodeTypeName = "scheduled-trigger"` literal is misleading; `email-gmail`'s
+informal name "gmail" is not the real code). If the two disagree, use the DB `Code`/what
+`ProcessElementTypeCode` actually returns, and flag the mismatch prominently in the doc itself — the
+constant-name trap is exactly the kind of thing an agent authoring a workflow would get wrong by
+guessing.
+
+**Single-doc structure** (mirrors `atlas-forms-rag\v2\controls\{type}.md`'s depth/format — read a
+couple of existing `..\..\Knowledge\Workflow\workflow-nodes-rag\nodes\*.md` files as a live example before writing a new one):
+
+```
+# `{node-type-code}`
+
+One paragraph: what the node does, when to use it, output ports, whether it requires credentials.
+
+## Config
+
+| Field (JSON key) | Type | Required | Default | Notes |
+|---|---|---|---|---|
+... every real field, exact wire-format key, sourced from Step 1 ...
+
+## Example
+
+```json
+{ ...a realistic, complete Configuration JSON for a typical use... }
+```
+
+## Gotchas
+- anything a config-authoring agent would get wrong by guessing instead of reading this doc
+- the DB-schema comparison finding — state plainly whether ConfigurationSchema was accurate, stale,
+  an empty stub, or wrong/fabricated, with the specific field-level evidence either way
+```
+
+**Split-doc structure** — `00-index.md` follows the same paragraph-plus-Gotchas shape but replaces
+`## Config` with `## Sub-features` (a table: sub-feature / what it covers / doc path) and keeps only
+core/always-relevant fields plus any cross-cutting Gotcha (e.g. a DB-schema-gap finding that spans the
+whole config surface belongs in the index, not duplicated into every sub-feature file). Each
+`{sub-feature}.md` follows the same `## Config` / `## Example` / `## Gotchas` shape as a single-doc
+file, scoped to just that sub-feature's fields — see `..\..\Knowledge\Workflow\workflow-nodes-rag\nodes\ai-agent\` or
+`..\..\Knowledge\Workflow\workflow-nodes-rag\nodes\flow-ai-agent\` for a worked example of both the index and sub-feature shape.
+
+**Keep all field-level/example/gotcha content here, in Tier 1 (whichever shape) — never promote any of
+it into `00-overview.md` (Tier 0).** Tier 0 gets exactly one line for the new node type: `code` /
+category / one-sentence description / credentials required / doc-status (for a split node type, the
+doc-status cell points at `nodes\{code}\00-index.md` and notes it's split). Binoy's explicit framing:
+Tier 0 is "always execute" (always loaded regardless of what the user is asking for) and must stay
+lean; Tier 1 is "optional" (retrieved only when a request implies that specific node type is relevant,
+and for a split node type, only the specific sub-feature doc(s) the request implies). A Slack-specific
+field list sitting in Tier 0 would bloat context for every workflow that never touches Slack — that
+failure mode is exactly what the two-tier split exists to prevent, and it re-appears any time new
+per-node detail gets added to the wrong tier (including a sub-feature's field list leaking into a
+split node's own `00-index.md`).
+
+## Step 4 — update the index
+
+In `..\..\Knowledge\Workflow\workflow-nodes-rag\00-overview.md`: add one row to the node type index table (code / category / one-line
+description / credentials / doc path — `nodes\{code}\00-index.md` with a "(split — N sub-feature
+docs)" note if you split), and remove the node type from whichever "Not yet covered" tier list it was
+in. Do not add anything beyond that one row — see the "keep Tier 0 lean" rule above.
+
+## Step 5 — ingest
+
+Add one **Knowledge Insert** (or, if refreshing an existing doc, **Update**) call to the FlowRag
+ingestion workflow per `..\..\Knowledge\Workflow\workflow-nodes-ingestion.md`, **once per file** — for a single-doc node
+type that's one call (`fileName` = `"nodes/{code}.md"`); for a split node type that's one call per
+file under `nodes/{code}/` (`fileName` = `"nodes/{code}/00-index.md"`, `"nodes/{code}/{sub-
+feature}.md"`, etc.). `knowledgeID` = the deterministic GUID derived from that exact file path (same
+convention as every other file in the collection, required so a later refresh can atomically replace
+that one file's chunks) — a split node type therefore gets multiple independent `knowledgeID`s, one
+per sub-feature file, not one shared ID for the whole node type.
+
+## Step 6 — independent review
+
+Same discipline `refreshFromCodeToDoc@agent.md` requires for Atlas Forms: don't treat your own doc as
+verified just because you wrote it carefully. Have a second pass (a fresh agent, or a careful
+self-review done after a break) re-read the real source independently and check the doc's field list,
+types, and Gotchas against it — self-review alone is exactly how a subtly wrong doc would slip in
+undetected, the same risk this entire doc set exists to eliminate from the DB column.
+
+## Constraints
+
+- Documentation only — do not modify any ExecutionNode code as part of writing a Tier 1 doc.
+- Do not commit or push anything without being explicitly asked in that specific request.
+- Ground every claim in real, currently-read source code — not in `Process_ProcessElementTypes`, not
+  in a prior doc's content, not in this runbook's own examples. This file tells you where to look and
+  what traps to watch for; it is not itself a source of current truth about any node type.
+
+---
+
+## Claudia/Procedure/Workflow/build-and-verify-workflow-via-mcp.md
+
+# Runbook — build and verify a real workflow via the Workflow MCP tools
+
+Written after the first real end-to-end write-path test of the Workflow MCP module (2026-09-10,
+`..\..\Agents\Testers\WorkflowTester\test-results\sample-workflow-mcp-test\`). That pass found and fixed three real bugs by
+actually building something, not by reading code — this runbook exists so the next agent doing this
+doesn't have to rediscover the same traps.
+
+## The sequence
+
+1. `tools/list` first, always. Don't guess a tool's param names or shapes — they drift (e.g.
+   `add_workflow_node` takes `configuration`; `update_node_configuration` takes `configurationJson`
+   — same concept, different key, easy to get wrong by analogy).
+2. `create_workflow_project` once, to get `processThreadID`/`processThreadVersionID` — every other
+   tool call in the session targets these IDs.
+3. `get_node_type_schema` for every distinct node type before configuring it. **Cross-reference the
+   result against this node's own `nodes\{code}.md` doc, don't just trust the tool output** — the
+   schema comes straight from the DB `ConfigurationSchema` column, which this doc set's own
+   `00-overview.md` already documents as unreliable per node type. The `email-smtp` `username`/
+   `userName` casing trap (documented in `email-smtp.md`'s Gotchas section for a long time before
+   anyone actually hit it live) is the concrete proof this cross-check matters, not a hypothetical.
+4. `add_workflow_node` per node (or `save_workflow` for a bulk/atomic build of several at once).
+5. `add_connection` to wire ports. Every optional field in its schema (`sourcePortKey`,
+   `targetPortKey`, `connectionTypeId`, `condition`) still needs to be sent explicitly (`null` if
+   unused) — omitting an optional key crashes the SDK's argument binder before the tool method ever
+   runs, a general gotcha across every tool in every module, not specific to this one.
+6. `get_workflow` to confirm the round trip.
+7. **Verify at three independent levels, not just one**: the MCP response, a direct SQL query
+   against `Process_ProcessElements`/`AIExt_Connectors`/`Process_Connections` (confirms the
+   Connector-pairing invariant — one Connector row per node, correctly linked — at the data layer,
+   not just "the API said success"), and the real Flow Studio Designer UI (confirms the node
+   actually renders and its config dialog opens with the right values — an MCP-created node that
+   looks fine via MCP but is broken/uneditable in the real UI is the specific failure mode this
+   module's own design doc flagged as the highest risk).
+8. If wiring a credentialed node (SMTP, any OAuth-based node, etc.), call `find_credentials` first
+   to check for a reusable one — never fabricate a fake credential or attempt a real send/call with
+   one just to "complete" a test. A missing credential is an honest, reportable blocker, not a
+   failure to work around.
+
+## Reusable diagnostic pattern: use SQL to settle ambiguity, not just re-reading via MCP
+
+When an MCP response and your expectation disagree, a direct read-only `SELECT` against the real
+tables (see `C:\BizFirstGO_FI_AI\BizFirstFiDB\.claude\connectonstring.md` for connection details) is
+faster and more conclusive than re-calling the same MCP tool again. This is how the `list_workflows`
+pagination bug in this pass was confirmed as real (rather than a fluke): the tool's own
+`totalRecords: 65` field, from the *outer* unfiltered query, already contradicted its own
+`workflows: []` result for a row that demonstrably existed — worth noticing in the raw JSON itself
+before reaching for SQL, but SQL is what confirms root cause once you suspect a filtering/pagination
+bug specifically.
+
+## Known, general gotchas to expect (not re-derive)
+
+- **Explicit `null`, never an omitted key**, for every optional MCP tool parameter across every
+  module — an SDK-level constraint, not per-tool.
+- **A tool's advertised schema (from the DB) can silently diverge from what the real executor
+  reads** — this doc set's whole reason for existing. `get_node_type_schema`'s live output is a
+  starting point, not a guarantee; the per-node `nodes\{code}.md` doc's Gotchas section is where the
+  divergence, if any, is already recorded.
+- **Client-side filtering after server-side pagination is a real, recurring bug shape** in this
+  codebase — the same defect (filter a substring match against only the first fetched page, report
+  the pre-filter total) was independently found in both this module's `list_workflows` and, in an
+  earlier session pass, Atlas Forms' form-search feature. If a new discovery/search-style MCP tool
+  is added anywhere in this system, check explicitly whether its filter runs before or after
+  pagination.
+- **The Designer UI's own config-dialog form can have a field-to-JSON-key binding that's
+  independent of both the DB schema and the executor** — fixing the schema doesn't guarantee the
+  human-facing form picks up the correct value. Confirmed live for `email-smtp`'s `Username` field
+  (still shows a placeholder after the schema fix); not yet confirmed whether this is isolated to
+  this one node type or a broader Designer-form pattern — a real open question for whoever picks
+  this up next.
+
+## Driving the MCP endpoint from a shell (no MCP client attached)
+
+Added 2026-09-20. Use this when the session has no Flow Studio MCP tools but the WebApi is up on port 10001.
+
+1. POST JSON-RPC to `https://localhost:10001/mcp` with headers `Content-Type: application/json`,
+   `Accept: application/json, text/event-stream` (without it: `406`) and `X-Api-Key: <scoped key>`
+   (without an identity every tool answers `Access denied: No valid MCP caller identity found`).
+2. Handshake: `initialize` → read the `mcp-session-id` response header → `notifications/initialized` →
+   then send `Mcp-Session-Id` on every call. Replies are SSE (`data: {json}` lines); tool output is a JSON string in
+   `result.content[0].text`.
+3. Use Node (`fetch`) for scripting; Python is not installed on this machine. The dev cert needs
+   `NODE_TLS_REJECT_UNAUTHORIZED=0`. Keep the API key in an environment variable, never in a committed file.
+4. `get_workflow` takes `processThreadId` only. `add_workflow_node` returns `{processElementID}`; `add_connection`
+   returns `{connectionID}`.
+5. Check port keys with `get_node_type_schema` before wiring: `loop` outputs `loop` and `done`, not `main`.
+6. Credentials that exist on another environment's database are absent locally: run `find_credentials` and leave
+   the field unbound rather than reuse a stale ID.
+
+Worked example: LeadFirst→Odoo recreation, project 1094 / thread 1079 / version 1077 (see
+`Documentation\projects-worflow\leadFirst-to-Odoo\`).
+
+## Lesson: nodes built through the MCP need their template and connector set (added 2026-09-20)
+
+Nodes added with add_workflow_node have no designer.ui.dataTemplateID and an empty connector configuration. The first time the workflow is saved in Flow Studio the designer stamps the connector from the LAST template registered for the node code (odoo -> odoo-custom-delete, apify -> apify-key-value-store-get-record), including a wrong resource/operation. To avoid it:
+1. After add_workflow_node, call update_node_configuration with the full configuration plus designer.ui.dataTemplateID (the per-operation template ID) and profileName; use real types (parameters as an array, Odoo fields as an object).
+2. Verify the connector with POST /api/v1/ai-extension/connectors/get-by-id and, if wrong, correct it with PUT /api/v1/ai-extension/connectors/{id} using the browser session (the MCP cannot write connector config).
+3. Verify the form with GET /api/v1/process-engine/node-forms/standard/GetNodeForms/DesignTime/{processElementID} (expect one Tier (Profile) form matching the operation, DisplayOrder 101..499, listed above the common forms).
+See workflow-development-node-forms\lessons\README.md and its rag\ folder for the full mechanism, the DisplayOrder policy and the ASCII-script rule.
+
+## Lesson: create apps as Workflow apps (added 2026-09-20)
+
+The Flow Studio dashboard tabs (All / Web Apps / Workflow Apps) filter on `Project_Projects.ProjectTypeID`: Workflow Apps
+shows only `ProjectTypeID = 21` (Project_ProjectTypes Code `WORKFLOW`); Web Apps shows everything else. `AIExt_Apps.AppTypeID`
+plays no part (it is NULL for workflow apps). A project created with a NULL type silently vanishes from the Workflow Apps tab.
+
+- `create_workflow_project` and the Flow Studio "+ Create Project" button share `StudioProjectService.CreateProjectWithStructureAsync`;
+  it now sets the WORKFLOW type (looked up by Code, never a hard-coded ID). MCP tools for App Studio create web apps and are unaffected.
+- Verify: open the dashboard "Workflow Apps" tab, or run
+  `SELECT ProjectID, Name, ProjectTypeID FROM Project_Projects WHERE ProjectID = <id>` (expect the ID of Code WORKFLOW, 21 locally;
+  `SELECT ProjectTypeID FROM Project_ProjectTypes WHERE Code = 'WORKFLOW'`).
+- Repair an existing project: `UPDATE Project_Projects SET ProjectTypeID = (SELECT ProjectTypeID FROM Project_ProjectTypes WHERE Code='WORKFLOW'), LastModifiedOn = GETDATE() WHERE ProjectID = <id>` (roll back by setting it to NULL).
+  Check the Project row exists first: the App row (`AIExt_Apps.ProjectID`) can exist while the Project row does not.
+- Code changes reach the running API only after rebuild/republish of the consolidated WebApi and an app-pool recycle; until then
+  fix newly created MCP projects with the UPDATE above.
+
+---
+
+## Claudia/Procedure/Workflow/node-forms/audit-all-datatemplates.md
+
+# Audit All Data Templates (all node types)
+
+Repeatable, read-only. Purpose: list every node type whose forms and palette templates do not line up, so
+`..\..\..\Knowledge\Workflow\node-forms\node-type-status-table.md` can be filled from facts. Run against the DB the API actually serves
+(`..\..\..\Knowledge\Workflow\node-forms\database-topology.md`); repeat for the other DB if in doubt.
+
+## Findings reported
+
+| Code | Meaning |
+|---|---|
+| FORM_NO_TEMPLATE | `Atlas_Forms` `node-form-<x>` with no type-13 template whose profileName equals `<x>` (exact) |
+| TEMPLATE_NO_FORM | template profileName with no form `node-form-<profileName>` |
+| NO_CONNECTOR_BLOCK | type-13 template with no `settings.data.connector.configuration` |
+| NO_PROFILENAME | connector block present but profileName empty |
+| CASE_MISMATCH | matches a form only after normalising case/hyphens (e.g. `odoo-contact-getAll` vs `node-form-odoo-contact-get-all`) |
+| DUPLICATE_PALETTE | same node code + TemplateName, or same profileName, on more than one live type-13 row |
+
+Forms that are NodeType-tier (`node-form-<nodeTypeCode>`, no operation suffix) and `node-form-common` are excluded from
+FORM_NO_TEMPLATE (they do not need a profileName). The exclusion below uses the registry table
+(`Process_ProcessElementTypes.ProcessElementTypeCode`, column name unverified).
+
+## Ready-to-run SQL
+
+```sql
+;WITH F AS (
+  SELECT f.FormID, f.PrimaryUsage, ProfileName = STUFF(f.PrimaryUsage, 1, 10, '')
+  FROM dbo.Atlas_Forms f
+  WHERE f.Deleted = 0 AND f.PrimaryUsage LIKE 'node-form-%' AND f.PrimaryUsage <> 'node-form-common'
+    AND f.NodeSubUsage = 'DesignTime'
+    AND NOT EXISTS (SELECT 1 FROM dbo.Process_ProcessElementTypes t
+                    WHERE t.ProcessElementTypeCode COLLATE Latin1_General_100_BIN2 = STUFF(f.PrimaryUsage, 1, 10, '') COLLATE Latin1_General_100_BIN2)
+),
+T AS (
+  SELECT d.DataTemplateID, d.TemplateName,
+         NodeCode    = JSON_VALUE(x.c, '$.code'),
+         ProfileName = JSON_VALUE(x.c, '$.settings.data.connector.configuration.profileName'),
+         HasBlock    = CASE WHEN JSON_QUERY(x.c, '$.settings.data.connector.configuration') IS NULL THEN 0 ELSE 1 END
+  FROM dbo.Template_DataTemplates d
+  CROSS APPLY (SELECT CAST(d.ContentData AS NVARCHAR(MAX)) AS c) x
+  WHERE d.Deleted = 0 AND d.DataTemplateTypeID = 13 AND ISJSON(x.c) = 1
+),
+N AS (  -- normalised comparison key: lower case, hyphens removed
+  SELECT 'F' AS Src, FormID AS RefID, ProfileName AS Name, LOWER(REPLACE(ProfileName, '-', '')) AS Norm FROM F
+  UNION ALL
+  SELECT 'T', DataTemplateID, ProfileName, LOWER(REPLACE(ProfileName, '-', '')) FROM T WHERE ProfileName <> ''
+)
+SELECT Finding, NodeCode, RefID, Name, Detail FROM (
+  SELECT 'FORM_NO_TEMPLATE' AS Finding, LEFT(F.ProfileName, CHARINDEX('-', F.ProfileName + '-') - 1) AS NodeCode,
+         F.FormID AS RefID, F.PrimaryUsage AS Name, CAST(NULL AS NVARCHAR(200)) AS Detail
+  FROM F WHERE NOT EXISTS (SELECT 1 FROM T WHERE T.ProfileName COLLATE Latin1_General_100_BIN2 = F.ProfileName COLLATE Latin1_General_100_BIN2)
+  UNION ALL
+  SELECT 'TEMPLATE_NO_FORM', T.NodeCode, T.DataTemplateID, T.ProfileName, T.TemplateName
+  FROM T WHERE T.ProfileName IS NOT NULL AND T.ProfileName <> ''
+    AND NOT EXISTS (SELECT 1 FROM F WHERE F.ProfileName COLLATE Latin1_General_100_BIN2 = T.ProfileName COLLATE Latin1_General_100_BIN2)
+  UNION ALL
+  SELECT 'NO_CONNECTOR_BLOCK', T.NodeCode, T.DataTemplateID, T.TemplateName, NULL FROM T WHERE T.HasBlock = 0
+  UNION ALL
+  SELECT 'NO_PROFILENAME', T.NodeCode, T.DataTemplateID, T.TemplateName, NULL
+  FROM T WHERE T.HasBlock = 1 AND (T.ProfileName IS NULL OR T.ProfileName = '')
+  UNION ALL
+  SELECT 'CASE_MISMATCH', T.NodeCode, T.DataTemplateID, T.ProfileName, F.ProfileName
+  FROM T JOIN F ON LOWER(REPLACE(T.ProfileName,'-','')) = LOWER(REPLACE(F.ProfileName,'-',''))
+  WHERE T.ProfileName COLLATE Latin1_General_100_BIN2 <> F.ProfileName COLLATE Latin1_General_100_BIN2
+  UNION ALL
+  SELECT 'DUPLICATE_PALETTE', T.NodeCode, MIN(T.DataTemplateID), T.TemplateName, CONCAT(COUNT(*), ' rows')
+  FROM T GROUP BY T.NodeCode, T.TemplateName HAVING COUNT(*) > 1
+  UNION ALL
+  SELECT 'DUPLICATE_PALETTE', MIN(T.NodeCode), MIN(T.DataTemplateID), T.ProfileName, CONCAT(COUNT(*), ' rows, same profileName')
+  FROM T WHERE T.ProfileName <> '' GROUP BY T.ProfileName HAVING COUNT(*) > 1
+) R
+ORDER BY NodeCode, Finding, RefID;
+```
+Caveat: `NO_CONNECTOR_BLOCK` will also list legitimate non-operation nodes (triggers, generic nodes) with one template per
+node type: filter to node types that have operation forms (FORM_NO_TEMPLATE for the same NodeCode) before acting.
+Adjust the `NodeCode` derivation (first hyphen token) for node codes containing hyphens.
+
+Run: `sqlcmd -S ".\SQLEXPRESS" -d data-ocean-platform-prod -E -C -W -s "|" -i audit.sql -o audit.txt` (put `audit.sql` in the
+scratchpad, not the repo).
+
+## Node script sketch (same audit + repo file check)
+
+```js
+// audit.js - node audit.js  (Windows auth sqlcmd; no secrets)
+const { execFileSync } = require('child_process');
+const fs = require('fs'), path = require('path');
+const q = fs.readFileSync(process.argv[2], 'utf8');                       // the SQL above
+const out = execFileSync('sqlcmd', ['-S', '.\\SQLEXPRESS', '-d', 'data-ocean-platform-prod', '-E', '-C',
+  '-W', '-h', '-1', '-s', '|', '-Q', q], { encoding: 'utf8', maxBuffer: 1 << 26 });
+const rows = out.split(/\r?\n/).filter(l => l.includes('|')).map(l => l.split('|'));
+const byNode = {};
+for (const [finding, node, refID, name, detail] of rows) (byNode[node || '?'] ??= []).push({ finding, refID, name, detail });
+console.log('| Node | Finding | Ref ID | Name | Detail |\n|---|---|---|---|---|');
+for (const [n, list] of Object.entries(byNode))
+  for (const r of list) console.log(`| ${n} | ${r.finding} | ${r.refID} | ${r.name} | ${r.detail ?? ''} |`);
+// Optional: cross-check repo folders (scoped to the projects root, depth-limited)
+const root = 'C:/BizFirstGO_FI_AI/BizFirstFiDB/BizFirstFiV3DB/BizFirstFiV3DB/dbo/Data/projects';
+const skip = /obsolete|backup|unapproved|unsorted/i;
+const files = []; (function walk(d, depth) { if (depth > 4) return;
+  for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+    if (e.isDirectory() && !skip.test(e.name)) walk(path.join(d, e.name), depth + 1);
+    else if (/^Template_DataTemplates_\d+_/.test(e.name)) files.push(e.name); } })(root, 0);
+console.log(`\nrepo DataTemplates scripts: ${files.length}`);
+```
+Sketch, untested. `-W` and `-y` cannot be combined; `-Q` with a long multi-line string can hit shell limits: prefer `-i file`.
+
+## Output format
+
+Deliver a table sorted by node, then finding, and a per-node summary that feeds `..\..\..\Knowledge\Workflow\node-forms\node-type-status-table.md`:
+
+| Node | Finding | Ref ID | Name | Detail |
+|---|---|---|---|---|
+| mysql | FORM_NO_TEMPLATE | 25100 | node-form-mysql-... | |
+| odoo | CASE_MISMATCH | 91020130 | odoo-contact-getAll | odoo-contact-get-all |
+
+Do not fix from the audit output alone: hand each node with FORM_NO_TEMPLATE to `agent.md`.
+
+---
+
+## Claudia/Procedure/Workflow/node-forms/debug-runbook.md
+
+# Debug Runbook - node shows no form / the wrong form
+
+All queries are read-only. Local run form:
+`sqlcmd -S ".\SQLEXPRESS" -d data-ocean-platform-prod -E -C -W -s "|" -Q "<query>"`.
+For the remote DB use host/db from `..\..\..\Knowledge\Workflow\node-forms\resource.md` with credentials from appsettings or from the user (never saved).
+Column names of `Atlas_Forms` other than `FormID, FormCode, PrimaryUsage, NodeUsage, NodeSubUsage, Deleted` are unverified:
+if a query errors, run `sp_help 'dbo.Atlas_Forms'` and adjust. `<node>` = node type code.
+
+## Queries
+
+**Q1 - operation forms for a node**
+```sql
+SELECT FormID, FormCode, PrimaryUsage, NodeUsage, NodeSubUsage,
+       ProfileName = STUFF(PrimaryUsage, 1, 10, '')
+FROM dbo.Atlas_Forms
+WHERE Deleted = 0 AND PrimaryUsage LIKE 'node-form-<node>%'
+ORDER BY PrimaryUsage;
+```
+
+**Q2 - palette templates for a node, with profileName**
+```sql
+SELECT d.DataTemplateID, d.DataTemplateTypeID, d.TemplateName, d.DisplayOrder,
+       NodeCode    = JSON_VALUE(x.c, '$.code'),
+       ProfileName = JSON_VALUE(x.c, '$.settings.data.connector.configuration.profileName'),
+       HasConnectorBlock = CASE WHEN JSON_QUERY(x.c, '$.settings.data.connector.configuration') IS NULL THEN 0 ELSE 1 END
+FROM dbo.Template_DataTemplates d
+CROSS APPLY (SELECT CAST(d.ContentData AS NVARCHAR(MAX)) AS c) x
+WHERE d.Deleted = 0 AND d.DataTemplateTypeID IN (13, 14)
+  AND ISJSON(x.c) = 1 AND JSON_VALUE(x.c, '$.code') = '<node>'
+ORDER BY d.DataTemplateTypeID, d.DisplayOrder, d.DataTemplateID;
+```
+
+**Q3 - forms vs templates for a node (exact, binary collation)**
+```sql
+;WITH F AS (
+  SELECT FormID, PrimaryUsage, ProfileName = STUFF(PrimaryUsage, 1, 10, '')
+  FROM dbo.Atlas_Forms
+  WHERE Deleted = 0 AND PrimaryUsage LIKE 'node-form-<node>-%' AND NodeSubUsage = 'DesignTime'),
+T AS (
+  SELECT d.DataTemplateID, ProfileName = JSON_VALUE(x.c, '$.settings.data.connector.configuration.profileName')
+  FROM dbo.Template_DataTemplates d
+  CROSS APPLY (SELECT CAST(d.ContentData AS NVARCHAR(MAX)) AS c) x
+  WHERE d.Deleted = 0 AND d.DataTemplateTypeID = 13 AND ISJSON(x.c) = 1 AND JSON_VALUE(x.c, '$.code') = '<node>')
+SELECT F.FormID, F.PrimaryUsage, T.DataTemplateID, T.ProfileName,
+       Finding = CASE WHEN T.DataTemplateID IS NULL THEN 'FORM WITHOUT TEMPLATE' END
+FROM F LEFT JOIN T ON T.ProfileName COLLATE Latin1_General_100_BIN2 = F.ProfileName COLLATE Latin1_General_100_BIN2
+UNION ALL
+SELECT NULL, NULL, T.DataTemplateID, T.ProfileName, 'TEMPLATE PROFILE WITHOUT FORM'
+FROM T WHERE NOT EXISTS (SELECT 1 FROM F WHERE F.ProfileName COLLATE Latin1_General_100_BIN2 = T.ProfileName COLLATE Latin1_General_100_BIN2);
+```
+
+**Q4 - duplicate palette entries for a node**
+```sql
+SELECT JSON_VALUE(x.c,'$.code') AS NodeCode, d.TemplateName, COUNT(*) AS Cnt, MIN(d.DataTemplateID) AS FirstID, MAX(d.DataTemplateID) AS LastID
+FROM dbo.Template_DataTemplates d CROSS APPLY (SELECT CAST(d.ContentData AS NVARCHAR(MAX)) AS c) x
+WHERE d.Deleted = 0 AND d.DataTemplateTypeID = 13 AND ISJSON(x.c) = 1 AND JSON_VALUE(x.c,'$.code') = '<node>'
+GROUP BY JSON_VALUE(x.c,'$.code'), d.TemplateName HAVING COUNT(*) > 1;
+```
+
+**Q5 - registry row**
+```sql
+SELECT * FROM dbo.Process_ProcessElementTypes WHERE ProcessElementTypeCode = '<node>';   -- column name unverified
+```
+
+**Q6 - stored connector config of a placed node (stale profileName check)**
+```sql
+SELECT pe.ProcessElementID, c.*
+FROM dbo.Process_ProcessElements pe
+JOIN dbo.AIExt_Connectors c ON c.ConnectorID = pe.ConnectorID      -- join columns unverified: check sp_help first
+WHERE pe.ProcessElementID = <processElementID>;
+```
+
+## JS snippets (Chrome page context, see `..\..\..\Knowledge\Workflow\node-forms\resource.md` section 5)
+
+**J1 - GetNodeForms summary** (returns tier counts and form usages, no token):
+```js
+(async () => {
+  const t = localStorage.getItem('authToken'), id = 2361;   // processElementID
+  const r = await fetch(`https://localhost:10001/api/v1/process-engine/node-forms/standard/GetNodeForms/DesignTime/${id}?includeSchema=false`,
+    { headers: { Authorization: `Bearer ${t}`, 'X-Tenant-ID': '1' } });
+  const j = await r.json(); const d = j.data ?? j;
+  return JSON.stringify({ status: r.status, formsBySource: d.resolutionSummary?.formsBySource,
+    forms: (d.forms ?? []).map(f => f.primaryUsage ?? f.formCode) });   // field names unverified: inspect j if undefined
+})()
+```
+
+**J2 - palette templates from the API** (count and lookup by ID or code):
+```js
+(async () => {
+  const t = localStorage.getItem('authToken');
+  const r = await fetch('https://localhost:10001/api/v1/ai/template/data-template/by-type', { method: 'POST',
+    headers: { Authorization: `Bearer ${t}`, 'X-Tenant-ID': '1', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ DataTemplateTypeID: { ID: 13 }, PageSize: 10000 }) });   // copy exact body from DevTools if 400
+  const j = await r.json(); const rows = j.data?.items ?? j.data ?? j.items ?? [];
+  const sql = rows.filter(x => /sqlserver/i.test(JSON.stringify(x).slice(0, 4000)));   // change the filter to the node under test
+  return JSON.stringify({ total: rows.length, matching: sql.length });
+})()
+```
+
+## Decision tree
+
+```
+START: node <node> shows no / wrong operation form
+ |
+ 1. J1 on a node of this type. What is formsBySource?
+ |   a) Common:24 only ................................ go to 2
+ |   b) Common:24 + Profile:1, form is WRONG .......... go to 5
+ |   c) Common:24 + Profile:1, form is RIGHT, UI empty  go to 6
+ |
+ 2. Q1: do operation forms exist for <node>?
+ |   no  -> CAUSE: forms missing. FIX: node-engineer pipeline (out of scope); report.
+ |   yes -> go to 3
+ |
+ 3. Q2: do type-13 templates exist with HasConnectorBlock=1 and a profileName?
+ |   no connector block (generic templates only) ....... CAUSE: SQL Server case. FIX: fix-playbook.md
+ |   profileName present but Q3 says mismatch ......... CAUSE: casing/shape mismatch. FIX: correct the template
+ |                                                        profileName from the form PrimaryUsage (fix-playbook.md 4b)
+ |   templates fine, node placed BEFORE they existed .. go to 5b
+ |   templates fine and node is fresh ................. go to 4
+ |
+ 4. Does the API see them? J2 count vs local count.
+ |   API count == local count minus your new rows ..... CAUSE: API serves the REMOTE DB (database-topology.md).
+ |                                                      FIX: apply to the serving DB after user confirmation.
+ |   API sees them, palette does not .................. CAUSE: caches (a,b,e). FIX: restart + Ctrl+F5 (caching-layers.md)
+ |
+ 5. Wrong form. Q6 / J1: what profileName does the node's connector carry?
+ |   a) stale value from an old template/MCP build .... 5b
+ |   b) mismatch in casing/hyphens vs form ............ correct the template (fix-playbook.md 4b), then 5b
+ |   5b) CAUSE: existing node keeps old connector config. FIX: delete + re-drop from palette, or open and save the node
+ |       in the designer so template defaults merge (workflowStore.ts). MCP cannot write connector config.
+ |
+ 6. "Forms exist in DB but UI shows none" (API returns the form, dialog is empty)
+     - Check NodeSubUsage: dialog requests DesignTime; forms marked other sub-usages are never returned (Q1).
+     - Check Deleted flag / NodeUsage = PrimaryConfigPage (Q1).
+     - Check the frontend tab is the one that changed: ConnectorConfigDialog uses first form as schema by displayOrder;
+       a lower-displayOrder Common form can win. Compare displayOrder in J1 output.
+     - Hard refresh, and confirm the browser is hitting the API you queried (port 10001 vs another host).
+     - If the API also returns none: return to step 4 (wrong DB) before suspecting the frontend.
+```
+
+## "One form shows but it is the wrong one" - detail
+
+1. J1 shows `Tier (Profile): 1` and the returned form belongs to a different operation (e.g. `odoo-custom-delete` on a create node).
+2. The node's saved connector `profileName` is stale (built via MCP, or dropped from an old template, or the template profileName
+   was wrong). Q6/J1 show the value.
+3. Fix the template first if Q3 shows a mismatch, then repair the node: re-drop, or open + save. Do not edit connector JSON by hand
+   in the DB without the user's approval (shared data).
+
+## "Forms exist in DB but UI shows none" - detail
+
+Almost always one of, in order of frequency: (1) no per-operation template with a profileName, so the Profile tier skips;
+(2) template exists but only in the DB the API does not serve; (3) caches; (4) node placed before the fix. Steps 3 and 4 of the tree.
+
+---
+
+## Claudia/Procedure/Workflow/node-forms/fix-playbook.md
+
+# Fix Playbook - generate per-operation data templates for a node type
+
+Use after `debug-runbook.md` concluded: forms exist, but the node has no per-operation template with a
+`connector.configuration.profileName` (or has a wrong one). Files only until step 5.
+
+## 1. Inputs
+
+- `<node>`: node type code; `<Group>\<Node>`: its DB-project folder (find with a scoped Glob under
+  `BizFirstFiDB\BizFirstFiV3DB\BizFirstFiV3DB\dbo\Data\projects\`).
+- The forms: Q1 in the runbook, ordered by `FormID`.
+- A reference template: SQL Server's `...\projects\SqlServer\DataTemplates\Template_DataTemplates_91030001_sqlserver-query-execute.data.sql`
+  (skeleton in `..\..\..\Knowledge\Workflow\node-forms\data-template-anatomy.md`). For a non-database node, copy ports/credential types from that node's existing
+  generic template instead of the SQL Server ones (`acceptedCredentialTypes` differs per node).
+
+## 2. Choose an unused ID range (query the DB AND scan the repo)
+
+Used so far (do not reuse): Odoo 91020123..91020157, SQL Server 91030001..91030037, Apify 10000127..10000137 and 10000395.
+Next candidate block: `9104xxxx` (unverified free: check).
+
+```sql
+-- both DBs the API may serve (database-topology.md); run each, take the max
+SELECT MIN(DataTemplateID) AS MinID, MAX(DataTemplateID) AS MaxID, COUNT(*) AS Cnt
+FROM dbo.Template_DataTemplates WHERE DataTemplateID BETWEEN 91040000 AND 91049999;
+```
+```bash
+# repo scan, scoped to the DataTemplates parent, no repo-wide grep
+find "/c/BizFirstGO_FI_AI/BizFirstFiDB/BizFirstFiV3DB/BizFirstFiV3DB/dbo/Data/projects" -name "Template_DataTemplates_9104*" | head
+```
+Pick a block with zero rows in every DB and zero files; reserve `count(forms)` consecutive IDs; tell the user the range.
+
+## 3. Generator approach (pseudo-code, proven on SQL Server)
+
+```
+forms = SELECT FormID, PrimaryUsage, FormCode FROM Atlas_Forms
+        WHERE Deleted=0 AND PrimaryUsage LIKE 'node-form-<node>-%' AND NodeSubUsage='DesignTime'
+        ORDER BY FormID
+base  = parse JSON of the reference template's @ContentData          // ports, colours, credential types
+id    = firstFreeID
+for n, form in enumerate(forms, start=1):
+    profileName = form.PrimaryUsage minus leading 'node-form-'         // e.g. sqlserver-query-execute
+    (resource, operation) = split profileName tokens after '<node>-'   // review multi-word resources by hand
+    label   = "<NodeDisplay> " + Title(resource) + " " + Title(operation)     // TemplateName
+    content = clone(base)
+    content['design-class']  = profileName
+    content.displayName      = label
+    content.description      = "<NodeDisplay> <resource> <operation> operation"
+    content.settings.data.connector.configuration = {
+        profileName, resource, operation,
+        flowPath: "", alias: "", enableTrustedExecutionEnvironment: false,
+        acceptedCredentialTypes: base.acceptedCredentialTypes }
+    row = { DataTemplateID: id, CategoryID: 4, TypeID: 13, ClassificationID: 3,
+            TemplateName: label, DisplayOrder: 400 + 10*n }
+    sql = render(SQL template, row, JSON.stringify(content, null, 4).replace(/'/g, "''"))
+    write file "Template_DataTemplates_<id>_<profileName>.data.sql"  as '﻿' + sql   // UTF-8 BOM
+    id += 1
+```
+
+Node sketch (run with `node gen.js`, credentials never involved; forms exported to JSON first):
+```js
+// gen.js - reads forms.json exported by: sqlcmd ... -Q "SELECT FormID, PrimaryUsage FROM ... FOR JSON PATH" -o forms.json (UTF-8)
+const fs = require('fs'), path = require('path');
+const [node, display, firstID, outDir, refFile] = process.argv.slice(2);
+const forms = JSON.parse(fs.readFileSync('forms.json', 'utf8').replace(/^﻿/, ''));
+const ref = fs.readFileSync(refFile, 'utf8').replace(/^﻿/, '');
+const base = JSON.parse(ref.match(/@ContentData NVARCHAR\(MAX\) = N'([\s\S]*?)'\r?\n\r?\nSET IDENTITY_INSERT/)[1].replace(/''/g, "'"));
+let id = Number(firstID);
+forms.sort((a, b) => a.FormID - b.FormID).forEach((f, i) => {
+  const profileName = f.PrimaryUsage.replace(/^node-form-/, '');
+  const tokens = profileName.slice(node.length + 1).split('-');
+  const resource = tokens[0], operation = tokens.slice(1).join('-');      // review multi-word resources
+  const title = s => s.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+  const label = `${display} ${title(resource)} ${title(operation)}`;
+  const c = structuredClone(base);
+  c['design-class'] = profileName; c.displayName = label;
+  c.settings.data.connector.configuration = { profileName, flowPath: '', alias: '',
+    enableTrustedExecutionEnvironment: false, resource, operation, acceptedCredentialTypes: base.acceptedCredentialTypes };
+  const json = JSON.stringify(c, null, 4).replace(/'/g, "''");
+  const sql = `SET QUOTED_IDENTIFIER ON\nGO\nBEGIN TRY\n\nDECLARE @ContentData NVARCHAR(MAX) = N'${json}'\n\nSET IDENTITY_INSERT [dbo].[Template_DataTemplates] ON\n\nIF NOT EXISTS (SELECT 1 FROM [dbo].[Template_DataTemplates] WHERE [DataTemplateID] = ${id})\nINSERT [dbo].[Template_DataTemplates] ([DataTemplateID], [DataTemplateCategoryID], [DataTemplateTypeID], [DataTemplateClassificationID], [TemplateName], [ContentData], [IsTemplate], [HasWildCards], [DisplayOrder], [Enabled], [IsPublic], [IsGlobal], [Published], [TenantID], [Deleted], [Archived], [LastModifiedOn], [LastModifiedBy], [CreatedOn], [CreatedBy], [SourceAppID], [ClientAccountID], [AppDomainID], [DataDomainID], [DataSegmentID], [ResID])\nVALUES (${id}, 4, 13, 3, N'${label.replace(/'/g, "''")}', @ContentData, 1, 0, ${400 + 10 * (i + 1)}, 1, 1, 1, 1, 1, 0, 0, SYSUTCDATETIME(), NULL, SYSUTCDATETIME(), NULL, NULL, NULL, NULL, NULL, NULL, NEWID())\n\nSET IDENTITY_INSERT [dbo].[Template_DataTemplates] OFF\n\nEND TRY\nBEGIN CATCH\n    SET IDENTITY_INSERT [dbo].[Template_DataTemplates] OFF; THROW;\nEND CATCH;\nGO\n`;
+  fs.writeFileSync(path.join(outDir, `Template_DataTemplates_${id}_${profileName}.data.sql`), '﻿' + sql, 'utf8');
+  id++;
+});
+```
+This is a sketch: it is untested here. Dry-run into a scratch folder, diff one output against the reference file, then copy.
+Keep `CreatedBy` NULL as in the reference (project standard says CreatedBy is INT).
+
+## 4. Rules for the output
+
+| Rule | Value |
+|---|---|
+| File name | `Template_DataTemplates_<ID>_<node>-<op>.data.sql` (the SQL Server files use the full profileName, e.g. `..._91030001_sqlserver-query-execute.data.sql`) |
+| Folder | `...\dbo\Data\projects\<Group>\<Node>\DataTemplates\` |
+| Guard | `IF NOT EXISTS (... WHERE [DataTemplateID] = <ID>)` (re-runnable) |
+| Encoding | UTF-8 **with BOM** (icons like emoji in ContentData) |
+| Ordering | by `FormID`; `DisplayOrder` = 400 + 10 * n |
+| Category / type / class | 4 / 13 / 3 (verify against the node's existing template) |
+| Standards | `TenantID` 1, `Deleted`/`Archived` 0, `ResID` NEWID(), `DATETIME` semantics via `SYSUTCDATETIME()` |
+
+**4b - correcting an existing wrong profileName** (casing/hyphen mismatch): prefer editing the repo script for that template and
+re-issuing it as an `UPDATE ... SET ContentData = ... WHERE DataTemplateID = <ID>` script the user approves; do not hand-edit rows.
+
+**Old generic templates:** if the node has generic type-13/14 templates without connector block that would duplicate palette
+entries, propose deleting their repo files and soft-deleting (`Deleted=1`) the rows only with user approval (SQL Server: both
+old files were deleted from the repo). Type-14 card can stay if it has no ports and does not clash.
+
+## 5. Apply (needs user confirmation naming the target DB)
+
+```bash
+# local example; loop over the new files only. -f 65001 = UTF-8 codepage, -b stop on error, -I QUOTED_IDENTIFIER
+for f in /c/BizFirstGO_FI_AI/BizFirstFiDB/BizFirstFiV3DB/BizFirstFiV3DB/dbo/Data/projects/<Group>/<Node>/DataTemplates/Template_DataTemplates_9104*.data.sql; do
+  sqlcmd -S ".\SQLEXPRESS" -d data-ocean-platform-prod -E -C -f 65001 -b -I -i "$f" || break
+done
+```
+For the remote DB use its host/db with credentials read from appsettings at run time (never in a saved script).
+Then clear caches (`..\..\..\Knowledge\Workflow\node-forms\caching-layers.md`): user restarts WebApi, Ctrl+F5.
+
+## 6. Verify
+
+```sql
+-- DB level: every new template has a connector block and a matching form (binary collation)
+SELECT COUNT(*) AS NewTemplates FROM dbo.Template_DataTemplates WHERE DataTemplateID BETWEEN <first> AND <last>;
+-- then run runbook Q3 for the node: expect zero findings
+```
+API level: J2 count increased by the number applied; J1 on a freshly dropped node: `Tier (Profile): 1`, the right form.
+UI level: Ctrl+F5, drop each operation, confirm the first form in the dialog matches; existing nodes need re-drop / open+save.
+
+## 7. Log
+
+Append to `..\..\..\Knowledge\Workflow\node-forms\DevelopmentHistoryLog.md`: node, ID range, DB written (host/db only), count, evidence, and unverified items.
+Update `..\..\..\Knowledge\Workflow\node-forms\node-type-status-table.md`. Do not commit unless asked; when the user does ask, commit in the BizFirstFiDB repo
+(SQL Server precedent: commit e72dc863 on BizFirstFiDB main).
+
+> POLICY: profile-driven and node-type forms must have Atlas_Forms.DisplayOrder strictly between 100 and 500 (101..499); common forms stay at 1002 and above. See ../../../Knowledge/Workflow/node-forms/display-order-and-menu.md (section POLICY) for the detector SQL and the normaliser script. Check it in every fix and audit.
+
+---
+
+## Claudia/Procedure/Workflow/node-forms/node-forms-fixer.md
+
+# Agent — Node Forms Debugger / Fixer
+
+Reusable agent definition. Written 2026-09-20 from the SQL Server case (see `..\..\..\Knowledge\Workflow\node-forms\lessons\README.md`).
+Read `..\..\..\Knowledge\Workflow\node-forms\resource.md` first for paths, connections and tool caveats; this file is the procedure.
+
+## Role
+
+You find out why a Flow Studio node type shows **no** operation-specific config form (only the 24 Common
+forms), or shows the **wrong** one, and you fix it by generating and applying the missing per-operation
+palette DATA TEMPLATES (`Template_DataTemplates` rows) — for ANY node type (sqlserver, mysql, odoo, apify,
+slack, ...). You work from evidence (DB rows + live API responses), never from assumptions.
+
+## When to invoke
+
+| Symptom reported by the user | Invoke? |
+|---|---|
+| "Node X config dialog shows only generic/common tabs, no operation form" | Yes |
+| "Node X shows a form for a different operation (e.g. a delete form on a create node)" | Yes |
+| "I added forms/templates to the DB but the UI shows nothing" | Yes (topology + caching first) |
+| "Field values do not save / wrong JSON key casing" | No — executor/schema problem, see `..\..\..\Knowledge\Workflow\workflow-nodes-rag\` |
+| "Node is missing from the palette entirely" | Partly — run the audit (`.\audit-all-datatemplates.md`) for duplicate/absent template rows |
+
+## Inputs you need (ask if missing)
+
+1. **Node type code** (e.g. `sqlserver`, `odoo`, `apify`) — the `ProcessElementTypeCode`.
+2. **Symptom** — no form / wrong form / forms exist but UI shows none. Which operation, on a fresh drop or an existing node?
+3. Whether the Consolidated WebApi is running (https://localhost:10001) and Flow Studio is open and logged in
+   in Chrome (needed for the authenticated REST call).
+4. **Only if you need MCP:** the `X-Api-Key` value — the user supplies it; never write it to a file.
+5. **Permission to write** — asked separately, per target database, at the Apply step.
+
+## Procedure
+
+### Step 1 — Triage (read-only)
+1. Read `..\..\..\Knowledge\Workflow\node-forms\form-resolution-pipeline.md` and `..\..\..\Knowledge\Workflow\node-forms\profilename-to-form-contract.md` if you have not this session.
+2. Find the forms: query `Atlas_Forms` for `PrimaryUsage LIKE 'node-form-<node>%'` (runbook Q1).
+3. Find the palette templates: query `Template_DataTemplates` for the node code (runbook Q2) and read
+   `$.settings.data.connector.configuration.profileName` on each.
+4. Call the live API `GetNodeForms` for a node of that type (runbook J1) and read `resolutionSummary.formsBySource`.
+5. Decide the branch with `debug-runbook.md` (decision tree). Record the cause before changing anything.
+6. Check ORDER as well as presence (`..\..\..\Knowledge\Workflow\node-forms\display-order-and-menu.md`): the node's palette templates should have DisplayOrder values that keep the node's operations together, and its profile/node-type forms must have `Atlas_Forms.DisplayOrder` below 1002 (the first common form), otherwise the dialog opens on a common form (`forms[0]` after a global ascending sort, `ConnectorConfigDialog.tsx:410`). Run detector queries A-C of that doc.
+
+### Step 2 — Determine which database the API serves (mandatory)
+The Consolidated WebApi uses TWO databases (local `.\SQLEXPRESS` and a remote server). Compare the API's
+type-13 template count / a known template ID against each DB (`..\..\..\Knowledge\Workflow\node-forms\database-topology.md`). Do this BEFORE
+writing scripts: a fix applied to the wrong DB has no effect and looks like a caching problem.
+
+### Step 3 — Confirm with the user
+State in plain words: node type, cause, which DB you will write to (host/db name, never credentials),
+how many rows, the ID range. **Wait for an explicit yes** before any write to a remote/shared DB. A local
+write to `.\SQLEXPRESS` still needs the user's go-ahead in this session unless they already gave it.
+
+### Step 4 — Fix (generate scripts, files only)
+Follow `fix-playbook.md`: read the node's forms, derive `profileName` = `PrimaryUsage` minus `node-form-`,
+pick an unused ID range (query the DB AND scan the repo folders), emit one
+`Template_DataTemplates_<ID>_<node>-<op>.data.sql` per form (guarded, UTF-8 BOM) into the node's
+`DataTemplates` folder under the DB project. Delete obsolete generic templates only with user approval.
+
+### Step 5 — Apply
+Run each script with `sqlcmd -f 65001` against the confirmed DB (`fix-playbook.md` section 5). Then clear caches:
+`..\..\..\Knowledge\Workflow\node-forms\caching-layers.md` (10-minute template cache, output cache, 60-minute workflow cache -> restart WebApi,
+which is the user's action; hard refresh the browser with Ctrl+F5).
+
+### Step 6 — Verify (three levels, all required)
+1. **DB:** row count and profileName check query (`fix-playbook.md` section 6).
+2. **API:** `by-type` returns the new templates; `GetNodeForms` for a node built from a new template shows
+   `Tier (Profile): 1` and that form is the RIGHT one (runbook J1/J2).
+3. **UI:** hard refresh, drop the node from the palette, open the config dialog, confirm the operation form
+   is the first form (schema) and correct. Existing canvas nodes must be re-dropped or opened+saved.
+
+### Step 7 — Log
+Append a dated entry to this folder's `..\..\..\Knowledge\Workflow\node-forms\DevelopmentHistoryLog.md` (what/why/evidence) and a lesson to
+`..\..\..\Knowledge\Workflow\node-forms\lessons\README.md` if something new was learned. Update `..\..\..\Knowledge\Workflow\node-forms\node-type-status-table.md` for the node type.
+
+## Hard safety rules
+
+1. **Never write to a remote or shared database without explicit user confirmation for that database in this session.**
+2. **Never `git commit` or `git push`** unless the user asks in that specific message. Leave files uncommitted and say so.
+3. **Never put a password, API key, token or connection-string secret into any file, log, chat echo or command
+   you save.** Read credentials from `appsettings*.json` at run time or ask the user. Use Windows auth (`-E`) locally.
+4. **Read-only first.** All triage is SELECT / GET only. Writes happen only in Step 5.
+5. **Never apply scripts from `obsolete`, `backup`, `unapproved`, `unsorted` folders.**
+6. **Scripts must be re-runnable** (`IF NOT EXISTS` guard on the primary key).
+7. **Cache awareness:** a fix that "does not show" is unproven, not failed — walk `..\..\..\Knowledge\Workflow\node-forms\caching-layers.md` before re-fixing.
+8. **Do not start/stop React dev servers or restart the WebApi yourself** — ask the user.
+9. Naming: uppercase `ID` in every identifier you invent (`processElementID`, `dataTemplateID`).
+10. .NET builds, if ever needed: `dotnet build -m:2`, incremental, never clean/rebuild.
+
+## Definition of done
+
+- [ ] Cause identified and recorded with evidence (query output / API `formsBySource`).
+- [ ] Serving database identified and the fix applied to that database (user-confirmed).
+- [ ] One template per operation form, `profileName` matches the form's `PrimaryUsage` exactly (case-sensitive).
+- [ ] API `by-type` returns the new templates; `GetNodeForms` shows `Tier (Profile): 1` with the correct form.
+- [ ] UI: fresh drop shows the correct operation form; user told about re-dropping existing nodes.
+- [ ] Scripts saved in the DB project folder (uncommitted unless asked), `..\..\..\Knowledge\Workflow\node-forms\DevelopmentHistoryLog.md` and
+      `..\..\..\Knowledge\Workflow\node-forms\node-type-status-table.md` updated.
+- [ ] Final report lists files, IDs used, DB written to, what was NOT verified.
+
+> POLICY: profile-driven and node-type forms must have Atlas_Forms.DisplayOrder strictly between 100 and 500 (101..499); common forms stay at 1002 and above. See ../../../Knowledge/Workflow/node-forms/display-order-and-menu.md (section POLICY) for the detector SQL and the normaliser script. Check it in every fix and audit.
+
+---
+
+## Claudia/Procedure/WorkflowAgent/01-create-basic-workflow.md
+
+# Create a Basic Workflow
+
+## Overview
+
+This procedure guides you through creating a simple workflow from scratch using the Flow Workflow MCP Server.
+
+## Prerequisites
+
+- Access to Flow Studio
+- Workflow MCP Server available
+- Credentials service ready
+- Understanding of [WorkflowAgent architecture](../../Knowledge/WorkflowAgent/01-workflow-architecture.md)
+
+## Step-by-Step
+
+### Step 1: Define Requirements
+Before creating, document:
+- **Purpose:** What does this workflow do?
+- **Trigger:** Manual, webhook, schedule, or event?
+- **Inputs:** What data does it need?
+- **Outputs:** What does it produce?
+- **Integrations:** Which external systems?
+
+**Example:**
+```
+Purpose: Send confirmation email when customer signs up
+Trigger: Webhook (from signup form)
+Input: { customer_email, customer_name, signup_date }
+Output: Email sent confirmation
+Integrations: Gmail via OAuth2
+```
+
+### Step 2: Create Workflow
+Use MCP tool `create_workflow`:
+
+```
+create_workflow(
+  name: "Customer Signup Email",
+  description: "Sends confirmation email when customer signs up via webhook",
+  project_id: "project_123"  // optional
+)
+```
+
+**Output:** Returns `workflow_id: "wf_abc123"`
+
+### Step 3: Add Trigger Node
+Use MCP tool `add_node`:
+
+```
+add_node(
+  workflow_id: "wf_abc123",
+  node_type: "webhook-trigger",
+  name: "Webhook: Customer Signup"
+)
+```
+
+**Output:** Returns `node_id: "node_webhook_001"`
+
+### Step 4: Add Action Node
+Add the main action node (e.g., email):
+
+```
+add_node(
+  workflow_id: "wf_abc123",
+  node_type: "email-gmail",
+  name: "Send Confirmation Email",
+  position: { x: 400, y: 200 }
+)
+```
+
+**Output:** Returns `node_id: "node_email_001"`
+
+### Step 5: Configure Action Node
+Use MCP tool `configure_node`:
+
+```
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_email_001",
+  operation: "send_message",
+  config: {
+    to: "{{InputData.customer_email}}",
+    subject: "Welcome {{InputData.customer_name}}!",
+    body: "Thank you for signing up..."
+  },
+  credentials_id: "cred_gmail_001"
+)
+```
+
+### Step 6: Connect Nodes (Add Transition)
+Use MCP tool `add_transition`:
+
+```
+add_transition(
+  workflow_id: "wf_abc123",
+  from_node_id: "node_webhook_001",
+  to_node_id: "node_email_001"
+)
+```
+
+**Output:** Returns `transition_id: "trans_001"`
+
+### Step 7: Validate Workflow
+Use MCP tool `validate_workflow`:
+
+```
+validate_workflow(
+  workflow_id: "wf_abc123"
+)
+```
+
+**Expected Result:** No errors or warnings
+
+**If errors found:**
+- Fix node configuration
+- Re-validate
+- Repeat until clean
+
+### Step 8: Test Workflow
+Use MCP tool `execute_workflow`:
+
+```
+execute_workflow(
+  workflow_id: "wf_abc123",
+  input_data: {
+    customer_email: "john@example.com",
+    customer_name: "John Smith",
+    signup_date: "2026-09-29"
+  },
+  timeout_seconds: 30
+)
+```
+
+**Output:** Returns `execution_id: "exec_xyz789"`
+
+### Step 9: Check Execution Status
+Use MCP tool `get_execution_status`:
+
+```
+get_execution_status(
+  execution_id: "exec_xyz789"
+)
+```
+
+**Expected:** Status is "Completed", no errors, email sent
+
+**If failed:**
+- Review error message
+- Fix issue in workflow
+- Re-test
+
+### Step 10: Deploy Workflow
+Once testing passes, use MCP tool `deploy_workflow`:
+
+```
+deploy_workflow(
+  workflow_id: "wf_abc123"
+)
+```
+
+**Result:** Workflow is now active and receives webhook triggers
+
+## Common Additions
+
+### Add Notification (Slack Alert)
+After email node:
+
+```
+add_node(
+  workflow_id: "wf_abc123",
+  node_type: "slack",
+  name: "Notify Team"
+)
+
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_slack_001",
+  operation: "post_message",
+  config: {
+    channel: "#signups",
+    text: "New signup: {{InputData.customer_name}}"
+  },
+  credentials_id: "cred_slack_001"
+)
+
+add_transition(
+  workflow_id: "wf_abc123",
+  from_node_id: "node_email_001",
+  to_node_id: "node_slack_001"
+)
+```
+
+### Add Conditional Logic (If Email Valid)
+Add if-condition before email:
+
+```
+add_node(
+  workflow_id: "wf_abc123",
+  node_type: "if-condition",
+  name: "Is Email Valid?",
+  position: { x: 300, y: 150 }
+)
+
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_if_001",
+  config: {
+    expression: "InputData.customer_email.includes('@')"
+  }
+)
+
+add_transition(
+  workflow_id: "wf_abc123",
+  from_node_id: "node_webhook_001",
+  to_node_id: "node_if_001"
+)
+
+add_transition(
+  workflow_id: "wf_abc123",
+  from_node_id: "node_if_001",
+  to_node_id: "node_email_001",
+  output_port: "true"
+)
+```
+
+## Workflow Diagram
+
+```
+Webhook Trigger
+    ↓
+(If Valid?) ← if-condition
+    ↓
+  true
+    ↓
+Send Email ← email-gmail
+    ↓
+Notify Team ← slack
+    ↓
+ Complete
+```
+
+## Verification Checklist
+
+- [ ] Workflow created with clear name and description
+- [ ] Trigger node configured
+- [ ] Action nodes added
+- [ ] All transitions connected
+- [ ] Credentials configured
+- [ ] Validation passes (no errors)
+- [ ] Test execution successful
+- [ ] Workflow deployed
+
+## See Also
+
+- [02-add-execution-nodes.md](02-add-execution-nodes.md) — Add more node types
+- [03-configure-transitions.md](03-configure-transitions.md) — Conditional routing
+- [05-test-workflow.md](05-test-workflow.md) — Complete testing guide
+- [Knowledge/WorkflowAgent/02-node-types.md](../../Knowledge/WorkflowAgent/02-node-types.md) — Node type reference
+
+---
+
+## Claudia/Procedure/WorkflowAgent/02-add-execution-nodes.md
+
+# Add and Configure Execution Nodes
+
+## Overview
+
+Guide for adding and configuring different node types to workflows.
+
+## Adding a Node
+
+### Basic Add Node Call
+
+```
+add_node(
+  workflow_id: "wf_abc123",
+  node_type: "http-request",
+  name: "Fetch API Data",
+  position: { x: 500, y: 300 }
+)
+```
+
+Returns: `node_id: "node_http_001"`
+
+### Common Node Types to Add
+
+| Node Type | Use Case | Credentials |
+|-----------|----------|-------------|
+| `manual-trigger` | User-initiated | None |
+| `webhook-trigger` | External webhook | None |
+| `schedule-trigger` | Scheduled execution | None |
+| `http-request` | REST API | Optional (bearer token) |
+| `email-smtp` | SMTP email | Required |
+| `email-gmail` | Gmail | Required (OAuth2) |
+| `slack` | Slack integration | Required (bot token) |
+| `if-condition` | Branching logic | None |
+| `loop` | Iterate over data | None |
+| `code-execute` | Custom script | None |
+| `flow-ai-agent` | AI-powered logic | Required (LLM) |
+
+## Configuring Each Node Type
+
+### HTTP Request
+
+```
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_http_001",
+  operation: "POST",
+  config: {
+    url: "https://api.example.com/data",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{credentials.api_key}}"
+    },
+    body: {
+      name: "{{InputData.name}}",
+      email: "{{InputData.email}}"
+    }
+  },
+  credentials_id: "cred_api_001"
+)
+```
+
+### Email (SMTP)
+
+```
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_email_001",
+  operation: "send_message",
+  config: {
+    to: "{{InputData.recipient_email}}",
+    cc: "manager@company.com",
+    subject: "Order Confirmation #{{InputData.order_id}}",
+    body: "Thank you for your order..."
+  },
+  credentials_id: "cred_smtp_001"
+)
+```
+
+### Email (Gmail)
+
+```
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_gmail_001",
+  operation: "send_message",
+  config: {
+    to: "{{InputData.customer_email}}",
+    subject: "Your Receipt",
+    body: "Order details..."
+  },
+  credentials_id: "cred_gmail_001"
+)
+```
+
+### Slack
+
+```
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_slack_001",
+  operation: "post_message",
+  config: {
+    channel: "#notifications",
+    text: "New order: {{InputData.order_id}} for {{InputData.customer}}",
+    thread_ts: "{{nodes.previous_node.output.thread_id}}"
+  },
+  credentials_id: "cred_slack_001"
+)
+```
+
+### If Condition
+
+```
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_if_001",
+  config: {
+    expression: "InputData.amount > 100"
+  }
+)
+```
+
+Supports: `>`, `<`, `==`, `!=`, `&&` (and), `||` (or), `.includes()`, `.length`
+
+### Loop
+
+```
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_loop_001",
+  config: {
+    input_array: "{{InputData.items}}",
+    iteration_variable: "current_item"
+  }
+)
+```
+
+### Code Execute
+
+```
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_code_001",
+  config: {
+    code: `
+      const total = InputData.items.reduce((sum, item) => sum + item.price, 0);
+      return {
+        total: total,
+        item_count: InputData.items.length,
+        average: total / InputData.items.length
+      };
+    `
+  }
+)
+```
+
+### Flow AI Agent
+
+```
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_ai_001",
+  operation: "reason",
+  config: {
+    strategy: "tools",
+    prompt: "Analyze this customer feedback and classify sentiment",
+    system_prompt: "You are a sentiment analyzer...",
+    max_iterations: 5
+  },
+  credentials_id: "cred_llm_001"
+)
+```
+
+## Node Output Variables
+
+After configuring a node, reference its output:
+
+```
+{{nodes.Fetch_API_Data.output.status}}
+{{nodes.Send_Email.output.message_id}}
+{{nodes.Analyze_Feedback.output.sentiment}}
+```
+
+## Validation
+
+After configuring each node:
+
+```
+validate_workflow(
+  workflow_id: "wf_abc123"
+)
+```
+
+**Look for errors:**
+- Missing required configuration
+- Invalid field references
+- Type mismatches
+
+## Testing Single Node
+
+Test a node in isolation:
+
+```
+execute_workflow(
+  workflow_id: "wf_abc123",
+  input_data: { /* test data */ },
+  timeout_seconds: 30
+)
+
+get_execution_status(execution_id)
+```
+
+Inspect node output in execution logs.
+
+## Common Mistakes
+
+### Missing Credentials ID
+**Error:** "Credential not found"
+**Fix:** Ensure credentials exist and `credentials_id` is correct
+
+### Invalid Variable Reference
+**Error:** "Variable not found"
+**Fix:** Check spelling, ensure variable is set before reference
+
+### Type Mismatch
+**Error:** "Expected array, got object"
+**Fix:** Check input data type; use code-execute to transform if needed
+
+### Circular References
+**Error:** "Circular dependency"
+**Fix:** Ensure nodes don't reference their own output
+
+## See Also
+
+- [01-create-basic-workflow.md](01-create-basic-workflow.md) — Basic workflow creation
+- [03-configure-transitions.md](03-configure-transitions.md) — Connect nodes
+- [Knowledge/WorkflowAgent/02-node-types.md](../../Knowledge/WorkflowAgent/02-node-types.md) — Node reference
+- [Knowledge/WorkflowAgent/06-mcp-server-reference.md](../../Knowledge/WorkflowAgent/06-mcp-server-reference.md) — MCP API
+
+---
+
+## Claudia/Procedure/WorkflowAgent/03-configure-transitions.md
+
+# Configure Transitions (Routing & Branching)
+
+## Overview
+
+Transitions connect nodes and define the execution path through a workflow.
+
+## Types of Transitions
+
+### Unconditional (Default)
+Always proceeds to next node.
+
+```
+add_transition(
+  workflow_id: "wf_abc123",
+  from_node_id: "node_1",
+  to_node_id: "node_2"
+)
+```
+
+### Conditional (Based on Output Port)
+Routes based on node output (especially if-condition, switch).
+
+```
+add_transition(
+  workflow_id: "wf_abc123",
+  from_node_id: "node_if_001",
+  to_node_id: "node_email_001",
+  output_port: "true"
+)
+
+add_transition(
+  workflow_id: "wf_abc123",
+  from_node_id: "node_if_001",
+  to_node_id: "node_error_handler",
+  output_port: "false"
+)
+```
+
+### Conditional (Based on Expression)
+Routes based on evaluating an expression.
+
+```
+add_transition(
+  workflow_id: "wf_abc123",
+  from_node_id: "node_1",
+  to_node_id: "node_notify",
+  condition: "{{nodes.node_1.output.status}} == 'success'"
+)
+```
+
+## Creating a Branch
+
+```
+If condition node → true → Send Email
+                  → false → Error Handler
+```
+
+Step 1: Add if-condition node
+```
+add_node(
+  workflow_id: "wf_abc123",
+  node_type: "if-condition",
+  name: "Valid Order?"
+)
+```
+
+Step 2: Add action nodes
+```
+add_node(workflow_id, node_type: "email-gmail", name: "Confirmation")
+add_node(workflow_id, node_type: "slack", name: "Alert Team")
+```
+
+Step 3: Configure if-condition
+```
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_if_001",
+  config: {
+    expression: "InputData.total_amount >= 10 && InputData.customer_verified == true"
+  }
+)
+```
+
+Step 4: Add transitions
+```
+add_transition(
+  workflow_id: "wf_abc123",
+  from_node_id: "node_if_001",
+  to_node_id: "node_email_001",
+  output_port: "true"
+)
+
+add_transition(
+  workflow_id: "wf_abc123",
+  from_node_id: "node_if_001",
+  to_node_id: "node_slack_001",
+  output_port: "false"
+)
+```
+
+## Multi-Way Branching (Switch)
+
+```
+add_node(workflow_id, node_type: "switch", name: "Route by Status")
+
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_switch_001",
+  config: {
+    cases: [
+      { value: "pending", label: "Pending" },
+      { value: "approved", label: "Approved" },
+      { value: "rejected", label: "Rejected" }
+    ],
+    expression: "InputData.status"
+  }
+)
+
+add_transition(from_node_id: "node_switch_001", to_node_id: "node_wait", output_port: "pending")
+add_transition(from_node_id: "node_switch_001", to_node_id: "node_process", output_port: "approved")
+add_transition(from_node_id: "node_switch_001", to_node_id: "node_reject", output_port: "rejected")
+```
+
+## Error Path Transitions
+
+Route to error handler on failure:
+
+```
+add_transition(
+  workflow_id: "wf_abc123",
+  from_node_id: "node_http_001",
+  to_node_id: "node_error_handler",
+  output_port: "error"
+)
+```
+
+## Conditional Transition Expression
+
+Transitions can evaluate expressions:
+
+```
+condition: "{{nodes.fetch_data.output.record_count}} > 0"
+condition: "{{InputData.status}} == 'active'"
+condition: "{{nodes.previous.output.timestamp}} > new Date() - 3600000"
+```
+
+## Loop Transitions
+
+Loops create implicit transitions:
+- Inside loop → normal transitions between nodes
+- After loop → transition continues after all iterations
+
+```
+add_transition(from_node_id: "node_loop_001", to_node_id: "node_summarize")
+```
+
+This transition executes after loop completes (not per iteration).
+
+## Parallel Fork/Join Transitions
+
+```
+add_node(workflow_id, node_type: "parallel-fork")
+add_node(workflow_id, node_type: "parallel-join")
+
+// Fork branches
+add_transition(from_node_id: "fork", to_node_id: "task_1")
+add_transition(from_node_id: "fork", to_node_id: "task_2")
+add_transition(from_node_id: "fork", to_node_id: "task_3")
+
+// Rejoin
+add_transition(from_node_id: "task_1", to_node_id: "join")
+add_transition(from_node_id: "task_2", to_node_id: "join")
+add_transition(from_node_id: "task_3", to_node_id: "join")
+
+// Continue after join
+add_transition(from_node_id: "join", to_node_id: "finalize")
+```
+
+## Updating Transitions
+
+Change a transition condition:
+
+```
+update_transition(
+  workflow_id: "wf_abc123",
+  transition_id: "trans_001",
+  condition: "{{nodes.check.output.result}} == 'OK'"
+)
+```
+
+## Deleting Transitions
+
+Remove a transition:
+
+```
+delete_transition(
+  workflow_id: "wf_abc123",
+  transition_id: "trans_001"
+)
+```
+
+This disconnects nodes but doesn't delete the nodes themselves.
+
+## Validation
+
+After configuring transitions:
+
+```
+validate_workflow(workflow_id)
+```
+
+Checks for:
+- Disconnected nodes (unreachable)
+- Dead ends (nodes with no outgoing transitions)
+- Circular loops (if-condition loops back to itself)
+
+## Visualization
+
+Workflow diagram with transitions:
+
+```
+Trigger
+  ↓
+Fetch Data
+  ↓
+If Status Valid?
+  ├─ true ─→ Send Email ─→ Log Success
+  └─ false → Alert Error → Retry
+```
+
+## See Also
+
+- [01-create-basic-workflow.md](01-create-basic-workflow.md) — Basic workflow
+- [Knowledge/WorkflowAgent/03-execution-flow.md](../../Knowledge/WorkflowAgent/03-execution-flow.md) — Execution model
+
+---
+
+## Claudia/Procedure/WorkflowAgent/04-integrate-external-system.md
+
+# Integrate External Systems
+
+## Overview
+
+Connect workflows to external APIs, services, and databases.
+
+## Integration Nodes
+
+| Node | System | Credentials |
+|------|--------|-------------|
+| `http-request` | Any REST API | Optional |
+| `email-smtp` | SMTP server | Required |
+| `email-gmail` | Gmail | Required (OAuth2) |
+| `slack` | Slack | Required (bot token) |
+| `odoo` | Odoo ERP | Required |
+| `elasticsearch` | Elasticsearch | Optional |
+| `sql-server` | SQL Server DB | Required |
+
+## HTTP Request Pattern
+
+### Step 1: Create Credential
+If not exists, create API key credential in Credentials service.
+
+### Step 2: Add Node
+```
+add_node(
+  workflow_id: "wf_abc123",
+  node_type: "http-request",
+  name: "Call External API"
+)
+```
+
+### Step 3: Configure
+```
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_http_001",
+  operation: "POST",
+  config: {
+    url: "https://api.partner.com/v1/customers",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: {
+      name: "{{InputData.name}}",
+      email: "{{InputData.email}}"
+    },
+    timeout: 30
+  },
+  credentials_id: "cred_partner_api"
+)
+```
+
+### Step 4: Handle Response
+Reference node output:
+```
+{{nodes.Call_External_API.output.body.customer_id}}
+{{nodes.Call_External_API.output.status}}
+{{nodes.Call_External_API.output.headers.x-ratelimit-remaining}}
+```
+
+## Email Integration (Gmail)
+
+### Step 1: OAuth2 Setup
+Create Gmail OAuth2 credential in Credentials service.
+
+### Step 2: Add Node
+```
+add_node(
+  workflow_id: "wf_abc123",
+  node_type: "email-gmail",
+  name: "Send Email"
+)
+```
+
+### Step 3: Configure
+```
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_gmail_001",
+  operation: "send_message",
+  config: {
+    to: "{{InputData.recipient}}",
+    cc: "manager@company.com",
+    subject: "Order {{InputData.order_id}}",
+    body: "Thank you for your order...",
+    html_body: "<h1>Order Confirmation</h1>..."
+  },
+  credentials_id: "cred_gmail_oauth2"
+)
+```
+
+## Slack Integration
+
+### Step 1: Create Bot Token
+Setup bot in Slack workspace, get token.
+
+### Step 2: Create Credential
+Store token in Credentials service.
+
+### Step 3: Add Node
+```
+add_node(
+  workflow_id: "wf_abc123",
+  node_type: "slack",
+  name: "Notify Team"
+)
+```
+
+### Step 4: Configure
+```
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_slack_001",
+  operation: "post_message",
+  config: {
+    channel: "#orders",
+    text: "New order: {{InputData.order_id}}",
+    blocks: [
+      {
+        type: "section",
+        text: { type: "mrkdwn", text: "*Order Details*" }
+      }
+    ]
+  },
+  credentials_id: "cred_slack_bot"
+)
+```
+
+## Database Integration (SQL Server)
+
+### Step 1: Create Credential
+Database connection string in Credentials service.
+
+### Step 2: Add Node
+```
+add_node(
+  workflow_id: "wf_abc123",
+  node_type: "sql-server",
+  name: "Write to Database"
+)
+```
+
+### Step 3: Configure
+```
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_sql_001",
+  operation: "execute",
+  config: {
+    query: `
+      INSERT INTO Customers (Name, Email, CreatedOn)
+      VALUES (@name, @email, @now)
+    `,
+    parameters: {
+      "@name": "{{InputData.name}}",
+      "@email": "{{InputData.email}}",
+      "@now": "{{now()}}"
+    }
+  },
+  credentials_id: "cred_db_connection"
+)
+```
+
+## Odoo ERP Integration
+
+### Step 1: Create Credential
+Odoo URL, database, username, password.
+
+### Step 2: Add Node
+```
+add_node(
+  workflow_id: "wf_abc123",
+  node_type: "odoo",
+  name: "Create Order in Odoo"
+)
+```
+
+### Step 3: Configure
+```
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_odoo_001",
+  operation: "create_record",
+  config: {
+    model: "sale.order",
+    values: {
+      partner_id: "{{InputData.partner_id}}",
+      order_line: [
+        { product_id: "{{InputData.product_id}}", product_qty: 1 }
+      ]
+    }
+  },
+  credentials_id: "cred_odoo"
+)
+```
+
+## Error Handling
+
+### Add Error Handler
+```
+add_node(
+  workflow_id: "wf_abc123",
+  node_type: "email-gmail",
+  name: "Alert on Error"
+)
+
+add_transition(
+  workflow_id: "wf_abc123",
+  from_node_id: "node_http_001",
+  to_node_id: "node_error_handler",
+  output_port: "error"
+)
+```
+
+### Retry with Backoff
+```
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_http_001",
+  config: {
+    retry_count: 3,
+    retry_backoff: "exponential",
+    timeout: 30
+  }
+)
+```
+
+## Rate Limiting
+
+### Parallel Calls
+```
+add_node(node_type: "parallel-fork")
+add_node(node_type: "http-request", name: "API Call 1")
+add_node(node_type: "http-request", name: "API Call 2")
+add_node(node_type: "parallel-join")
+```
+
+### Sequential with Delay
+```
+Loop items
+  → HTTP Request
+  → Delay (1 second)
+  → Next item
+```
+
+## Real-World Example: Customer Sync
+
+```
+Webhook (customer update)
+  ↓
+Fetch from external CRM via HTTP
+  ↓
+If status = active?
+  ├─ Yes: Write to local DB
+  │       Send confirmation email
+  │       Notify Slack
+  └─ No: Archive locally
+```
+
+## Testing Integration
+
+### Pre-Deployment
+1. Verify credential works
+2. Test with real external system in staging
+3. Check response data format
+4. Test error scenarios
+
+### Execution Test
+```
+execute_workflow(
+  workflow_id: "wf_abc123",
+  input_data: { test_customer_id: "test_123" }
+)
+
+get_execution_status(execution_id)
+```
+
+Verify:
+- External system received data
+- Response data parsed correctly
+- Records created/updated as expected
+
+## See Also
+
+- [04-integration-patterns.md](../../Knowledge/WorkflowAgent/04-integration-patterns.md) — Real-world patterns
+- [Knowledge/Credentials](../../Knowledge/Credentials/) — Credential management
+- [02-add-execution-nodes.md](02-add-execution-nodes.md) — Node configuration
+
+---
+
+## Claudia/Procedure/WorkflowAgent/05-test-workflow.md
+
+# Test Workflow
+
+## Pre-Deployment Checklist
+
+- [ ] All nodes configured
+- [ ] All transitions connected
+- [ ] No disconnected nodes
+- [ ] Credentials created and valid
+- [ ] Error paths defined
+- [ ] Data schemas align between nodes
+
+## Validation
+
+### Step 1: Validate Workflow
+```
+validate_workflow(
+  workflow_id: "wf_abc123"
+)
+```
+
+**Expected:** No errors or warnings
+
+**Common errors:**
+- Disconnected nodes → Connect via transitions
+- Missing credential → Create in Credentials service
+- Invalid expression → Check if-condition syntax
+- Type mismatch → Verify node output schema
+
+### Step 2: Fix Issues
+If errors found:
+1. Identify issue
+2. Fix in workflow
+3. Re-validate
+
+## Unit Testing (Per Node)
+
+### Test HTTP Request Node
+
+```
+execute_workflow(
+  workflow_id: "wf_abc123",
+  input_data: {
+    api_url: "https://httpbin.org/post",
+    api_method: "POST",
+    api_body: { test: "data" }
+  }
+)
+
+get_execution_status(execution_id)
+```
+
+Verify:
+- HTTP request sent
+- Response received
+- Status code is 200-299
+
+### Test Email Node
+
+```
+execute_workflow(
+  workflow_id: "wf_abc123",
+  input_data: {
+    recipient: "test@example.com",
+    subject: "Test Email",
+    body: "This is a test"
+  }
+)
+
+get_execution_status(execution_id)
+```
+
+Verify:
+- Email sent successfully
+- Recipient received message
+- No credential errors
+
+### Test Slack Node
+
+```
+execute_workflow(
+  workflow_id: "wf_abc123",
+  input_data: {
+    channel: "#testing",
+    message: "Test message from workflow"
+  }
+)
+```
+
+Verify:
+- Message posted to channel
+- Formatting correct
+- No rate limit errors
+
+## Integration Testing (Node Chain)
+
+### Test HTTP → Email Chain
+
+```
+execute_workflow(
+  workflow_id: "wf_abc123",
+  input_data: {
+    customer_id: "C123",
+    api_endpoint: "https://api.example.com/customer",
+    recipient_email: "manager@company.com"
+  }
+)
+
+get_execution_status(execution_id)
+```
+
+Inspect intermediate outputs:
+- HTTP node → Verify response data
+- Email node → Verify email sent with HTTP response data
+
+### Test If Condition Branch
+
+```
+// Test true branch
+execute_workflow(
+  workflow_id: "wf_abc123",
+  input_data: { status: "approved" }
+)
+
+// Verify: Email node executed (true path)
+
+// Test false branch
+execute_workflow(
+  workflow_id: "wf_abc123",
+  input_data: { status: "rejected" }
+)
+
+// Verify: Error handler executed (false path)
+```
+
+## End-to-End Testing
+
+### Full Workflow Execution
+
+```
+execute_workflow(
+  workflow_id: "wf_abc123",
+  input_data: {
+    customer_id: "C123",
+    customer_name: "John Smith",
+    order_total: 500.00
+  }
+)
+```
+
+### Check Execution
+
+```
+get_execution_status(execution_id)
+```
+
+Verify:
+- Status: "Completed"
+- No errors
+- All nodes executed
+- Final output matches expected
+
+### Validate Side Effects
+
+After workflow execution:
+1. **Email sent?** Check recipient inbox
+2. **Database updated?** Query database for new records
+3. **Slack notified?** Check channel for message
+4. **External system called?** Check audit logs
+
+## Error Path Testing
+
+### Test Missing Credential
+```
+execute_workflow(
+  workflow_id: "wf_abc123",
+  input_data: { /* valid data */ }
+)
+```
+
+With credential removed/invalid:
+- Verify error handler executes
+- Check alert sent to team
+- Confirm workflow doesn't completely fail
+
+### Test Invalid Input
+
+```
+execute_workflow(
+  workflow_id: "wf_abc123",
+  input_data: {
+    email: "invalid-email",  // Missing @
+    amount: "not-a-number"   // Type error
+  }
+)
+```
+
+Verify:
+- If-condition catches validation error
+- Error handler executes
+- Notification sent
+
+### Test Timeout
+
+Configure short timeout:
+```
+configure_node(
+  workflow_id: "wf_abc123",
+  node_id: "node_http_001",
+  config: { timeout: 1 }  // 1 second
+)
+```
+
+Call slow API:
+- Verify timeout triggers
+- Error path executes
+- Retry logic works
+
+## Performance Testing
+
+### Load Testing (10 Concurrent)
+
+```
+for i in 1..10:
+  execute_workflow(workflow_id, input_data_i)
+```
+
+Monitor:
+- All executions complete
+- Average latency
+- Success rate
+- Concurrent limit hit?
+
+### Loop Performance
+
+```
+execute_workflow(
+  workflow_id: "wf_abc123",
+  input_data: {
+    items: [ 100 items ]
+  }
+)
+```
+
+Monitor:
+- Execution time
+- Per-iteration latency
+- Total memory usage
+- Timeout not hit
+
+## Test Data
+
+### Sample Datasets
+
+**Minimal:**
+```json
+{
+  "customer_id": "C123",
+  "email": "john@example.com"
+}
+```
+
+**Edge cases:**
+```json
+{
+  "customer_id": "",
+  "email": "john+alias@sub.example.com",
+  "notes": "Special chars: & < > \" '"
+}
+```
+
+**Large:**
+```json
+{
+  "items": [ 1000 items ],
+  "description": "... 10000 characters ..."
+}
+```
+
+## Test Report Template
+
+```
+Workflow: [Name]
+Date: [Date]
+Tester: [Name]
+
+Validation:
+  ✓ No structural errors
+  ✓ All nodes configured
+  ✓ Credentials valid
+
+Unit Tests:
+  ✓ HTTP node: Response parsed correctly
+  ✓ Email node: Sent to recipient
+  ✓ Slack node: Message posted
+
+Integration Tests:
+  ✓ HTTP → Email: Data flows correctly
+  ✓ Branching: Both paths execute
+
+End-to-End:
+  ✓ Full execution: Completed successfully
+  ✓ Side effects: All verified
+
+Error Handling:
+  ✓ Missing credential: Handled gracefully
+  ✓ Invalid input: Error path executes
+  ✓ Timeout: Retry logic works
+
+Performance:
+  ✓ 10 concurrent: All succeed
+  ✓ 100 loop items: < 30 seconds
+  ✓ Success rate: 99%+
+
+Status: APPROVED FOR PRODUCTION
+```
+
+## See Also
+
+- [05-testing-guide.md](../../Knowledge/WorkflowAgent/05-testing-guide.md) — Detailed testing reference
+- [06-deploy-workflow.md](06-deploy-workflow.md) — Deployment
+
+---
+
+## Claudia/Procedure/WorkflowAgent/06-deploy-workflow.md
+
+# Deploy Workflow to Production
+
+## Prerequisites
+
+- [ ] Workflow passes validation (`validate_workflow`)
+- [ ] All unit tests pass
+- [ ] All integration tests pass
+- [ ] End-to-end test successful
+- [ ] Error paths tested
+- [ ] Credentials configured and valid
+- [ ] Test report generated
+
+## Deployment Steps
+
+### Step 1: Final Validation
+
+```
+validate_workflow(
+  workflow_id: "wf_abc123"
+)
+```
+
+**Expected:** No errors or warnings
+
+If errors found, fix and re-validate.
+
+### Step 2: Create Backup (Optional)
+
+Create a version record:
+
+```
+get_workflow_versions(
+  workflow_id: "wf_abc123"
+)
+```
+
+Keep record of current version number for rollback if needed.
+
+### Step 3: Deploy Workflow
+
+```
+deploy_workflow(
+  workflow_id: "wf_abc123"
+)
+```
+
+**Expected:** Workflow transitions to "active" status
+
+### Step 4: Verify Deployment
+
+```
+get_workflow(
+  workflow_id: "wf_abc123"
+)
+```
+
+Check:
+- Status is "active"
+- Published timestamp updated
+- All node configurations persisted
+
+### Step 5: Monitor First Executions
+
+After deployment, monitor early executions:
+
+```
+get_execution_history(
+  workflow_id: "wf_abc123",
+  limit: 20
+)
+```
+
+Watch for:
+- All executions completing
+- No unexpected errors
+- Performance baseline met
+- Side effects working (emails sent, records created, etc.)
+
+## Deployment Checklist
+
+- [ ] Validation passes
+- [ ] All tests pass
+- [ ] Code review approved
+- [ ] Credentials verified
+- [ ] Documentation updated
+- [ ] Team notified
+- [ ] Monitoring configured
+- [ ] Rollback plan ready
+- [ ] Deploy command executed
+- [ ] Deployment confirmed
+- [ ] First executions monitored
+
+## Rollback Procedure
+
+If workflow causes issues:
+
+### Step 1: Deactivate Workflow
+
+Get previous version and redeploy:
+
+```
+get_workflow_versions(
+  workflow_id: "wf_abc123"
+)
+```
+
+Identify previous working version number.
+
+### Step 2: Restore Previous Version
+
+Create new version from previous:
+
+```
+update_workflow(
+  workflow_id: "wf_abc123",
+  version: "previous_version_number"
+)
+
+deploy_workflow(
+  workflow_id: "wf_abc123"
+)
+```
+
+### Step 3: Verify Rollback
+
+```
+execute_workflow(
+  workflow_id: "wf_abc123",
+  input_data: { test: "data" }
+)
+
+get_execution_status(execution_id)
+```
+
+Confirm workflow returns to previous behavior.
+
+### Step 4: Root Cause Analysis
+
+After rollback:
+1. Identify root cause
+2. Fix in new version
+3. Re-test thoroughly
+4. Re-deploy
+
+## Post-Deployment Monitoring
+
+### Key Metrics
+
+Track for 24-48 hours:
+- **Execution count:** How many times triggered?
+- **Success rate:** % completing successfully
+- **Error rate:** % failing
+- **Average latency:** Per-node and total
+- **Resource usage:** CPU, memory, API calls
+
+### Alert Thresholds
+
+Set up alerts for:
+- **High error rate:** >5% failures
+- **Slow execution:** >2x baseline latency
+- **Timeout:** More than baseline
+- **Credential error:** Any JWT/OAuth2 failures
+- **Rate limit:** Service responding with 429
+
+### Observability
+
+Access logs:
+```
+get_execution_history(
+  workflow_id: "wf_abc123",
+  limit: 100
+)
+```
+
+For each execution, review:
+- Node execution times
+- Error messages
+- Output data quality
+- Credential usage
+
+## Common Deployment Issues
+
+### Issue: Credential Fails in Production
+
+**Cause:** Credential different in production environment
+
+**Fix:**
+1. Verify production credential exists
+2. Test credential manually
+3. Update workflow to use production credential ID
+4. Redeploy
+
+### Issue: Rate Limit Errors
+
+**Cause:** Unexpected high volume of executions
+
+**Fix:**
+1. Implement rate limiting in workflow (delay nodes)
+2. Use parallel-fork for parallel but rate-limited calls
+3. Contact external service to increase quota
+4. Redeploy
+
+### Issue: Data Format Mismatch
+
+**Cause:** Production data different from test data
+
+**Fix:**
+1. Add code-execute node to inspect actual data
+2. Update node configurations
+3. Add data transformation
+4. Re-test and redeploy
+
+## Deployment Notification
+
+Notify team of deployment:
+
+**Template:**
+```
+🚀 Workflow Deployed: [Workflow Name]
+
+Status: Active
+Version: [v1.2.3]
+Deployed: [Date Time]
+Deployed By: [Name]
+
+Changes:
+- [Change 1]
+- [Change 2]
+
+Monitoring:
+- Success Rate: [%]
+- Avg Latency: [ms]
+- Error Rate: [%]
+
+Alerts:
+- Contact [team] if issues
+
+Rollback:
+- Previous version: [v1.2.2]
+- Rollback command available if needed
+```
+
+## See Also
+
+- [05-test-workflow.md](05-test-workflow.md) — Pre-deployment testing
+- [Knowledge/WorkflowAgent/06-mcp-server-reference.md](../../Knowledge/WorkflowAgent/06-mcp-server-reference.md) — MCP deployment tools
+
+---
+
+## Claudia/Procedure/WorkflowAgent/README.md
+
+# WorkflowAgent Procedures
+
+Step-by-step guides for building, testing, and deploying workflows.
+
+## Workflows
+
+Each procedure covers one task end-to-end. Start with **Create Basic Workflow**, then branch to other tasks as needed.
+
+### 1. [Create Basic Workflow](01-create-basic-workflow.md)
+**When:** You're starting a new workflow from scratch
+
+What you'll do:
+- Define requirements
+- Create workflow in MCP server
+- Add trigger node
+- Add action node
+- Connect nodes
+- Validate
+- Test
+- Deploy
+
+**Time:** ~15 minutes
+
+**Example:** Customer signup → Send confirmation email
+
+---
+
+### 2. [Add Execution Nodes](02-add-execution-nodes.md)
+**When:** You need to add more nodes to an existing workflow
+
+What you'll do:
+- Understand node types (HTTP, email, Slack, AI, etc.)
+- Add nodes to workflow
+- Configure each node type
+- Reference node outputs
+- Validate configuration
+
+**Time:** ~10 minutes per node
+
+**Examples:** 
+- Add HTTP request to fetch data
+- Add email node to send notifications
+- Add Flow AI Agent for intelligent routing
+
+---
+
+### 3. [Configure Transitions](03-configure-transitions.md)
+**When:** You're connecting nodes and adding branching logic
+
+What you'll do:
+- Create unconditional transitions (direct routing)
+- Create conditional transitions (if-condition, switch)
+- Create branching paths (true/false)
+- Create multi-way branching (switch cases)
+- Handle errors with error paths
+
+**Time:** ~10 minutes
+
+**Examples:**
+- Route based on order amount
+- Different paths for approved/rejected
+- Error handler on API failure
+
+---
+
+### 4. [Integrate External Systems](04-integrate-external-system.md)
+**When:** You're connecting to APIs, email, Slack, databases, ERP, etc.
+
+What you'll do:
+- Create credentials
+- Add integration node
+- Configure API calls, email, Slack, database, Odoo
+- Handle errors and retries
+- Implement rate limiting
+
+**Time:** ~15 minutes per integration
+
+**Examples:**
+- Call REST API to fetch customer data
+- Send email via Gmail
+- Post message to Slack
+- Create record in Odoo ERP
+- Write to SQL Server database
+
+---
+
+### 5. [Test Workflow](05-test-workflow.md)
+**When:** Before deploying to production
+
+What you'll do:
+- Validate workflow structure
+- Unit test individual nodes
+- Integration test node chains
+- End-to-end test full workflow
+- Test error paths
+- Load test
+- Generate test report
+
+**Time:** ~30 minutes
+
+**Checklist:**
+- [ ] Validation passes
+- [ ] All nodes work in isolation
+- [ ] Nodes chain together correctly
+- [ ] Error paths execute
+- [ ] Side effects verified (emails, records, messages)
+- [ ] Performance acceptable
+
+---
+
+### 6. [Deploy Workflow](06-deploy-workflow.md)
+**When:** Workflow is tested and ready for production
+
+What you'll do:
+- Final validation
+- Create backup
+- Deploy workflow
+- Verify deployment
+- Monitor first executions
+- Set up alerts
+
+**Time:** ~5 minutes deployment + 24h monitoring
+
+**Checklist:**
+- [ ] All tests pass
+- [ ] Code/workflow review approved
+- [ ] Credentials configured
+- [ ] Deploy command executed
+- [ ] Deployment confirmed
+- [ ] First executions monitored
+
+---
+
+## Usage Patterns
+
+### I'm building a new workflow
+Follow in order:
+1. Create Basic Workflow
+2. Add Execution Nodes (as needed)
+3. Configure Transitions (when branching)
+4. Integrate External Systems (when needed)
+5. Test Workflow
+6. Deploy Workflow
+
+### I'm fixing an existing workflow
+1. Update node configuration in Add Execution Nodes
+2. Re-configure transitions if needed
+3. Test affected sections in Test Workflow
+4. Deploy updated workflow in Deploy Workflow
+
+### I'm adding a new feature
+1. Add nodes in Add Execution Nodes
+2. Configure transitions in Configure Transitions
+3. Integrate systems in Integrate External Systems
+4. Test new paths in Test Workflow
+5. Deploy in Deploy Workflow
+
+## Quick Reference
+
+| Task | Document | Time |
+|------|----------|------|
+| Create new workflow | 01-create-basic-workflow | 15m |
+| Add HTTP node | 02-add-execution-nodes | 10m |
+| Add email notification | 02 + 04 | 15m |
+| Add branching (if/condition) | 03-configure-transitions | 10m |
+| Integrate external API | 04-integrate-external-system | 15m |
+| Test workflow | 05-test-workflow | 30m |
+| Deploy to production | 06-deploy-workflow | 5m + 24h monitoring |
+
+## Related Knowledge
+
+- **Knowledge/WorkflowAgent/** — Complete reference docs
+  - [00-overview.md](../../Knowledge/WorkflowAgent/00-overview.md) — Concepts
+  - [01-workflow-architecture.md](../../Knowledge/WorkflowAgent/01-workflow-architecture.md) — Data flow
+  - [02-node-types.md](../../Knowledge/WorkflowAgent/02-node-types.md) — Node reference
+  - [03-execution-flow.md](../../Knowledge/WorkflowAgent/03-execution-flow.md) — Debugging
+  - [04-integration-patterns.md](../../Knowledge/WorkflowAgent/04-integration-patterns.md) — Integration examples
+  - [05-testing-guide.md](../../Knowledge/WorkflowAgent/05-testing-guide.md) — Testing reference
+  - [06-mcp-server-reference.md](../../Knowledge/WorkflowAgent/06-mcp-server-reference.md) — MCP API
+
+- **Knowledge/Credentials/** — Credential management
+- **Knowledge/Servers/** — Execution infrastructure
+- **Agents/Testers/WorkflowTester/** — Automated testing
+
+## Tools Reference
+
+### MCP Server
+`BizFirst.Ai.Mcp.Tools.Workflow`
+
+**Core tools:**
+- `create_workflow` — Create new workflow
+- `add_node` — Add ExecutionNode
+- `configure_node` — Set node configuration
+- `add_transition` — Connect nodes
+- `execute_workflow` — Test workflow
+- `deploy_workflow` — Publish workflow
+- `validate_workflow` — Check for errors
+
+See [06-mcp-server-reference.md](../../Knowledge/WorkflowAgent/06-mcp-server-reference.md) for complete API.
+
+### Credentials Service
+Referenced in integrations.
+
+### Monitoring
+Post-deployment in production.
+
+## Tips & Best Practices
+
+**Design First**
+- Sketch workflow before building
+- Define inputs and outputs clearly
+- List all integrations upfront
+
+**Test Incrementally**
+- Test each node independently
+- Test chains of 2-3 nodes
+- Test error paths early
+- Load test before deployment
+
+**Handle Errors**
+- Always add error paths
+- Test credential failures
+- Test timeout scenarios
+- Log issues for debugging
+
+**Monitor Production**
+- Set success rate alerts (>95%)
+- Monitor latency (baseline + 2x)
+- Track error rate (<1%)
+- Review logs regularly
+
+## Support
+
+If issues arise:
+1. Check [Knowledge/WorkflowAgent/03-execution-flow.md](../../Knowledge/WorkflowAgent/03-execution-flow.md) — "Common Issues"
+2. Review [05-testing-guide.md](05-test-workflow.md) — "Common Testing Issues"
+3. Check logs in execution history
+4. Trace node outputs step-by-step
+
+## Updates
+
+- **2026-09-29** — Procedures reorganized as dedicated WorkflowAgent procedures
+- **2026-08-20** — Node configuration examples updated
+- **2026-07-15** — MCP API reference finalized
+
+---
+
+## Claudia/Procedure/WorkflowAgent/WorkflowQuestionnaire.md
+
+# Workflow Creation Questionnaire
+
+**Purpose:** Interactive guided workflow design via WorkflowDeveloper agent. Answer these questions to build a complete workflow specification.
+
+---
+
+## 1. Workflow Purpose & Scope
+
+### Questions:
+- **Name:** What is the workflow called? (e.g., "Order Processing", "Leave Request Approval")
+- **Description:** 2-3 sentence summary of what it does
+- **Business Purpose:** What business problem does this solve?
+- **Workflow Type:** Choose one:
+  - [ ] Data Pipeline (ETL, transformation, aggregation)
+  - [ ] Approval Process (request → review → approval)
+  - [ ] Notification Flow (trigger → notify → track)
+  - [ ] Integration Sync (sync data between systems)
+  - [ ] Agent Task (AI-driven decision/classification)
+  - [ ] Custom Multi-step Process
+
+### Performance Requirements:
+- **Frequency:** One-time / Hourly / Daily / Weekly / On-demand / Custom: ___
+- **Volume:** Expected triggers per month: ___
+- **Criticality:** Is this a critical path? (SLA required?)
+  - [ ] Yes, SLA: ___ (e.g., 4 hours)
+  - [ ] No, best-effort
+
+### Recommendation:
+For high-volume (>10k/month) workflows, plan for parallel execution and error retry policies.
+
+---
+
+## 2. Trigger & Initiation
+
+### How does the workflow start?
+- [ ] **Scheduled** — Recurring timer
+  - Frequency: Daily / Hourly / Weekly / Custom cron: ___
+  - Time: ___
+- [ ] **Manual** — User initiates
+  - Via form / API / Button
+- [ ] **Event-based** — System event triggers
+  - Event source: ___
+  - Event type: ___
+- [ ] **Webhook** — External system notifies
+  - Source system: ___
+  - Webhook endpoint: ___
+- [ ] **API Call** — Direct API invocation
+- [ ] **Form Submission** — User submits form data
+- [ ] **Database Event** — Record insert/update/delete
+
+### Input Requirements:
+- **Input Parameters:** List the data needed to start the workflow:
+  - Parameter 1: ___ (type: string/number/date/object)
+  - Parameter 2: ___
+- **Validation Rules:** Any constraints?
+  - Email must be valid? [ ]
+  - Amount > 0? [ ]
+  - Required fields: ___
+
+### Example:
+*Approval workflow triggered by form submission (Leave Request form) with: Employee ID, Dates, Reason.*
+
+---
+
+## 3. Core Process Steps
+
+### Workflow Steps:
+Map out the main steps (sequential or parallel):
+
+| # | Step Name | Description | Type | Parallel? |
+|---|-----------|-------------|------|-----------|
+| 1 | | | Query/Transform/Branch/API/Notify/Agent/Wait/Loop | Y/N |
+| 2 | | | | |
+| 3 | | | | |
+
+### Action Types Explained:
+- **Query Data** — Fetch from database/API
+- **Transform** — Process/calculate/format data
+- **Condition/Branch** — If-then decision
+- **Call API** — Invoke external service
+- **Send Notification** — Email/Slack/SMS
+- **Execute Agent** — Run AI agent
+- **Wait** — Pause for event/time
+- **Loop** — Repeat until condition
+- **Error Handling** — Catch and recover
+
+### Branching Logic:
+Describe conditional paths:
+- If [condition], then [action]
+- Example: If amount > $10k, then escalate; else auto-approve
+
+### Example:
+*Order Processing: 1) Validate order → 2) Check inventory → 3) If stock available → Reserve items → Confirm order (parallel); If out of stock → Notify customer → End.*
+
+---
+
+## 4. Data Flow & Integration
+
+### Data Sources:
+Which systems provide input data?
+- [ ] Database (which? ___)
+- [ ] REST API (endpoint? ___)
+- [ ] File upload (format? CSV/JSON)
+- [ ] External system (which? ___)
+- [ ] User input (form fields)
+
+### Data Transformations:
+What calculations/mappings are needed?
+- Aggregate orders by customer? [ ]
+- Calculate total amount? [ ]
+- Convert currencies? [ ]
+- Parse dates? [ ]
+- Custom transformations: ___
+
+### External Integrations:
+Which external systems does this workflow connect to?
+- [ ] Salesforce (sync opportunities, accounts)
+- [ ] Slack (send notifications)
+- [ ] Email (send reports)
+- [ ] Elasticsearch (log/search)
+- [ ] Odoo (inventory, accounting)
+- [ ] Custom API (which? ___)
+
+### Data Mapping:
+Map internal fields to external system fields:
+- Internal field → External field
+- Example: order_id → Salesforce.OpportunityID
+
+### Credentials Required:
+- API keys needed? [ ] For: ___
+- Database credentials? [ ] Database: ___
+- OAuth tokens? [ ] Service: ___
+
+---
+
+## 5. Decision Points & Routing
+
+### Approval Workflows?
+- [ ] Yes, approval required
+  - Who approves? (user role/email): ___
+  - Approval timeout: ___ (hours)
+  - Escalation path: ___
+- [ ] No, automatic
+
+### Conditional Branches:
+Create decision paths:
+- If [condition A] → [step B]
+- Else if [condition C] → [step D]
+- Else → [step E]
+
+**Example:**
+```
+If priority = High:
+  → Escalate to supervisor (Email)
+Else if priority = Medium:
+  → Send to queue (Notification)
+Else:
+  → Auto-process (Silent)
+```
+
+### Error Handling:
+How should workflow handle failures?
+- **Retry on failure?** [ ] Yes, max attempts: ___
+- **Fallback action?** [ ] Yes: ___
+- **Notify on error?** [ ] Yes, notify: ___
+- **Stop on error?** [ ] Yes / [ ] No (continue)
+
+---
+
+## 6. Notifications & Outputs
+
+### Stakeholders:
+Who needs to know about workflow progress?
+- [ ] Process owner (email: ___)
+- [ ] End user (email/SMS)
+- [ ] Admin team
+- [ ] External system
+- [ ] Custom: ___
+
+### Notification Channels:
+- [ ] Email (subject template: ___)
+- [ ] Slack (channel: ___)
+- [ ] SMS (message template: ___)
+- [ ] In-app notification
+- [ ] Webhook to external system
+
+### Result Outputs:
+What happens when workflow completes?
+- [ ] Store result in database (table: ___)
+- [ ] Generate report (format: PDF/CSV/JSON)
+- [ ] Send file (email/download link)
+- [ ] Update external system (which? ___)
+- [ ] Trigger next workflow (which? ___)
+
+### Archive/Retention:
+- Keep workflow history? [ ] Yes, duration: ___ (months)
+- Audit trail needed? [ ] Yes
+
+---
+
+## 7. Monitoring & Compliance
+
+### Performance:
+- **SLA requirement?** [ ] Yes, response time: ___ ms
+- **Success rate target?** ___ %
+- **Max duration?** ___ minutes
+
+### Logging & Audit:
+- [ ] Full execution log required
+- [ ] Data access log required
+- [ ] Sensitive data redacted in logs? [ ] Yes
+
+### Compliance:
+- [ ] GDPR compliance (data handling, retention)
+- [ ] HIPAA compliance (healthcare data)
+- [ ] SOC 2 compliance (audit trail)
+- [ ] PCI DSS (payment data)
+- [ ] Other: ___
+
+### Recovery Policies:
+- **Automatic retry?** [ ] Yes, every ___ seconds, max ___ attempts
+- **Manual intervention needed?** [ ] Yes, when: ___
+- **Fallback service?** [ ] Yes: ___
+- **Timeout behavior?** Retry / Notify / Abort: ___
+
+---
+
+## 8. Agent Involvement (if applicable)
+
+### Does this workflow use an AI Agent?
+- [ ] No, skip this section
+- [ ] Yes, answer below:
+
+### Agent Purpose:
+- [ ] Classification (categorize data)
+- [ ] Extraction (pull structured data)
+- [ ] Summarization (condense content)
+- [ ] Decision-making (recommend action)
+- [ ] Custom: ___
+
+### Agent Configuration:
+- **Which agent?** (Agent name: ___)
+- **Input:** What data goes to the agent? (field list: ___)
+- **Output:** What does the agent return? (format: ___)
+- **Confidence threshold?** ___ %
+- **Fallback:** What if agent confidence is low? ___
+
+### Agent Node Details:
+- **Prompt/Instructions:** (How should agent handle this?)
+- **Context/RAG:** Should agent reference external knowledge? [ ] Yes, knowledge base: ___
+- **Error handling:** What if agent fails? Retry / Escalate / Manual review
+
+---
+
+## 9. Review & Confirmation
+
+### Summary:
+Before building, confirm:
+- [ ] Workflow name and purpose clear
+- [ ] Triggers and inputs defined
+- [ ] All steps and decision points mapped
+- [ ] Data sources and integrations identified
+- [ ] Notifications and approvals configured
+- [ ] Error handling and recovery planned
+- [ ] Compliance and monitoring requirements set
+- [ ] Agent involvement (if any) specified
+
+### Visual Flowchart:
+*System generates flowchart from answers above. Review for:*
+- Correct sequence of steps?
+- All branches covered?
+- Error paths included?
+- Performance acceptable?
+
+### Risk Assessment:
+- **Critical points:** Which steps are most likely to fail? ___
+- **Failure impact:** What happens if workflow fails? ___
+- **Mitigation:** How to reduce risk? ___
+
+### Common Workflow Templates:
+*If your workflow matches a pattern, use template:*
+- [ ] **Approval Template** (Request → Review → Approve/Reject → Notify)
+- [ ] **Alert Template** (Monitor → Trigger → Notify → Log)
+- [ ] **Sync Template** (Source → Extract → Transform → Load → Verify)
+- [ ] **Extract Template** (Document → Parse → Extract Fields → Store)
+- [ ] **Route Template** (Input → Classify → Route → Process → Archive)
+
+### Integration Pattern Library:
+*Common integrations:*
+- **Order Processing:** Salesforce → Inventory → Fulfillment → Customer Notification
+- **Leave Request:** HR Form → Manager Approval → Calendar Update → Notification
+- **Data Sync:** Source DB → Transform → Elasticsearch → Analytics
+- **Invoice Processing:** Invoice Upload → OCR → Validate → Book → Notify
+
+### Build Confirmation:
+- [ ] **Ready to build** — Proceed with workflow creation
+- [ ] **Need more time** — Save and return later
+- [ ] **Discuss with team** — Export to share
+
+### Next Steps:
+1. **Build Phase:** WorkflowDeveloper creates nodes
+2. **Configuration:** Set node properties, mappings, logic
+3. **Test Phase:** WorkflowTester validates execution
+4. **Deploy:** Publish to production
+5. **Monitor:** Track execution and performance
+
+---
+
+## Tips & Best Practices
+
+- **Start simple:** Build basic workflow first, add complexity later
+- **Test early:** Test with sample data before production
+- **Monitor closely:** Set up alerts for failures
+- **Document decisions:** Use Rouge_Notes to record why you chose certain approaches
+- **Get feedback:** Review with stakeholders after testing
+- **Iterate:** Update based on real-world performance
+
+---
+
+**Questionnaire Version:** 1.0 | **Last Updated:** 2026-09-29
+
+---
+
+## Claudia/Recommendations_ForPublicUX.md
+
+# Recommendations for Public User Experience
+
+**Purpose:** Detailed, actionable recommendations for transforming SoftwareEngineerAiAgents into a public-friendly system.
+
+---
+
+## 1. Navigation Architecture: Hub-and-Spoke Model
+
+### Problem
+Current: Folder-based navigation (Knowledge/, Procedures/, Agents/)
+Users navigate file structure, not user journey.
+
+### Solution: Hub-and-Spoke Model
+```
+                    START_HERE.md
+                    (Warm greeting)
+                         ↓
+                    MAIN_MENU.md
+                    (Central hub)
+                   /      |      \
+                  /       |       \
+         Quick_Guides  Knowledge  Examples
+         (5 min each)  (Deep ref)  (Real journeys)
+```
+
+### Implementation Details
+
+**Hub = MAIN_MENU.md (Always accessible)**
+```
+📍 WHERE ARE YOU?
+You are here: [Your current task]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 CURRENT TASK (if applicable)
+  ▶ Continue: Building Customer Portal (Phase 3 of 5)
+  [Resume] [Start Over] [Change Task]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ START SOMETHING NEW
+  Which interests you?
+  
+  👷 BUILD
+    └─ Create web app (30 min)
+    └─ Create form (20 min)
+    └─ Design workflow (45 min)
+  
+  🔐 INTEGRATE  
+    └─ Setup API key (15 min)
+    └─ Connect to system (30 min)
+  
+  ⚙️ MANAGE
+    └─ Manage users (20 min)
+    └─ Configure settings (15 min)
+  
+  📚 EXPLORE
+    └─ See what's possible (10 min)
+    └─ Real-world examples (20 min)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🆘 HELP & SUPPORT
+  [FAQ] [Glossary] [Feedback] [Contact]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚙️ SETTINGS
+  Theme: Dark [Change]
+  Language: English [Change]
+  Preferences: [Edit]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 TIP: Press [M] to return here anytime
+```
+
+**Spokes = Quick_Guides/ (Landing pages for each task)**
+```
+# Build a Web App — 5 Minute Overview
+
+🎯 What you'll create: Interactive web page with forms, content, buttons
+
+⏱️ Timeline: 15-30 minutes total
+
+📋 Your path:
+  ✓ Phase 1: Quick questions (2 min)
+  ✓ Phase 2: See the dashboard (3 min)
+  ✓ Phase 3: Create first page (15 min)
+  ✓ Phase 4: Add elements (10 min)
+  ✓ Phase 5: Go live (5 min)
+
+🎯 Ready to start?
+  [Start Now] [Show me examples] [Tell me more] [Main Menu]
+```
+
+---
+
+## 2. Cognitive Load Management: Progressive Disclosure
+
+### Principle
+Show 3-5 options at a time. Hide complexity. Lazy-load details.
+
+### Implementation
+
+**At each step, present 4-5 choices max:**
+
+❌ Bad:
+```
+What would you like to do?
+- Create app
+- Create form
+- Create workflow
+- Setup API key
+- Manage credentials
+- Configure server
+- View analytics
+- Integrate external system
+- Setup SSO
+- Export data
+- Import data
+```
+(Too many choices = decision paralysis)
+
+✅ Good:
+```
+What would you like to do?
+  👷 [Build something new]
+  🔐 [Setup integration]
+  ⚙️ [Manage & configure]
+  📚 [Learn & explore]
+  [Main Menu]
+```
+
+### Each category expands on demand:
+
+```
+👷 Build something new
+  └─ Create web app (30 min)
+  └─ Create form (20 min)
+  └─ Design workflow (45 min)
+  └─ [See all options]
+```
+
+### Implementation rules:
+1. Never show >5 direct options
+2. Group related options in categories
+3. Show time estimate for each task
+4. Link to "See all" or "Browse all" for completeness
+5. Use emoji for visual scanning
+
+---
+
+## 3. Token Efficiency: Lazy-Load Strategy
+
+### Current problem
+Users read all of Knowledge/AppAgent/00-overview.md (1000 words) when they just need "How do I add a widget?"
+
+### Solution: TL;DR at top of every file
+
+**Format for every knowledge/procedure file:**
+
+```markdown
+# App Building Guide
+
+⚡ **TL;DR (30 seconds)**
+Build a web page by creating pages, adding widgets (forms, content, buttons), and styling. Takes 15-30 minutes.
+[Jump to quick guide] [Full guide below]
+
+---
+
+[Rest of comprehensive content]
+```
+
+**Format for every procedure file:**
+
+```markdown
+# How to Create a Page
+
+✅ **Quick version (2 min read)**
+1. Go to Apps → App name
+2. Click "+ New Page"
+3. Enter page name
+4. Click "Create"
+5. Done!
+
+[More details below] [See examples]
+
+---
+
+[Detailed walkthrough with all edge cases]
+```
+
+### Lazy-load strategy:
+
+**Immediate access (always shown):**
+- TL;DR (30-60 seconds)
+- Quick version (2-3 minutes)
+- Title and emoji
+- "Next steps" link
+
+**Click to expand (lazy-load):**
+- Detailed explanation
+- Why this matters
+- Screenshots
+- Code examples
+- Troubleshooting
+- Related topics
+
+### Expected token savings: 30-40 tokens per task
+
+---
+
+## 4. Non-IT Friendly Language: Translation Guide
+
+### Problem
+Technical terms scatter throughout: API, endpoint, payload, entity, MCP, repository, soft-delete, TenantID
+
+### Solution: Systematic translation
+
+**Create file: `Language_Guide.md`** with translations:
+
+| Technical | Plain Language | Context |
+|-----------|---|---|
+| API | "Connection to system" | "We use APIs to connect to Salesforce" |
+| Endpoint | "Connection point" | "The endpoint is where we send data" |
+| Payload | "Information package" or "Data bundle" | "Send this data package to the system" |
+| Entity | "Object" or "Thing" | "We're managing Customer objects" |
+| Repository | "Storage" or "Database" | "Data is stored in our storage system" |
+| MCP Server | "Integration tool" or "Connection method" | "We use this tool to connect to your system" |
+| Soft delete | "Archive" or "Hide" | "Archive this record instead of deleting" |
+| TenantID | "Organization ID" or "Company code" | "Your company code is ABC123" |
+| Schema | "Structure" | "The database structure defines how data is organized" |
+| Query | "Request" or "Question" | "We'll send a request to get your data" |
+| Commit | "Save" | "Click Save to commit your changes" |
+| Scope | "Permission" or "Access level" | "This key has Read and Write permissions" |
+| Interface | "Gateway" or "Connection point" | "This interface lets you control the system" |
+| Node | "Step" or "Process" | "Each step in the workflow is a node" |
+
+**Apply throughout all files:**
+- Knowledge files: Use plain language first, technical second
+- Procedures: Use plain language exclusively
+- AGENT.md: Use plain language for public-facing descriptions
+
+**Example transformation:**
+
+Before (Technical):
+> "The MCP server exposes a RESTful API with CRUD endpoints. Each entity inherits from BaseEntity, supporting soft-delete, audit fields (TenantID, CreatedOn/By), and multi-tenancy isolation through repository pattern implementation."
+
+After (Plain):
+> "We connect to the system using an integration tool. Each object (like Customers, Orders) has automatic tracking of when it was created and by whom. You can hide old records instead of deleting them, and each company's data is kept separate."
+
+---
+
+## 5. Grand Plan Pattern: Standardized Format
+
+### Problem
+Users don't know what they're getting into. How long? How hard? Can I stop halfway?
+
+### Solution: Every task shows a grand plan
+
+**Format for every major task:**
+
+```markdown
+# Create a Web App
+
+🎯 **What you'll accomplish:**
+Build an interactive web page with forms, content, buttons, images
+
+⏱️ **Total time needed:** 15-30 minutes
+
+📊 **Difficulty:** Beginner (no coding required)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## Your journey:
+
+**✓ Phase 1: Quick Questions** (2 min)
+What should your app do? What pages do you need?
+
+**✓ Phase 2: See the Dashboard** (3 min)
+Get familiar with the builder interface
+
+**✓ Phase 3: Create Your First Page** (15 min)
+Add content, forms, buttons to your page
+
+**✓ Phase 4: Style & Design** (10 min)
+Make it look great with colors, fonts, layout
+
+**✓ Phase 5: Go Live** (5 min)
+Preview your app and publish it
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## Before we start:
+
+🎯 **What you'll need:**
+- 15-30 minutes
+- Your ideas (what should your app do?)
+- No coding knowledge required
+
+💡 **What comes next:**
+After this, you can add workflows, integrate data, share with team
+
+⚠️ **Important:**
+You can pause anytime and resume later
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## Ready?
+
+[Start Now] [Show me examples] [I need help] [Main Menu]
+```
+
+### Grand plan principles:
+1. Always show upfront: phases, timeline, difficulty, what you'll build
+2. Be honest about time (no "quick" 30-minute tasks)
+3. Show what comes after (next steps)
+4. Get user buy-in before starting
+5. Include clear exit option
+6. Allow "show me examples" before committing
+
+---
+
+## 6. Feedback Integration: Adaptive Experience
+
+### Problem
+After Phase 1, system doesn't adapt if user is confused.
+
+### Solution: Itemized feedback after each phase
+
+**After each phase, ask:**
+
+```markdown
+✅ How was Phase 2 for you?
+
+☑ Easy! Keep going →
+☑ I'm following, but slower than expected →
+☑ Confusing, I need more explanation →
+☑ Something went wrong →
+☑ I want to change my approach →
+☑ I need to pause (save progress) →
+☑ I want to start over →
+```
+
+**System adapts based on response:**
+- "Easy" → Move to Phase 3 quickly
+- "Slower" → Add time estimates to next phase
+- "Confusing" → Expand explanations, add examples
+- "Something wrong" → Show troubleshooting
+- "Change approach" → Offer different path
+- "Pause" → Save to Rouge_Notes, return to main menu
+- "Start over" → Reset, show alternative approaches
+
+### Implementation:
+- Store feedback in Rouge_Notes (semantic + episodic memory)
+- Use for next session ("Last time you found forms confusing, so we're adding examples")
+- Improve system over time based on user feedback
+
+---
+
+## 7. Recommendations Everywhere: Proactive Guidance
+
+### Problem
+Users don't know best practices. They make risky or inefficient choices.
+
+### Solution: Add recommendations at key decision points
+
+**Types of recommendations:**
+
+```markdown
+🤖 I recommend: [Best practice for this situation]
+💡 Pro tip: [Productivity shortcut]
+⚠️ Important: [Security/safety consideration]
+🎯 Next step: [What comes after]
+✅ That's right: [Affirmation when user makes good choice]
+❌ Watch out: [Common mistake to avoid]
+```
+
+**Examples:**
+
+🤖 I recommend: "For security, set your API key to expire in 90 days"
+💡 Pro tip: "You can copy this form and reuse it for other apps"
+⚠️ Important: "Never share your API key with anyone"
+🎯 Next step: "After this, you'll probably want to add a workflow to process forms"
+✅ That's right: "Great choice - that theme works well on mobile"
+❌ Watch out: "Adding too many fields makes forms harder to use"
+
+### Implementation:
+- Add to questionnaires (after each answer)
+- Add to procedures (at decision points)
+- Add to navigation (when browsing options)
+- Personalize based on user role/context
+- Use Rouge_Notes to remember past recommendations
+
+---
+
+## 8. Main Menu Design: Hub-and-Spoke Implementation
+
+### Full main menu template:
+
+```markdown
+# Main Menu
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📍 **YOU ARE HERE:** [Current section - Breadcrumb trail]
+
+[← Back] [↑ Home] [Main Menu]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## 🔄 CONTINUE YOUR WORK
+
+Status: You are building a Customer Portal (Phase 3 of 5)
+Progress: ~50% complete (estimated 45 minutes)
+
+[▶ Resume] [Start Over] [Change Task] [Save & Exit]
+
+If you step away, we'll save your progress. Return anytime to pick up where you left off.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## 🚀 START SOMETHING NEW
+
+**What interests you?**
+
+👷 **BUILD** (Creating things)
+  1️⃣ Create web app (30 min) — Make an interactive page
+  2️⃣ Create form (20 min) — Collect data from users
+  3️⃣ Design workflow (45 min) — Automate processes
+  4️⃣ [See all build options]
+
+🔐 **INTEGRATE** (Connecting systems)
+  1️⃣ Setup API key (15 min) — Authenticate your session
+  2️⃣ Connect to Salesforce (30 min) — Sync customer data
+  3️⃣ Add Slack notifications (20 min) — Get alerts
+  4️⃣ [See all integrations]
+
+⚙️ **MANAGE** (Admin tasks)
+  1️⃣ Add team members (10 min)
+  2️⃣ Configure settings (15 min)
+  3️⃣ View activity logs (5 min)
+
+📚 **EXPLORE** (Learning)
+  1️⃣ Real-world examples (20 min) — See what's possible
+  2️⃣ Best practices guide (10 min) — Learn tips & tricks
+  3️⃣ Feature tour (15 min) — See everything available
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## 🆘 HELP & SUPPORT
+
+[FAQ] [Glossary] [Video tutorial] [Contact support] [Report bug]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## ⚙️ PREFERENCES
+
+Theme: Dark [Change]
+Language: English [Change]
+Notifications: Enabled [Change]
+Advanced options: [Show]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## 💾 YOUR SESSION
+
+Last activity: 30 minutes ago
+Progress saved automatically
+Session data: [View] [Clear]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Keyboard shortcuts:**
+[M] = This menu (anytime)
+[B] = Go back
+[Home] = Return to start
+[?] = Help
+
+**Session tips:**
+💡 You can pause any task anytime — progress is saved
+💡 Use [M] to jump to this menu from anywhere
+💡 Stuck? Click [Help] or [Contact support]
+```
+
+---
+
+## 9. Implementation Checklist: Quick Reference
+
+### Phase 1 (Foundation)
+- [ ] Create START_HERE.md (warmest welcome)
+- [ ] Create MAIN_MENU.md (central hub)
+- [ ] Create Quick_Guides/ folder with 5 quick summaries
+- [ ] Update all AGENT.md specs to link to Quick_Guides
+- [ ] Test with 3 non-IT users
+
+### Phase 2 (Content)
+- [ ] Create Examples/Real_Journeys/ folder
+- [ ] Create 3 complete end-to-end examples
+- [ ] Create Grand_Plan_Templates/ folder
+- [ ] Create Language_Guide.md and apply throughout
+
+### Phase 3 (Polish)
+- [ ] Add TL;DR to all knowledge files
+- [ ] Add navigation helpers (back/main menu/help) to all files
+- [ ] Add recommendations throughout
+- [ ] Create FAQ.md and Glossary.md
+- [ ] Video tutorials or walkthroughs
+
+---
+
+## 10. Common User Personas & Solutions
+
+### Persona 1: Complete Non-IT User
+**"I don't know anything about technology"**
+
+Solution:
+- Start with START_HERE.md (warmest welcome)
+- Use Quick_Guides/ (plain language, 5-min reads)
+- Show examples first (Real_Journeys/)
+- Heavy use of emoji and formatting
+- Jargon-free language throughout
+
+### Persona 2: Busy Professional
+**"I just need it done quickly"**
+
+Solution:
+- Quick_Guides (not full Knowledge)
+- TL;DR versions
+- 1-click path (no browsing required)
+- Checkpoints to pause/resume
+- No fluff, just steps
+
+### Persona 3: Curious Learner
+**"I want to understand deeply"**
+
+Solution:
+- Access to full Knowledge/
+- Detailed explanations
+- Real examples + edge cases
+- Best practices
+- Advanced options
+
+### Persona 4: Developer/Advanced User
+**"Show me the full system"**
+
+Solution:
+- All existing content preserved
+- Ability to skip UI and jump to specs
+- Code examples and technical details
+- API documentation
+- Architecture diagrams
+
+**Key:** Make all 4 personas happy simultaneously.
+
+---
+
+## Success Criteria for Public UX
+
+### After implementation, measure:
+
+**Navigation clarity:**
+- Users get to start within 1 minute ✅
+- Users never ask "Where do I start?" ✅
+- Users can return to main menu anytime ✅
+
+**Token efficiency:**
+- Average tokens per session: <150 (down from 200+) ✅
+- Time to get value: <5 minutes ✅
+
+**Non-IT friendliness:**
+- Zero jargon in Quick_Guides/ ✅
+- 80%+ user comprehension in testing ✅
+- No "I don't understand" moments ✅
+
+**Guided experience:**
+- 85%+ task completion rate ✅
+- 8+/10 user satisfaction ✅
+- 90%+ feel they had exit option ✅
+
+**Safety & continuity:**
+- 90%+ can pause and resume ✅
+- 0% get stuck unable to exit ✅
+- Session state preserved ✅
+
+---
+
+## Timeline & Effort
+
+| Phase | Tasks | Time | Effort |
+|-------|-------|------|--------|
+| **Phase 1** | START_HERE, MAIN_MENU, Quick_Guides | Week 1 | 1-2 days |
+| **Phase 2** | Examples, Templates, Language_Guide | Week 2-3 | 2-3 days |
+| **Phase 3** | Polish, Navigation, FAQ, Glossary | Week 4 | 3-5 days |
+| **Testing** | User testing with non-IT users | Week 5 | 1-2 days |
+| **Total** | Full public UX transformation | 5 weeks | ~12-15 days |
+
+---
+
+## Conclusion
+
+These recommendations transform SoftwareEngineerAiAgents from a "powerful but overwhelming" system into a "simple, guided, friendly" public experience.
+
+**Key insight:** We don't need to change the content. We just need to change how users *navigate* it.
+
+**Expected impact:** 
+- 40% reduction in navigation time
+- 60% improvement in non-IT user satisfaction
+- 90%+ task completion rate
+
+**Next step:** Approve and start Phase 1.
+
+---
+
