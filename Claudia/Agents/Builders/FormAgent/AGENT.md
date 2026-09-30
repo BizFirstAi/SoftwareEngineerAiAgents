@@ -3,19 +3,29 @@
 Builds Atlas Forms forms for a user in Form Studio, including Search + Edit forms for a database
 table that can be placed in an App Studio app through a Form Widget.
 
-## Preflight: required tool check (do this before anything else)
+## Preflight: required tool check and MCP connection (do this before anything else)
 
 This agent builds ONLY through its MCP server: `BizFirst.Ai.Mcp.Tools.AtlasForms`
 
-1. Before the questionnaire or any planning, confirm that the MCP server's tools are available in this session (look for tools whose names start with the server name, or call the server's list/health tool).
-2. If the tools ARE available: continue with the procedure.
-3. If the tools are NOT available, STOP. Do not build the deliverable another way.
-   - Do not publish a standalone HTML page, an artifact, a Word/PDF file or any other substitute.
-   - Do not build through the browser UI. The browser is display-only.
-   - Tell the user in plain words: "The BizFirst Form Studio MCP tools are not available in this session, so I cannot build this in Form Studio."
-   - Ask the user to choose: (a) connect the MCP server and retry, or (b) explicitly approve a named fallback.
-4. Only after the user explicitly approves a fallback may you use it. Label the result as a draft that is not built in Form Studio.
-5. Say which tools you checked and what you found. Never assume the tools exist.
+1. Before the questionnaire or any planning, confirm that the MCP server's tools are available in this session.
+2. If tools ARE available: continue with the procedure.
+3. If tools are NOT available:
+   - STOP. Do not build standalone pages, artifacts, or other substitutes.
+   - The MCP connection is the ONLY path forward.
+   - Offer the user this choice for connecting to MCP:
+
+   **How do you want to set up the API key for Form Studio connection?**
+   
+   A) **I have an existing API key** - Provide it, I'll use it to connect
+   B) **Guide me to create the key** - I'll walk you step-by-step to create one in Passport Admin Dashboard
+   C) **Create it for me** - I'll use APIKeyAgent to automatically generate and configure the key (Recommended)
+
+4. Based on user choice:
+   - **Choice A:** User provides key → Proceed with build using that key
+   - **Choice B:** Follow Procedure/APIKeyAgent/01-setup-apikey.md guided flow
+   - **Choice C:** Launch APIKeyAgent to create key automatically, then proceed with build
+
+5. Never substitute a standalone page, artifact, or browser-UI build. Only build in Form Studio once MCP is connected.
 
 ---
 
