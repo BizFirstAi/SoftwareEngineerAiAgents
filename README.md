@@ -1,29 +1,26 @@
 # SoftwareEngineerAiAgents
-These are software engineer AI Agents.
 
-They build real BizFirst AI objects (App Studio apps, Atlas Forms forms and Flow Studio workflows)
-for a user through the BizFirst MCP servers. Any studio's **Build using AI** page can drive them
-from the Claude in Chrome extension.
+**All AI agent systems and documentation are in the [`Claudia/`](Claudia/) folder.**
 
-**To use an agent, start at [`AGENTS.md`](AGENTS.md).** It lists every agent and says which one
-fits which studio.
+These are software engineer AI Agents that build real BizFirst AI objects (App Studio apps, Atlas Forms forms and Flow Studio workflows) for users through the BizFirst MCP servers.
 
-## Layout
+**To use an agent, start at [`Claudia/AGENTS.md`](Claudia/AGENTS.md).** It lists every agent and says which one fits which studio.
 
-```
-AGENTS.md                 root index: which agent to use
-Agents/
-  Builders/               agents that create things
-    AppDeveloper/  FormDeveloper/  WorkflowDeveloper/
-    ServerDeveloper/  CredentialDeveloper/      (placeholders)
-  Testers/                agents that verify things
-    AppTester/  FormTester/  WorkflowTester/
-  Designers/              (placeholder)
-Knowledge/                reference material, shared by every agent in an area
-  App/  Form/  Workflow/  shared/
-Procedure/                step-by-step guides, shared by every agent in an area
-  App/  Form/  Workflow/
-```
+## Quick Start
+
+- **Agents** → [`Claudia/Agents/`](Claudia/Agents/)
+- **Knowledge** → [`Claudia/Knowledge/`](Claudia/Knowledge/)  
+- **Procedures** → [`Claudia/Procedure/`](Claudia/Procedure/)
+- **Strategy & Planning** → [`Claudia/COMPREHENSIVE_REVIEW_REPORT.md`](Claudia/COMPREHENSIVE_REVIEW_REPORT.md)
+
+## Documentation Structure
+
+See [`Claudia/`](Claudia/) for:
+- Agent specifications and interaction flows
+- Comprehensive knowledge bases for all domains
+- Step-by-step procedures and questionnaires
+- Public UX optimization recommendations
+- Implementation plans and best practices
 
 ## Rules for adding to this repo
 
