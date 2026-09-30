@@ -11,18 +11,26 @@ This procedure guides you through creating a simple workflow from scratch using 
 - Credentials service ready
 - Understanding of [WorkflowAgent architecture](../../Knowledge/WorkflowAgent/01-workflow-architecture.md)
 
-## Step 0 — Preflight Tool Check (Required)
+## Step 0 — Preflight: MCP Connection & API Key Setup (Required)
 
-Before proceeding, confirm that the WorkflowAgent's MCP server tools are available:
+Before proceeding, confirm that the WorkflowAgent's MCP server tools are available AND set up the API key connection:
 
-1. Look for tools whose names start with `BizFirst.Ai.Mcp.Tools.Workflow` or call the server's list/health tool.
+1. **Check MCP tools:** Look for tools whose names start with `BizFirst.Ai.Mcp.Tools.Workflow` or call the server's list/health tool.
 2. **If tools ARE available:** Continue with Step 1 below.
-3. **If tools are NOT available:** STOP.
-   - Do not publish an artifact, HTML page, or standalone file.
-   - Tell the user in plain words: "The BizFirst Flow Studio MCP tools are not available in this session, so I cannot build this in Flow Studio."
-   - Ask: "(a) connect the MCP server and retry, or (b) explicitly approve a named fallback"
-4. Only proceed with a fallback if the user explicitly approves. Label the result as a draft, not built in Flow Studio.
-5. Report which tools you checked and what you found. Never assume tools exist.
+3. **If tools are NOT available:** Offer the user this choice:
+
+   **How do you want to set up the API key for Flow Studio connection?**
+   
+   A) **I have an existing API key** - Provide it, I'll use it to connect
+   B) **Guide me to create the key** - I'll walk you step-by-step to create one in Passport Admin Dashboard
+   C) **Create it for me** - I'll use APIKeyAgent to automatically generate and configure the key (Recommended)
+
+4. Based on user choice:
+   - **Choice A:** User provides key → Verify connection → Continue with Step 1
+   - **Choice B:** Follow [Procedure/APIKeyAgent/01-create-api-key.md](../../APIKeyAgent/01-create-api-key.md) → Return with API key → Continue with Step 1
+   - **Choice C:** Launch APIKeyAgent to auto-create → Return with API key → Continue with Step 1
+
+5. **Never substitute:** Do not publish an artifact, HTML page, or standalone file. MCP connection is the ONLY path forward.
 
 ## Step-by-Step
 

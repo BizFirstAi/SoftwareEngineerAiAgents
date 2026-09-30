@@ -4,9 +4,19 @@ Welcome to Claudia, a comprehensive AI agent system for building BizFirst applic
 
 ## Key Rules
 
-### Hard rule: no silent substitution
+### Hard rule: MCP-only building with guided API key setup
 
-Every agent MUST run its Preflight check before starting. If the required MCP tools are missing, the agent stops and asks the user. It never produces a substitute deliverable (standalone page, artifact, file, or browser-UI build) without explicit user approval in chat. Approval for one fallback does not carry over to later tasks.
+Every agent MUST run its Preflight check before starting. If the required MCP tools/services are missing, the agent NEVER falls back to standalone pages, artifacts, or browser-UI builds. Instead:
+
+1. **The agent stops and offers MCP connection options** — Never produce a substitute deliverable without explicit user approval
+2. **If MCP tools unavailable:** Agent offers 3 API key setup choices:
+   - **A)** User provides existing API key
+   - **B)** Claude guides user to create key in Passport Admin Dashboard
+   - **C)** Claude auto-creates key using APIKeyAgent (Recommended)
+3. **Only after the user chooses and confirms** does the agent proceed with building in Studio
+4. **Approval carries no fallback carryover** — Approval for one connection attempt does not carry to later tasks
+
+Approval is per-task, per-session. MCP connection is the only legitimate path forward.
 
 ---
 
@@ -34,12 +44,15 @@ Claudia/
 
 Build web apps, forms, workflows, credentials, servers, and manage API keys and memory.
 
-- [Agents/Builders/AppDeveloper/AGENT.md](Claudia/Agents/Builders/AppDeveloper/AGENT.md) - Build web apps, sites, pages, widgets
-- [Agents/Builders/WorkflowDeveloper/AGENT.md](Claudia/Agents/Builders/WorkflowDeveloper/AGENT.md) - Create automation workflows
-- [Agents/Builders/FormDeveloper/AGENT.md](Claudia/Agents/Builders/FormDeveloper/AGENT.md) - Build forms and search+edit interfaces
+### Builders
+- [Agents/Builders/AppAgent/AGENT.md](Claudia/Agents/Builders/AppAgent/AGENT.md) - Build web apps, sites, pages, widgets
+- [Agents/Builders/WorkflowAgent/AGENT.md](Claudia/Agents/Builders/WorkflowAgent/AGENT.md) - Create automation workflows
+- [Agents/Builders/FormAgent/AGENT.md](Claudia/Agents/Builders/FormAgent/AGENT.md) - Build forms and search+edit interfaces
 - [Agents/Builders/APIKeyAgent/AGENT.md](Claudia/Agents/Builders/APIKeyAgent/AGENT.md) - Generate and manage API keys
-- [Agents/Builders/CredentialDeveloper/AGENT.md](Claudia/Agents/Builders/CredentialDeveloper/) - Manage credentials securely
-- [Agents/Builders/ServerDeveloper/AGENT.md](Claudia/Agents/Builders/ServerDeveloper/) - Provision and manage servers
+- [Agents/Builders/CredentialAgent/README.md](Claudia/Agents/Builders/CredentialAgent/) - Manage credentials securely
+- [Agents/Builders/ServerAgent/README.md](Claudia/Agents/Builders/ServerAgent/) - Provision and manage servers
+
+### Testers
 - [Agents/Testers/AppTester/AGENT.md](Claudia/Agents/Testers/AppTester/AGENT.md) - Test app studio features
 - [Agents/Testers/FormTester/AGENT.md](Claudia/Agents/Testers/FormTester/AGENT.md) - Test form controls
 - [Agents/Testers/WorkflowTester/AGENT.md](Claudia/Agents/Testers/WorkflowTester/AGENT.md) - Test workflow nodes
@@ -59,9 +72,9 @@ Complete reference material for all topics.
 - [Knowledge/APIKeys/passport-dashboard-walkthrough.md](Claudia/Knowledge/APIKeys/passport-dashboard-walkthrough.md) - Step-by-step visual guide
 
 ### App Studio
-- [Knowledge/App/00-overview.md](Claudia/Knowledge/App/00-overview.md) - App Studio overview
-- [Knowledge/App/app-model.md](Claudia/Knowledge/App/app-model.md) - App data model and hierarchy
-- [Knowledge/App/widgets/](Claudia/Knowledge/App/widgets/) - All 17+ widget types documentation
+- [Knowledge/AppAgent/00-overview.md](Claudia/Knowledge/AppAgent/00-overview.md) - App Studio overview
+- [Knowledge/AppAgent/01-app-model.md](Claudia/Knowledge/AppAgent/01-app-model.md) - App data model and hierarchy
+- [Knowledge/AppAgent/02-widget-types.md](Claudia/Knowledge/AppAgent/02-widget-types.md) - All 17+ widget types documentation
 
 ### Credentials Management
 - [Knowledge/Credentials/](Claudia/Knowledge/Credentials/) - Credential types, security, API reference
@@ -74,7 +87,10 @@ Complete reference material for all topics.
 - [Knowledge/Servers/](Claudia/Knowledge/Servers/) - Server types, architecture, deployment, API
 
 ### Workflow Studio
-- [Knowledge/Workflow/](Claudia/Knowledge/Workflow/) - Workflow architecture, nodes, execution, testing
+- [Knowledge/WorkflowAgent/](Claudia/Knowledge/WorkflowAgent/) - Workflow architecture, nodes, execution, testing
+
+### Form Studio
+- [Knowledge/Form/](Claudia/Knowledge/Form/) - Form controls, validation, integration patterns
 
 ---
 
@@ -90,6 +106,12 @@ Complete walkthroughs for building and managing.
   - 04-add-widgets.md
   - 05-style-and-theme.md
   - 06-validate-app.md
+
+### Form Development
+- [Procedure/Form/](Claudia/Procedure/Form/) - Create forms, configure controls, validate, test
+  - create-entity-search-form@agent.md
+  - refreshFromCodeToDoc@agent.md
+  - testControlViaMcp@agent.md
 
 ### Workflow Development
 - [Procedure/WorkflowAgent/](Claudia/Procedure/WorkflowAgent/) - Create workflows, add nodes, integrate, test, deploy
