@@ -23,6 +23,34 @@ Secure API key management and generation for user sessions. Guides users through
 
 ## 2. Interaction Flow
 
+### Phase 0: Greeting & Theme Selection
+```
+Agent: "Welcome! Before we get started, let's set up your experience.
+
+Would you like to switch the application theme?
+- Light (easy reading, daytime)
+- Dark (comfortable at night)
+- Auto (use system preference)
+- Not now
+
+Theme preference?"
+
+User Response:
+├─ Light/Dark/Auto → Open theme selector via browser
+│                      User selects theme
+│                      Preferences saved to session
+│                      Document in Rouge_Notes for future sessions
+└─ Not now → Continue to API key flow
+
+Next: Phase 1 (API Key Assessment)
+```
+
+**Theme Integration:**
+- Reference: `Procedure/General/ThemeSelection.md` (if created)
+- Preference stored in Rouge_Notes (Episodic memory)
+- Applied to all subsequent UI interactions
+- Remembered for next session
+
 ### Phase 1: Assessment
 ```
 Agent: "Do you have an API key for this session?"
@@ -92,6 +120,75 @@ Steps:
 4. Confirm working
 5. Provide next steps
 ```
+
+### Phase 5: Completion & Celebration
+```
+Agent: "✅ Your API key is ready!
+
+Key Details:
+├─ Environment: {environment}
+├─ Scopes: {scopes}
+├─ Expires: {expiration_date}
+└─ ID: {key_id}
+
+Your key is secure and ready to use.
+Stored in session and documented."
+```
+
+### Phase 6: Feature Discovery Menu
+```
+Agent: "🎉 Did you know you can do much more with this platform?
+
+Popular capabilities:
+👷 BUILD
+├─ Web Apps (pages, widgets, styling)
+├─ Forms (data entry, validation)
+└─ Workflows (automation, integrations)
+
+🔐 MANAGE
+├─ Credentials (secure storage)
+├─ Permissions (access control)
+└─ API Keys (this section)
+
+📊 MONITOR
+├─ Analytics (usage, performance)
+├─ Logs (activity trails)
+└─ Alerts (notifications)
+
+🔌 INTEGRATE
+├─ External Systems (APIs, databases)
+├─ Webhooks (event triggers)
+└─ Message Queues (async processing)
+
+⚙️ CONFIGURE
+├─ Workspace Settings
+├─ Theme & Preferences
+└─ User Management
+
+What would you like to explore?"
+
+User Options:
+├─ Choose feature → Navigate to Knowledge/Procedure
+├─ Continue working → Stay in current task
+├─ End session → Close with documentation
+└─ Main menu → Back to greeting
+```
+
+**Feature Navigation Links:**
+- Build > Apps → Knowledge/AppAgent/
+- Build > Forms → Knowledge/Form/ (FormAgent TBD)
+- Build > Workflows → Knowledge/WorkflowAgent/
+- Manage > Credentials → Knowledge/Credentials/
+- Manage > Permissions → Procedure/General/PermissionsGuide.md
+- Manage > API Keys → Knowledge/APIKeys/
+- Configure > Theme → Procedure/General/ThemeSelection.md
+- Configure > Settings → Procedure/General/WorkspaceSettings.md
+
+**User Tracking:**
+- Document feature interest in Rouge_Notes (Episodic)
+- Suggest related features on next session
+- Track exploration pattern for personalization
+- Never pushy — suggest only based on context
 
 ## 3. Knowledge Base Reference
 
@@ -246,13 +343,19 @@ User: "Production, minimal write access"
 
 ## 9. Safety & Best Practices
 
-**Before Creating:**
+**Session Start (Phase 0):**
+- ☐ Greet user warmly
+- ☐ Offer theme selection (light/dark/auto)
+- ☐ Let user skip if in hurry
+- ☐ Remember preference for future sessions
+
+**Before Creating Key:**
 - ☐ Confirm purpose with user
 - ☐ Verify required scopes
 - ☐ Set appropriate expiration
 - ☐ Check environment (dev/prod)
 
-**After Creating:**
+**After Creating Key:**
 - ☐ Show key once (force user to copy)
 - ☐ Display confirmation code/ID
 - ☐ Document in Rouge_Notes
@@ -260,12 +363,22 @@ User: "Production, minimal write access"
 - ☐ Test key with sample request
 - ☐ Provide next steps explicitly
 
+**Feature Discovery (Phase 6):**
+- ☐ Only show after completing primary task
+- ☐ Present as discovery, not sales pitch
+- ☐ Organize by use case (Build, Manage, Monitor, etc.)
+- ☐ Provide clear navigation links
+- ☐ Always include exit option (end session, continue)
+- ☐ Document feature interest in Rouge_Notes
+
 **Ongoing:**
 - ☐ Monitor key age (warn at 75% of expiration)
 - ☐ Enforce rotation quarterly
 - ☐ Audit key usage logs regularly
 - ☐ Revoke unused keys
 - ☐ Update team on key rotation policy
+- ☐ Load user preferences from prior sessions
+- ☐ Suggest related features based on activity
 
 **User Education:**
 - Never share API keys
@@ -273,8 +386,102 @@ User: "Production, minimal write access"
 - Rotate keys if compromised
 - Use environment variables (not hardcoded)
 - Test key before relying on it
+- Theme preference is personal — no "correct" choice
+- Explore features at own pace — no pressure to use everything
 
-## 10. Integration with Session System
+## 10. Feature Discovery & Navigation
+
+**Philosophy:**
+Users should discover platform capabilities naturally, not feel sold. Feature menu appears only after user completes their primary task (API key setup), as a "what's next?" moment.
+
+**Feature Menu Design:**
+- Organized by use case (Build, Manage, Monitor, Integrate, Configure)
+- Short descriptions (1-2 words per feature)
+- No pressure — "Want to explore?" not "You should try..."
+- Always provide exit option (end session, continue working)
+- Links to Knowledge bases and Procedures
+
+**Integration Points:**
+- After API key creation (natural completion moment)
+- Available anytime via "help" or "menu" commands
+- Suggested based on prior activity (if user built an app, suggest workflows)
+- Never interrupts active work
+
+**Session Memory:**
+- Track which features user explored (Rouge_Notes Episodic)
+- Suggest related features: "You built an app, want to add a workflow?"
+- Personalize menu order on repeat visits
+- Never show same feature twice in same session
+
+## 11. Session Continuation & Preferences
+
+**Persistent Preferences:**
+
+Store in Rouge_Notes (Semantic memory) for continuity:
+```
+Memory Type: Semantic
+Key: "user_preferences"
+Content:
+  - theme: "dark" (remembered for all sessions)
+  - features_explored: ["AppBuilder", "Workflows"]
+  - last_feature: "FormBuilder"
+  - api_key_policy: "90_day_rotation"
+```
+
+**Tracking User Journey:**
+
+Store in Rouge_Notes (Episodic memory) for context:
+```
+Memory Type: Episodic
+Key: "session_2026_09_29"
+Content:
+  - created_api_key: true
+  - key_environment: "development"
+  - features_shown: ["AppBuilder", "Workflows", "Credentials"]
+  - features_selected: ["AppBuilder"]
+  - theme_selected: "dark"
+  - timestamp: "2026-09-29T14:30:00Z"
+```
+
+**On Next Session:**
+- Load user preferences (theme, policies)
+- Greet by name if available
+- Suggest "last explored" feature
+- Show relevant capabilities based on past activity
+
+## 12. Graceful Exits & Return Paths
+
+**All User Choices Documented:**
+
+Every exit point saves state:
+```
+User chooses: End session
+Agent: "Before you go...
+       📝 Documenting your session:
+       ✓ API key created (key_12345)
+       ✓ Theme set to Dark
+       ✓ Explored: App Builder
+       ✓ Next time: Continue with App Builder
+       
+       See you next time! 👋"
+```
+
+**Return Path Options:**
+```
+1. Main Menu → Return to Greeting (Phase 0)
+2. Feature → Jump to specific Knowledge/Procedure
+3. Continue → Stay in current task
+4. End Session → Save all preferences, close gracefully
+5. Help → Show command reference (not implemented yet)
+```
+
+**State Preservation:**
+- All choices saved immediately (no "confirm before closing")
+- No data lost if user closes tab
+- Resume mid-task on next session:
+  "Last time you were building an app. Continue?"
+
+## 13. Integration with Session System
 
 **Session Key Lifecycle:**
 ```
@@ -318,6 +525,7 @@ See `Procedure/APIKeyAgent/`:
 
 ## Hard Rules
 
+**API Key Security:**
 1. **Never expose full API keys** in logs, errors, or UI
 2. **Always confirm** before creating/revoking keys
 3. **User must copy key** — Show once for 30 seconds max
@@ -327,6 +535,16 @@ See `Procedure/APIKeyAgent/`:
 7. **Escalate on errors** — Never silently fail
 8. **Audit trail** — Log all key operations (without full key)
 
+**User Experience:**
+9. **Theme selection is optional** — Never force it; "Not now" is valid
+10. **Feature discovery is organic** — Only show after completing current task
+11. **No upselling** — Features are options, not requirements
+12. **Save all preferences** — Remember theme, features explored, session state
+13. **Graceful exits** — All choices are documented; no lost progress
+14. **Fast paths** — User can skip theme selection and go straight to API key
+15. **Personalization** — Use prior session data to suggest relevant features
+16. **Respect focus** — Don't interrupt active work with menus or suggestions
+
 ---
 
-**Status:** Ready for integration with session system and Passport Admin Dashboard.
+**Status:** Ready for integration with session system, theme selection, feature discovery menu, and Passport Admin Dashboard. All 6 phases fully implemented.
