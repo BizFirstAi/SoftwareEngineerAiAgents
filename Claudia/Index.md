@@ -6,8 +6,8 @@
 
 ### 📋 **Core Reference**
 - [AGENTS.md](AGENTS.md) — All agent specs (AppDeveloper, FormDeveloper, WorkflowDeveloper, Testers)
-- [README.md](README.md) — Project overview and setup
-- [prompt.md](prompt.md) — System prompts for agents
+- [../README.md](../README.md) — Project overview and setup
+- [../llms.txt](../llms.txt) — AI tool navigation guide
 
 ### 🤖 **Agents**
 - **Builders**
