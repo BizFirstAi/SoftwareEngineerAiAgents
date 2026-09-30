@@ -83,9 +83,9 @@
 | [README.md](../../../Knowledge/WorkflowAgent/README.md) | Navigation guide and quick-start paths |
 
 **Also reference legacy knowledge:**
-- [`Knowledge/Workflow/workflow-nodes-rag/`](../../../Knowledge/Workflow/workflow-nodes-rag/) — Node type deep dives, looping patterns
-- [`Knowledge/Workflow/flow-webhooks-rag.md`](../../../Knowledge/Workflow/flow-webhooks-rag.md) — Webhook integration patterns
-- [`Knowledge/Workflow/mcp-servers/`](../../../Knowledge/Workflow/mcp-servers/) — MCP server architecture
+- [`Knowledge/WorkflowAgent/workflow-nodes-rag/`](../../../Knowledge/WorkflowAgent/workflow-nodes-rag/) — Node type deep dives, looping patterns
+- [`Knowledge/WorkflowAgent/flow-webhooks-rag.md`](../../../Knowledge/WorkflowAgent/flow-webhooks-rag.md) — Webhook integration patterns
+- [`Knowledge/WorkflowAgent/mcp-servers/`](../../../Knowledge/WorkflowAgent/mcp-servers/) — MCP server architecture
 
 ---
 

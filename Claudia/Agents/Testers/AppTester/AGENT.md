@@ -11,7 +11,7 @@ Player.
 
 This file is an index only. It uses the same knowledge as the
 [App Developer](../../Builders/AppDeveloper/AGENT.md). Start with
-[`Knowledge/App/00-overview.md`](../../../Knowledge/App/00-overview.md).
+[`Knowledge/AppAgent/00-overview.md`](../../../Knowledge/AppAgent/00-overview.md).
 
 ## Test material in this folder
 

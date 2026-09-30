@@ -130,7 +130,7 @@ Complete reference for building, storing, and retrieving agent memories using Ro
 
 - **Procedure Guide** — [Rouge_Notes.md](../../Procedure/General/Rouge_Notes.md)
 - **Backend Source** — BizFirstPayrollV3/src/mvc-server/Ai/Rouge/
-- **Agent Specs** — [AppDeveloper](../../Agents/Builders/AppDeveloper/AGENT.md), [FormDeveloper](../../Agents/Builders/FormDeveloper/AGENT.md), [WorkflowDeveloper](../../Agents/Builders/WorkflowDeveloper/AGENT.md)
+- **Agent Specs** — [AppDeveloper](../../Agents/Builders/AppAgent/AGENT.md), [FormDeveloper](../../Agents/Builders/FormAgent/AGENT.md), [WorkflowDeveloper](../../Agents/Builders/WorkflowAgent/AGENT.md)
 
 ---
 

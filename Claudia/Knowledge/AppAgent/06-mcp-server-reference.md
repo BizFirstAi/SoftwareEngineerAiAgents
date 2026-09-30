@@ -25,7 +25,7 @@ Key generated in admin app, scoped to tenant + user.
 
 Signed-in user with valid tenant scope from auth context.
 
-**Some tools behave differently per auth method** (e.g., field visibility, defaults) — see [site-building-lessons.md](../../Knowledge/App/site-building-lessons.md) for gotchas.
+**Some tools behave differently per auth method** (e.g., field visibility, defaults) — see [site-building-lessons.md](../../Knowledge/AppAgent/site-building-lessons.md) for gotchas.
 
 ## Endpoint Reference
 

@@ -97,4 +97,4 @@ Append a dated entry to this folder's `..\..\..\Knowledge\Workflow\node-forms\De
       `..\..\..\Knowledge\Workflow\node-forms\node-type-status-table.md` updated.
 - [ ] Final report lists files, IDs used, DB written to, what was NOT verified.
 
-> POLICY: profile-driven and node-type forms must have Atlas_Forms.DisplayOrder strictly between 100 and 500 (101..499); common forms stay at 1002 and above. See ../../../Knowledge/Workflow/node-forms/display-order-and-menu.md (section POLICY) for the detector SQL and the normaliser script. Check it in every fix and audit.
+> POLICY: profile-driven and node-type forms must have Atlas_Forms.DisplayOrder strictly between 100 and 500 (101..499); common forms stay at 1002 and above. See ../../../Knowledge/WorkflowAgent/node-forms/display-order-and-menu.md (section POLICY) for the detector SQL and the normaliser script. Check it in every fix and audit.
