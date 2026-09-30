@@ -1,0 +1,96 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "formID": "form-documents-view-edit",
+    "title": "Document",
+    "code": "documents_view_edit_v1",
+    "numberOfColumns": 1
+  },
+  "controls": [
+    {
+      "id": "documentID",
+      "type": "text",
+      "label": "Document ID",
+      "order": 0,
+      "required": false,
+      "readonly": true,
+      "disabled": false,
+      "hidden": false
+    },
+    {
+      "id": "documentName",
+      "type": "text",
+      "label": "Name",
+      "order": 1,
+      "required": true,
+      "readonly": false,
+      "disabled": false,
+      "hidden": false
+    },
+    {
+      "id": "documentDescription",
+      "type": "textarea",
+      "label": "Description",
+      "width": "full",
+      "order": 2,
+      "required": false,
+      "readonly": false,
+      "disabled": false,
+      "hidden": false
+    },
+    {
+      "id": "documentTypeID",
+      "type": "select",
+      "label": "Document Type",
+      "order": 3,
+      "required": false,
+      "readonly": false,
+      "disabled": false,
+      "hidden": false,
+      "config": {
+        "options": [],
+        "optionsSource": {
+          "endpoint": "/api/v1/documents/types/active",
+          "method": "POST",
+          "requestBody": {},
+          "valueField": "documentTypeID",
+          "labelField": "documentTypeName",
+          "auth": "passport"
+        }
+      }
+    },
+    {
+      "id": "documentCategoryID",
+      "type": "select",
+      "label": "Document Category",
+      "order": 4,
+      "required": false,
+      "readonly": false,
+      "disabled": false,
+      "hidden": false,
+      "config": {
+        "options": [],
+        "optionsSource": {
+          "endpoint": "/api/v1/documents/categories/active",
+          "method": "POST",
+          "requestBody": {},
+          "valueField": "documentCategoryID",
+          "labelField": "documentCategoryName",
+          "auth": "passport"
+        }
+      }
+    },
+    {
+      "id": "classificationName",
+      "type": "text",
+      "label": "Classification",
+      "order": 5,
+      "required": false,
+      "readonly": false,
+      "disabled": false,
+      "hidden": false
+    }
+  ],
+  "apiActions": [],
+  "styles": {}
+}

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BizFirst MCP Servers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f5f7f7;
+    --paper-raised: #ffffff;
+    --paper-sunken: #eef2f1;
+    --ink: #16212a;
+    --ink-soft: #47606c;
+    --ink-faint: #7c93a0;
+    --line: #d7e1e0;
+    --line-strong: #b9c9c8;
+
+    --accent: #0f7a82;
+    --accent-ink: #0a5860;
+    --accent-soft: #e2f1f0;
+    --accent-line: #b7dbd9;
+
+    --violet: #5b4b9e;
+    --violet-soft: #ece9f7;
+    --violet-line: #cec5e8;
+
+    --amber: #9a6608;
+    --amber-soft: #faf0dc;
+    --amber-line: #e9d1a0;
+
+    --danger: #a2372a;
+    --danger-soft: #fbe9e6;
+    --danger-line: #eebfb6;
+
+    --good: #1f7a4d;
+    --good-soft: #e3f3ea;
+    --good-line: #b9ddc7;
+
+    --font-display: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --font-label: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
+    --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0f1519; --paper-raised: #161f24; --paper-sunken: #0c1114;
+      --ink: #e6edf0; --ink-soft: #a6bac3; --ink-faint: #71858e;
+      --line: #263238; --line-strong: #34444c;
+      --accent: #56c2c7; --accent-ink: #8fd9dc; --accent-soft: #102c2d; --accent-line: #1f4547;
+      --violet: #a99adf; --violet-soft: #201c33; --violet-line: #3a3357;
+      --amber: #e0ac52; --amber-soft: #2c220f; --amber-line: #4a3a1c;
+      --danger: #e58579; --danger-soft: #301917; --danger-line: #4d2924;
+      --good: #7fd6a5; --good-soft: #12291d; --good-line: #234c34;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0f1519; --paper-raised: #161f24; --paper-sunken: #0c1114;
+    --ink: #e6edf0; --ink-soft: #a6bac3; --ink-faint: #71858e;
+    --line: #263238; --line-strong: #34444c;
+    --accent: #56c2c7; --accent-ink: #8fd9dc; --accent-soft: #102c2d; --accent-line: #1f4547;
+    --violet: #a99adf; --violet-soft: #201c33; --violet-line: #3a3357;
+    --amber: #e0ac52; --amber-soft: #2c220f; --amber-line: #4a3a1c;
+    --danger: #e58579; --danger-soft: #301917; --danger-line: #4d2924;
+    --good: #7fd6a5; --good-soft: #12291d; --good-line: #234c34;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--font-body); font-size: 16.5px; line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; color: var(--ink); text-wrap: balance; margin: 0; }
+  p { margin: 0 0 1em; color: var(--ink-soft); }
+  a { color: var(--accent-ink); text-decoration-color: var(--accent-line); text-underline-offset: 3px; }
+  a:hover { text-decoration-thickness: 2px; }
+  code { font-family: var(--font-mono); font-size: 0.88em; background: var(--paper-sunken); border: 1px solid var(--line); border-radius: 4px; padding: 0.1em 0.4em; color: var(--accent-ink); }
+
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---- Hero ---- */
+  .hero {
+    background:
+      radial-gradient(1100px 420px at 15% -10%, var(--accent-soft), transparent 60%),
+      radial-gradient(900px 380px at 100% 0%, var(--violet-soft), transparent 55%),
+      var(--paper-raised);
+    border-bottom: 1px solid var(--line);
+    padding-block: 64px 48px;
+  }
+  .eyebrow {
+    font-family: var(--font-label); font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase;
+    font-size: 0.78rem; color: var(--accent-ink); display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+  }
+  .eyebrow::before { content: ""; width: 26px; height: 2px; background: var(--accent); display: inline-block; }
+  .hero h1 { font-size: clamp(2rem, 4.2vw, 2.9rem); letter-spacing: -0.01em; max-width: 18ch; }
+  .hero .lede { font-size: 1.14rem; color: var(--ink-soft); max-width: 62ch; margin-top: 18px; }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 10px 28px; margin-top: 28px; font-family: var(--font-label); font-size: 0.86rem; color: var(--ink-faint); }
+  .hero-meta strong { color: var(--ink-soft); font-weight: 600; }
+
+  section { padding-block: 52px; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: none; }
+  .section-head { margin-bottom: 30px; max-width: 74ch; }
+  .kicker { font-family: var(--font-label); font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; font-size: 0.76rem; color: var(--ink-faint); margin-bottom: 8px; }
+  h2 { font-size: 1.6rem; }
+  .section-head p { margin-top: 10px; }
+
+  /* ---- Status cards ---- */
+  .status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  @media (max-width: 800px) { .status-grid { grid-template-columns: 1fr; } }
+  .status-card {
+    background: var(--paper-raised); border: 1px solid var(--line); border-radius: 14px;
+    padding: 22px 22px 24px; position: relative; overflow: hidden;
+  }
+  .status-card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--bar, var(--line-strong)); }
+  .status-card.good { --bar: var(--good); }
+  .status-card.amber { --bar: var(--amber); }
+  .status-card.danger { --bar: var(--danger); }
+  .status-card .name { font-family: var(--font-label); font-size: 0.82rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 6px; }
+  .status-card h3 { font-size: 1.32rem; margin-bottom: 10px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-label); font-weight: 600;
+    font-size: 0.78rem; letter-spacing: 0.02em; padding: 4px 10px 4px 8px; border-radius: 999px; margin-bottom: 14px;
+  }
+  .badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .badge.good { background: var(--good-soft); color: var(--good); border: 1px solid var(--good-line); }
+  .badge.amber { background: var(--amber-soft); color: var(--amber); border: 1px solid var(--amber-line); }
+  .badge.danger { background: var(--danger-soft); color: var(--danger); border: 1px solid var(--danger-line); }
+  .status-card .stat { font-family: var(--font-mono); font-size: 0.92rem; color: var(--ink); }
+  .status-card ul { margin: 12px 0 0; padding-left: 1.1em; color: var(--ink-soft); font-size: 0.94rem; }
+  .status-card li { margin-bottom: 5px; }
+
+  /* ---- Architecture diagram ---- */
+  .diagram {
+    background: var(--paper-sunken); border: 1px solid var(--line); border-radius: 16px;
+    padding: 32px 24px; display: flex; flex-direction: column; align-items: center; gap: 0;
+  }
+  .diagram .row { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; width: 100%; }
+  .node {
+    background: var(--paper-raised); border: 1.5px solid var(--line-strong); border-radius: 10px;
+    padding: 12px 18px; text-align: center; font-family: var(--font-label); font-weight: 600; font-size: 0.9rem;
+    min-width: 150px; color: var(--ink);
+  }
+  .node.accent { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-soft); }
+  .node .sub { display: block; font-family: var(--font-mono); font-weight: 400; font-size: 0.72rem; color: var(--ink-faint); margin-top: 4px; }
+  .connector { width: 2px; height: 26px; background: var(--line-strong); }
+  .arrowdown { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid var(--line-strong); margin-top: -1px; }
+
+  /* ---- Tier table ---- */
+  table { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
+  thead th {
+    text-align: left; font-family: var(--font-label); font-weight: 600; font-size: 0.76rem; letter-spacing: 0.05em;
+    text-transform: uppercase; color: var(--ink-faint); padding: 0 14px 10px; border-bottom: 1.5px solid var(--line-strong);
+  }
+  tbody td { padding: 14px 14px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink-soft); }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody td:first-child, tbody th { color: var(--ink); font-weight: 600; }
+  .tier-table-wrap { background: var(--paper-raised); border: 1px solid var(--line); border-radius: 14px; padding: 8px 10px; overflow-x: auto; }
+  .pill { display: inline-block; font-family: var(--font-mono); font-size: 0.8rem; background: var(--paper-sunken); border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; color: var(--accent-ink); }
+
+  /* ---- Module deep-dive ---- */
+  .module { background: var(--paper-raised); border: 1px solid var(--line); border-radius: 16px; padding: 28px 26px; margin-bottom: 22px; }
+  .module-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 6px; }
+  .module-head h3 { font-size: 1.3rem; }
+  .module .desc { max-width: 68ch; }
+  .tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; margin: 16px 0 4px; }
+  .tool-chip {
+    font-family: var(--font-mono); font-size: 0.82rem; background: var(--paper-sunken); border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 10px; color: var(--ink);
+  }
+  .tool-chip.missing { color: var(--ink-faint); border-style: dashed; }
+  .note-box { border-radius: 10px; padding: 14px 16px; font-size: 0.92rem; margin-top: 16px; }
+  .note-box.amber { background: var(--amber-soft); border: 1px solid var(--amber-line); color: var(--ink); }
+  .note-box.danger { background: var(--danger-soft); border: 1px solid var(--danger-line); color: var(--ink); }
+  .note-box.good { background: var(--good-soft); border: 1px solid var(--good-line); color: var(--ink); }
+  .note-box strong { color: var(--ink); }
+
+  /* ---- Roadmap timeline ---- */
+  .timeline { position: relative; padding-left: 30px; }
+  .timeline::before { content: ""; position: absolute; left: 8px; top: 6px; bottom: 6px; width: 2px; background: var(--line-strong); }
+  .phase { position: relative; padding-bottom: 30px; }
+  .phase:last-child { padding-bottom: 0; }
+  .phase::before {
+    content: ""; position: absolute; left: -30px; top: 3px; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--paper-raised); border: 3px solid var(--phase-color, var(--accent)); z-index: 1;
+  }
+  .phase.p1 { --phase-color: var(--good); }
+  .phase.p2 { --phase-color: var(--accent); }
+  .phase.p3 { --phase-color: var(--violet); }
+  .phase.p4 { --phase-color: var(--amber); }
+  .phase-label { font-family: var(--font-label); font-weight: 700; font-size: 0.76rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--phase-color, var(--accent)); margin-bottom: 4px; }
+  .phase h4 { font-size: 1.12rem; margin-bottom: 8px; }
+  .phase ul { margin: 8px 0 0; padding-left: 1.2em; color: var(--ink-soft); }
+  .phase li { margin-bottom: 6px; }
+
+  footer { padding-block: 40px 64px; }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-family: var(--font-label); font-size: 0.84rem; color: var(--ink-faint); }
+
+  @media (max-width: 600px) {
+    .hero { padding-block: 44px 36px; }
+    section { padding-block: 38px; }
+  }
+</style>
+</head>
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">BizFirst AI Platform &middot; MCP Servers</div>
+    <h1>Turning Claude into a builder of Forms, Workflows, and Apps</h1>
+    <p class="lede">
+      Three domains of BizFirst — Atlas Forms, Flow Studio workflows, and App Studio apps — are being
+      exposed as typed, discoverable Model Context Protocol tools, sitting behind one authorization
+      guard with three trust tiers. This page is the honest, current state: what's live, what's built
+      but unproven, and what's still a plan.
+    </p>
+    <div class="hero-meta">
+      <span><strong>Transport</strong> &nbsp;Streamable HTTP + SSE on <code>/mcp</code></span>
+      <span><strong>Host</strong> &nbsp;BizFirst.Ai.Consolidated.WebApi</span>
+      <span><strong>Auth</strong> &nbsp;Human JWT &middot; Agent header &middot; Scoped API key</span>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">At a glance</div>
+      <h2>Three domains, three different stages of readiness</h2>
+      <p>Nothing below is aspirational rounding — each status reflects what has actually been run against a live server, not what merely compiles.</p>
+    </div>
+    <div class="status-grid">
+      <div class="status-card good">
+        <div class="name">Forms &middot; Atlas Forms</div>
+        <span class="badge good">Certified live</span>
+        <h3>8 tools, real round trip proven</h3>
+        <p class="stat">tools/list: 8/8 &middot; read: PASS &middot; write: PASS</p>
+        <ul>
+          <li>Create, read, and mutate forms &amp; controls end to end</li>
+          <li>Verified against real data with correct tenant attribution</li>
+          <li>One known cross-cutting bug: audit fields not stamped (not MCP-specific)</li>
+        </ul>
+      </div>
+      <div class="status-card amber">
+        <div class="name">Flows &middot; Flow Studio</div>
+        <span class="badge amber">Built, unverified</span>
+        <h3>12 tools coded, never live-tested</h3>
+        <p class="stat">tools/list: not run &middot; DB seed: not applied</p>
+        <ul>
+          <li>Full node/connection/credential CRUD surface written</li>
+          <li>Server registration rows exist only on paper, not in a live DB</li>
+          <li>Flow Studio UI cross-check (connector-pairing invariant) never done</li>
+        </ul>
+      </div>
+      <div class="status-card danger">
+        <div class="name">Apps &middot; App Studio</div>
+        <span class="badge danger">Design only</span>
+        <h3>0 tools built &middot; design needs a rewrite</h3>
+        <p class="stat">code: none &middot; hosting model: outdated in the spec</p>
+        <ul>
+          <li>12 tools designed against real endpoints, never implemented</li>
+          <li>Original design assumed a standalone server — superseded by the proven merged-gateway pattern</li>
+          <li>3 open design questions now have recommended answers (below)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Architecture</div>
+      <h2>One gateway, one guard, many domain modules</h2>
+      <p>
+        There is exactly one MCP endpoint for the whole platform. Every domain adds a module, not a
+        new server — this is what keeps the surface a curated, ~5&ndash;15-tool-per-domain catalog
+        instead of an unmanageable wall of one-tool-per-endpoint entries.
+      </p>
+    </div>
+    <div class="diagram">
+      <div class="node accent">Claude<span class="sub">claude.ai Custom Connector / Claude Code</span></div>
+      <div class="connector"></div><div class="arrowdown"></div>
+      <div class="node accent">/mcp &amp; /mcp/sse<span class="sub">BizFirst.Ai.Consolidated.WebApi &middot; one AddMcpServer()</span></div>
+      <div class="connector"></div><div class="arrowdown"></div>
+      <div class="node">McpToolAuthorizationGuard<span class="sub">HumanOnly &middot; X-Api-Key &middot; X-Mcp-Agent-Id</span></div>
+      <div class="connector"></div><div class="arrowdown"></div>
+      <div class="row">
+        <div class="node">Tools.AtlasForms<span class="sub">IFormsExtendedService</span></div>
+        <div class="node">Tools.Workflow<span class="sub">IProcessElementExtendedService</span></div>
+        <div class="node">Tools.Credentials<span class="sub">ICredentialResolver</span></div>
+        <div class="node" style="border-style:dashed;color:var(--ink-faint);">Tools.AppStudio<span class="sub">planned &middot; IAppStudioExtendedService</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Security model</div>
+      <h2>Three trust tiers, one enforcement point</h2>
+      <p>
+        Every tool call, regardless of module, passes through the same guard before it ever reaches
+        domain logic. The tiers are additive in privilege, not interchangeable &mdash; the highest-risk
+        tools are permanently out of reach of the two external-facing tiers, by design.
+      </p>
+    </div>
+    <div class="tier-table-wrap">
+      <table>
+        <thead>
+          <tr><th>Tier</th><th>Carried as</th><th>Who</th><th>Reach</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>HumanOnly</td>
+            <td><span class="pill">Authorization: Bearer &lt;JWT&gt;</span></td>
+            <td>A real logged-in user with <code>TenantAdmin</code>/<code>Admin</code> role</td>
+            <td>Only tier that can call <code>create_credential</code>, <code>create_agent</code>, <code>create_mcp_server</code> &mdash; permanently unreachable by the two tiers below</td>
+          </tr>
+          <tr>
+            <td>Scoped API key</td>
+            <td><span class="pill">X-Api-Key: &lt;key&gt;</span></td>
+            <td>An external caller &mdash; e.g. a Claude Custom Connector</td>
+            <td>Any tool covered by the key's <code>mcp:{module}:{read|write}</code> scopes, strictly bound to that key's own tenant &mdash; no cross-tenant access, ever</td>
+          </tr>
+          <tr>
+            <td>Same-tenant agent</td>
+            <td><span class="pill">X-Mcp-Agent-Id: &lt;id&gt;</span></td>
+            <td>An in-product Octopus agent</td>
+            <td>Regular tools within its own tenant only</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note-box good">
+      <strong>Why this fits Claude specifically:</strong> Claude's remote-connector auth (the
+      <code>static_headers</code> mode) sends one fixed credential as a request header on every call
+      &mdash; and <code>X-Api-Key</code> is one of only two header names Claude pre-approves without any
+      extra review. The scoped-API-key tier above is not a new thing built for Claude; it is the exact
+      mechanism Claude already expects from any external MCP server.
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Module detail</div>
+      <h2>What each domain actually exposes</h2>
+    </div>
+
+    <div class="module">
+      <div class="module-head">
+        <h3>Forms &mdash; Atlas Forms</h3>
+        <span class="badge good">Certified live</span>
+      </div>
+      <p class="desc">Create and edit forms and their controls with the same granularity as the Atlas Forms designer, with optimistic concurrency on every mutation.</p>
+      <div class="tool-grid">
+        <div class="tool-chip">find_forms</div>
+        <div class="tool-chip">create_form</div>
+        <div class="tool-chip">get_form_schema</div>
+        <div class="tool-chip">add_form_control</div>
+        <div class="tool-chip">update_form_control</div>
+        <div class="tool-chip">remove_form_control</div>
+        <div class="tool-chip">reorder_form_controls</div>
+        <div class="tool-chip">set_form_enabled</div>
+      </div>
+      <div class="note-box good">
+        Live-certified 2026-08-22/23: <code>create_form</code> &rarr; <code>get_form_schema</code> round trip confirmed
+        both in the tool response and directly in the database, with the correct tenant on the row.
+      </div>
+    </div>
+
+    <div class="module">
+      <div class="module-head">
+        <h3>Flows &mdash; Flow Studio Workflows</h3>
+        <span class="badge amber">Built, unverified</span>
+      </div>
+      <p class="desc">Full workflow authoring surface: create a project, discover node types and their real schemas, wire nodes and connections, attach credentials.</p>
+      <div class="tool-grid">
+        <div class="tool-chip">create_workflow_project</div>
+        <div class="tool-chip">get_workflow</div>
+        <div class="tool-chip">save_workflow</div>
+        <div class="tool-chip">list_node_types</div>
+        <div class="tool-chip">get_node_type_schema</div>
+        <div class="tool-chip">add_workflow_node</div>
+        <div class="tool-chip">update_workflow_node</div>
+        <div class="tool-chip">delete_workflow_node</div>
+        <div class="tool-chip">update_node_configuration</div>
+        <div class="tool-chip">add_connection</div>
+        <div class="tool-chip">delete_connection</div>
+        <div class="tool-chip">attach_node_credential</div>
+      </div>
+      <div class="note-box amber">
+        <strong>Not yet proven end to end.</strong> The seeded server registration row exists only as a script,
+        not applied to a live database; <code>tools/list</code> has never been called against a running server;
+        and the one cross-check that actually matters &mdash; opening an MCP-created node back up in the real
+        Flow Studio UI &mdash; has never been done. Treat this module as &ldquo;compiles,&rdquo; not &ldquo;works.&rdquo;
+      </div>
+    </div>
+
+    <div class="module">
+      <div class="module-head">
+        <h3>Apps &mdash; App Studio</h3>
+        <span class="badge danger">Design only</span>
+      </div>
+      <p class="desc">Designed, not built: browse and create apps, pages, and widget placements from a template or from scratch.</p>
+      <div class="tool-grid">
+        <div class="tool-chip missing">list_apps</div>
+        <div class="tool-chip missing">get_app</div>
+        <div class="tool-chip missing">create_project_with_app</div>
+        <div class="tool-chip missing">create_app_from_template</div>
+        <div class="tool-chip missing">create_template_from_app</div>
+        <div class="tool-chip missing">list_pages</div>
+        <div class="tool-chip missing">create_page</div>
+        <div class="tool-chip missing">list_widgets_in_app</div>
+        <div class="tool-chip missing">create_widget</div>
+        <div class="tool-chip missing">update_widget_config</div>
+        <div class="tool-chip missing">delete_app</div>
+        <div class="tool-chip missing">list_widget_types</div>
+      </div>
+      <div class="note-box danger">
+        <strong>The existing design document is stale, not just unbuilt.</strong> It assumes a standalone,
+        separately-registered MCP server &mdash; superseded by the merged-gateway pattern Forms and Flows
+        already prove out. Before any code is written this needs: (1) rehosting as a fourth module on the
+        same gateway, (2) a new <code>IAppStudioExtendedService</code> for the two composite operations
+        (create-project-then-app, create-widget-then-place), (3) server-side validation of widget
+        <code>configuration</code> against each widget type's real schema, and (4) publish gated behind the
+        <code>HumanOnly</code> tier rather than left out entirely.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Plan</div>
+      <h2>Path to &ldquo;all three, externally usable&rdquo;</h2>
+      <p>Ordered by risk and dependency &mdash; certify what exists before building what doesn't, and prove the external path before opening it to the internet.</p>
+    </div>
+    <div class="timeline">
+      <div class="phase p1">
+        <div class="phase-label">Phase 1 &middot; Certify what's already built</div>
+        <h4>Prove Flows and the API-key tier actually work</h4>
+        <ul>
+          <li>Apply the Workflow module's seeded DB rows to a live environment</li>
+          <li>Live-verify <code>tools/list</code> and a full create/read/update/delete round trip for all 12 workflow tools</li>
+          <li>Open an MCP-created node in the real Flow Studio UI to confirm the connector-pairing invariant holds</li>
+          <li>Run the Credentials module's round trip and confirm no plaintext secret ever appears in a tool response</li>
+          <li><strong>Run the scoped-API-key tier itself for the first time</strong> &mdash; the literal mechanism external Claude access depends on has never been exercised live</li>
+        </ul>
+      </div>
+      <div class="phase p2">
+        <div class="phase-label">Phase 2 &middot; Close known gaps</div>
+        <h4>Fix what certification will surface</h4>
+        <ul>
+          <li>Fix the commented-out <code>CreatedBy</code>/<code>LastModifiedBy</code> stamping in the shared base repository</li>
+          <li>Remove the hardcoded <code>TenantID = 1</code> fallback on the internal agent path</li>
+          <li>Wire rate limiting onto the MCP endpoint before any external traffic reaches it</li>
+        </ul>
+      </div>
+      <div class="phase p3">
+        <div class="phase-label">Phase 3 &middot; Build Apps</div>
+        <h4>Bring App Studio to parity with Forms and Flows</h4>
+        <ul>
+          <li>Rewrite the design for the proven merged-gateway hosting model</li>
+          <li>Build <code>BizFirst.Ai.Mcp.Tools.AppStudio</code> and <code>IAppStudioExtendedService</code></li>
+          <li>Add <code>mcp:app-studio:read</code> / <code>mcp:app-studio:write</code> scopes to the access catalog</li>
+          <li>Certify with the same read+write, real-data standard Forms already met</li>
+        </ul>
+      </div>
+      <div class="phase p4">
+        <div class="phase-label">Phase 4 &middot; Open it up</div>
+        <h4>Make it reachable from a real Claude workspace</h4>
+        <ul>
+          <li>Expose <code>/mcp</code> on a public HTTPS domain</li>
+          <li>Each tenant provisions its own scoped API key via the existing admin key management</li>
+          <li>Tenant adds a Custom Connector in Claude, auth type <code>static_headers</code>, header <code>X-Api-Key</code></li>
+          <li>Any conversation in that workspace can now build forms, workflows, and apps &mdash; strictly within that tenant, with agent/credential/server creation still locked to real logged-in admins</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>BizFirst AI Platform &middot; MCP Servers</span>
+    <span>Internal reference &middot; reflects real, verified state as of 2026-09-09</span>
+  </div>
+</footer>
+</body>
+</html>

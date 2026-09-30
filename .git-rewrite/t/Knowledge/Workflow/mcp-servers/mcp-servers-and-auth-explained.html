@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Servers &amp; Authentication</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============ Tokens ============ */
+  :root {
+    --paper: #f5f7f7;
+    --paper-raised: #ffffff;
+    --paper-sunken: #eef2f1;
+    --ink: #16212a;
+    --ink-soft: #47606c;
+    --ink-faint: #7c93a0;
+    --line: #d7e1e0;
+    --line-strong: #b9c9c8;
+
+    --accent: #0f7a82;
+    --accent-ink: #0a5860;
+    --accent-soft: #e2f1f0;
+    --accent-line: #b7dbd9;
+
+    --amber: #9a6608;
+    --amber-soft: #faf0dc;
+    --amber-line: #e9d1a0;
+
+    --danger: #a2372a;
+    --danger-soft: #fbe9e6;
+    --danger-line: #eebfb6;
+
+    --good: #1f7a4d;
+    --good-soft: #e3f3ea;
+    --good-line: #b9ddc7;
+
+    --font-display: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --font-label: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
+    --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0f1519;
+      --paper-raised: #161f24;
+      --paper-sunken: #0c1114;
+      --ink: #e6edf0;
+      --ink-soft: #a6bac3;
+      --ink-faint: #71858e;
+      --line: #263238;
+      --line-strong: #34444c;
+
+      --accent: #56c2c7;
+      --accent-ink: #8fd9dc;
+      --accent-soft: #102c2d;
+      --accent-line: #1f4547;
+
+      --amber: #e0ac52;
+      --amber-soft: #2c220f;
+      --amber-line: #4a3a1c;
+
+      --danger: #e58579;
+      --danger-soft: #301917;
+      --danger-line: #4d2924;
+
+      --good: #7fd6a5;
+      --good-soft: #12291d;
+      --good-line: #234c34;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0f1519;
+    --paper-raised: #161f24;
+    --paper-sunken: #0c1114;
+    --ink: #e6edf0;
+    --ink-soft: #a6bac3;
+    --ink-faint: #71858e;
+    --line: #263238;
+    --line-strong: #34444c;
+
+    --accent: #56c2c7;
+    --accent-ink: #8fd9dc;
+    --accent-soft: #102c2d;
+    --accent-line: #1f4547;
+
+    --amber: #e0ac52;
+    --amber-soft: #2c220f;
+    --amber-line: #4a3a1c;
+
+    --danger: #e58579;
+    --danger-soft: #301917;
+    --danger-line: #4d2924;
+
+    --good: #7fd6a5;
+    --good-soft: #12291d;
+    --good-line: #234c34;
+  }
+
+  /* ============ Reset & base ============ */
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; color: var(--ink); text-wrap: balance; margin: 0; }
+  p { margin: 0 0 1em; }
+  a { color: var(--accent-ink); text-decoration-color: var(--accent-line); text-underline-offset: 3px; }
+  a:hover { text-decoration-thickness: 2px; }
+  a:focus-visible, button:focus-visible, .toc a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  code, .mono { font-family: var(--font-mono); font-size: 0.92em; }
+  code {
+    background: var(--paper-sunken);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.05em 0.4em;
+    color: var(--accent-ink);
+    white-space: nowrap;
+  }
+  ::selection { background: var(--accent-soft); }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  /* ============ Page shell ============ */
+  .page {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 clamp(16px, 4vw, 48px) 96px;
+  }
+
+  /* ============ Masthead ============ */
+  header.masthead {
+    padding: clamp(40px, 6vw, 64px) 0 30px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 8px;
+  }
+  .eyebrow {
+    font-family: var(--font-label);
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    margin-bottom: 14px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 22px;
+    height: 1px;
+    background: var(--accent);
+    display: inline-block;
+  }
+  h1.title {
+    font-size: clamp(2.1rem, 4.2vw, 3.05rem);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    max-width: 18ch;
+  }
+  .subtitle {
+    margin-top: 18px;
+    max-width: 62ch;
+    font-size: 1.15rem;
+    color: var(--ink-soft);
+    font-weight: 400;
+  }
+  .status-strip {
+    margin-top: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .chip {
+    font-family: var(--font-label);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 5px 12px 6px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    background: var(--paper-raised);
+    color: var(--ink-soft);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
+  .chip-live { background: var(--good-soft); border-color: var(--good-line); color: var(--good); }
+  .chip-partial { background: var(--amber-soft); border-color: var(--amber-line); color: var(--amber); }
+  .chip-designed { background: var(--paper-sunken); border-color: var(--line-strong); color: var(--ink-faint); }
+  .chip-blocked { background: var(--danger-soft); border-color: var(--danger-line); color: var(--danger); }
+
+  /* ============ Layout: rail + content ============ */
+  .layout {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: clamp(24px, 4vw, 56px);
+    margin-top: 44px;
+    align-items: start;
+  }
+  nav.toc {
+    position: sticky;
+    top: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-right: 8px;
+    border-right: 1px solid var(--line);
+  }
+  nav.toc a {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    font-family: var(--font-label);
+    font-size: 0.86rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+    text-decoration: none;
+    padding: 8px 10px 8px 4px;
+    border-radius: 6px;
+    line-height: 1.3;
+  }
+  nav.toc a:hover { background: var(--paper-sunken); color: var(--ink); }
+  nav.toc .num {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--accent);
+    flex: none;
+  }
+
+  main { min-width: 0; }
+  section.chapter {
+    padding-top: 8px;
+    margin-bottom: clamp(48px, 6vw, 76px);
+    scroll-margin-top: 24px;
+  }
+  .chapter-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .chapter-head .num {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    color: var(--accent);
+    flex: none;
+  }
+  .chapter-head h2 { font-size: clamp(1.4rem, 2.6vw, 1.85rem); }
+
+  .prose { max-width: 68ch; }
+  .prose p { color: var(--ink); }
+  .prose .lede { font-size: 1.08rem; color: var(--ink-soft); }
+  .prose strong { color: var(--ink); }
+  .wide { max-width: 100%; }
+
+  /* ============ Tables ============ */
+  .table-wrap { overflow-x: auto; margin: 22px 0 28px; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 0.92rem; }
+  thead th {
+    text-align: left;
+    font-family: var(--font-label);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    background: var(--paper-sunken);
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+    color: var(--ink-soft);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody td:first-child { color: var(--ink); font-weight: 500; }
+  tbody tr:hover td { background: var(--paper-sunken); }
+
+  /* ============ Callouts ============ */
+  .callout {
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--ink-faint);
+    background: var(--paper-raised);
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin: 24px 0;
+    max-width: 100%;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout-label {
+    font-family: var(--font-label);
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .callout-danger { border-left-color: var(--danger); background: var(--danger-soft); }
+  .callout-danger .callout-label { color: var(--danger); }
+  .callout-amber { border-left-color: var(--amber); background: var(--amber-soft); }
+  .callout-amber .callout-label { color: var(--amber); }
+  .callout-note { border-left-color: var(--accent); background: var(--accent-soft); }
+  .callout-note .callout-label { color: var(--accent-ink); }
+
+  /* ============ Diagram: topology ============ */
+  .topology { display: flex; flex-direction: column; gap: 18px; margin: 26px 0 30px; }
+  .topology-lane {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 20px 20px;
+    background: var(--paper-raised);
+  }
+  .lane-label {
+    font-family: var(--font-label);
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 14px;
+  }
+  .box-row { display: flex; flex-wrap: wrap; gap: 12px; }
+  .node-box {
+    flex: 1 1 200px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: var(--paper-sunken);
+    font-size: 0.9rem;
+  }
+  .node-box .name { font-weight: 600; color: var(--ink); display: block; margin-bottom: 4px; }
+  .node-box .meta { color: var(--ink-faint); font-family: var(--font-mono); font-size: 0.78rem; }
+  .lane-external .node-box { background: var(--paper-sunken); border-style: solid; }
+  .lane-designed .node-box { background: transparent; border-style: dashed; color: var(--ink-faint); }
+  .lane-designed .name { color: var(--ink-faint); }
+  .merge-arrow { text-align: center; font-family: var(--font-mono); color: var(--ink-faint); font-size: 0.8rem; margin: 10px 0; display: flex; align-items: center; gap: 10px; }
+  .merge-arrow::before, .merge-arrow::after { content: ""; flex: 1; height: 1px; background: var(--line-strong); }
+  .gateway-box {
+    border: 1.5px solid var(--accent-line);
+    background: var(--accent-soft);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 0.9rem;
+  }
+  .gateway-box .name { font-weight: 600; color: var(--accent-ink); font-family: var(--font-mono); display: block; margin-bottom: 4px; }
+  .gateway-box .meta { color: var(--ink-soft); }
+
+  /* ============ Diagram: flow steps ============ */
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0; margin: 26px 0 30px; }
+  .flow-step {
+    flex: 1 1 150px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 15px;
+    background: var(--paper-raised);
+    position: relative;
+  }
+  .flow-step .step-num {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .flow-step .step-code {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--ink);
+    margin-bottom: 6px;
+    word-break: break-word;
+  }
+  .flow-step .step-desc { font-size: 0.83rem; color: var(--ink-soft); line-height: 1.45; }
+  .flow-arrow {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    color: var(--ink-faint);
+    font-size: 1.1rem;
+  }
+
+  /* ============ Diagram: trust tiers ============ */
+  .tiers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin: 26px 0 10px;
+  }
+  .tier-card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--paper-raised);
+    padding: 18px 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .tier-card.tier-a { border-top: 3px solid var(--good); }
+  .tier-card.tier-b { border-top: 3px solid var(--amber); }
+  .tier-card.tier-c { border-top: 3px solid var(--ink-faint); }
+  .tier-head { display: flex; align-items: baseline; gap: 8px; }
+  .tier-letter {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+  }
+  .tier-name { font-family: var(--font-display); font-weight: 600; font-size: 1.02rem; }
+  .tier-row { font-size: 0.85rem; }
+  .tier-row .k {
+    font-family: var(--font-label);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .tier-row .v { color: var(--ink-soft); }
+  .tier-row .v code { white-space: normal; }
+
+  /* ============ Comparison / pull quote ============ */
+  .pull {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.2rem;
+    line-height: 1.45;
+    color: var(--ink);
+    border-left: 3px solid var(--accent);
+    padding: 4px 0 4px 20px;
+    margin: 26px 0;
+    max-width: 56ch;
+  }
+
+  footer.colophon {
+    margin-top: 60px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    color: var(--ink-faint);
+    font-size: 0.84rem;
+    max-width: 68ch;
+  }
+
+  /* ============ Responsive ============ */
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    nav.toc {
+      position: static;
+      flex-direction: row;
+      flex-wrap: wrap;
+      border-right: none;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+      gap: 4px;
+    }
+    nav.toc a { padding: 6px 10px; }
+    .flow { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); padding: 4px 0; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <div class="eyebrow">BizFirst Engineering Reference</div>
+    <h1 class="title">MCP Servers &amp; Authentication</h1>
+    <p class="subtitle">How Octopus AI agents call tools over the Model Context Protocol in this codebase — and how those calls prove who's actually asking.</p>
+    <div class="status-strip">
+      <span class="chip chip-live">3 first-party tool modules merged and live</span>
+      <span class="chip chip-partial">Same-tenant auth: built, not yet enforced</span>
+      <span class="chip chip-designed">Cross-tenant auth: designed, not built</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc" aria-label="Sections">
+      <a href="#what-is-mcp"><span class="num">01</span> What MCP is here</a>
+      <a href="#servers"><span class="num">02</span> The servers in this system</a>
+      <a href="#call-flow"><span class="num">03</span> How a call actually flows</a>
+      <a href="#auth-story"><span class="num">04</span> The authentication story</a>
+      <a href="#why-not-rag"><span class="num">05</span> Why not RAG for workflows</a>
+      <a href="#status"><span class="num">06</span> Status: built vs. designed</a>
+    </nav>
+
+    <main>
+
+      <!-- 01 -->
+      <section class="chapter" id="what-is-mcp">
+        <div class="chapter-head"><span class="num">01</span><h2>What MCP is here</h2></div>
+        <div class="prose">
+          <p class="lede">MCP (the Model Context Protocol) is a standard wire format that lets an LLM-driven conversation call out to external <strong>tools</strong> — plain functions with a name, a description, and a JSON-Schema parameter list — mid-conversation, over a client/server connection, the same way it would call any native function.</p>
+          <p>The difference is only where the implementation lives. A native function runs in the same process as the conversation. An MCP tool runs on the other end of a connection instead — sometimes that's a genuinely separate program (GitHub's own MCP server, spawned as a subprocess), and sometimes it's just a different C# project loaded into the same running platform server. From the LLM's point of view the two are schema-indistinguishable: they land in the exact same function list, dispatched through the exact same executor factory. MCP is an interface choice, not a statement about deployment topology.</p>
+        </div>
+      </section>
+
+      <!-- 02 -->
+      <section class="chapter" id="servers">
+        <div class="chapter-head"><span class="num">02</span><h2>The servers in this system</h2></div>
+        <div class="prose">
+          <p>Every MCP server an Octopus agent can be granted today falls into one of three groups: one external server this codebase will never own, three first-party servers already merged into one shared endpoint, and one first-party server that exists only as a design.</p>
+        </div>
+
+        <div class="topology">
+          <div class="topology-lane lane-external">
+            <div class="lane-label">External — third-party, can never be merged in</div>
+            <div class="box-row">
+              <div class="node-box">
+                <span class="name">GitHub MCP Server</span>
+                <span class="meta">stdio · npx subprocess</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="topology-lane lane-first-party">
+            <div class="lane-label">First-party — ours, one shared endpoint</div>
+            <div class="box-row">
+              <div class="node-box"><span class="name">Atlas Forms</span><span class="meta">8 tools</span></div>
+              <div class="node-box"><span class="name">Credentials</span><span class="meta">8 tools · shared</span></div>
+              <div class="node-box"><span class="name">Workflow</span><span class="meta">12 tools</span></div>
+            </div>
+            <div class="merge-arrow">project-reference only, in-process, no HTTP hop</div>
+            <div class="gateway-box">
+              <span class="name">/mcp/sse on the Consolidated WebApi, port 10001</span>
+              <span class="meta">one <code>AddMcpServer()</code>, three chained <code>.WithToolsFromAssembly()</code> calls — each module stays its own project with its own SRP boundary</span>
+            </div>
+          </div>
+
+          <div class="topology-lane lane-designed">
+            <div class="lane-label">First-party — designed, not built</div>
+            <div class="box-row">
+              <div class="node-box">
+                <span class="name">Octopus Agent MCP Server</span>
+                <span class="meta">Agents · Teams · MCP admin · Documents — ~37 tools planned</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Server</th><th>Owner</th><th>Transport</th><th>Runs where</th><th>State</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>GitHub MCP Server</td>
+                <td>Third-party (<code>@modelcontextprotocol/server-github</code>)</td>
+                <td>stdio</td>
+                <td>separate OS process, spawned per connection</td>
+                <td>DB-wired to <code>AgentID=20</code>; credential is still a raw placeholder token, never migrated to the credential-vault pattern</td>
+              </tr>
+              <tr>
+                <td>Atlas Forms MCP Server</td>
+                <td>First-party</td>
+                <td>SSE</td>
+                <td>merged, <code>/mcp/sse</code></td>
+                <td>Live — <code>tools/list</code> verified three times; <code>tools/call</code> reached real DB code</td>
+              </tr>
+              <tr>
+                <td>Credentials MCP Server</td>
+                <td>First-party, shared</td>
+                <td>SSE</td>
+                <td>merged, <code>/mcp/sse</code></td>
+                <td>Built and DB-registered; full round trip not yet exercised</td>
+              </tr>
+              <tr>
+                <td>Workflow MCP Server</td>
+                <td>First-party</td>
+                <td>SSE</td>
+                <td>merged, <code>/mcp/sse</code></td>
+                <td>Built and build-verified; seed rows written, not yet applied live</td>
+              </tr>
+              <tr>
+                <td>Octopus Agent MCP Server</td>
+                <td>First-party</td>
+                <td>planned SSE, same endpoint</td>
+                <td>not started</td>
+                <td>Design document only</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="prose">
+          <p>"Merged into the platform server" means one specific thing, confirmed explicitly during the build: only <em>where the MCP endpoint is hosted</em> changed. Each tool module's code was never moved, copied, or collapsed into the platform server project — it stays its own class library with its own Single-Responsibility boundary, and the platform server only takes a <code>ProjectReference</code> to it and chains one more <code>.WithToolsFromAssembly()</code> call onto the same builder. A standalone gateway process (<code>BizFirst.Ai.Mcp.Gateway</code>) was built first and proved the pattern, then retired in favor of this shared hosting once the memory cost of running a second full ASP.NET Core process — duplicate DI graph, duplicate DB connection pool — stopped being worth it on a memory-constrained dev box.</p>
+        </div>
+      </section>
+
+      <!-- 03 -->
+      <section class="chapter" id="call-flow">
+        <div class="chapter-head"><span class="num">03</span><h2>How a call actually flows</h2></div>
+        <div class="prose">
+          <p>A tool call is not decided by anything MCP-specific — it's an ordinary LLM function-call decision. What differs is everything downstream of that decision.</p>
+        </div>
+
+        <div class="flow">
+          <div class="flow-step">
+            <span class="step-num">1</span>
+            <span class="step-code">MCPToolAgentHook</span>
+            <span class="step-desc">On every agent load, calls the live <code>tools/list</code> on each of the agent's granted MCP servers and merges the results into <code>agent.SecondaryFunctions</code> — the same list native functions sit in.</span>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <span class="step-num">2</span>
+            <span class="step-code">FunctionExecutorFactory</span>
+            <span class="step-desc">Matches the LLM's chosen function name and routes to <code>McpToolExecutor</code> — one factory, no separate "MCP mode" in the conversation loop.</span>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <span class="step-num">3</span>
+            <span class="step-code">McpClientManager</span>
+            <span class="step-desc">Opens or reuses a cached client connection (keyed by server ID + credential), substitutes any <code>{fieldName}</code> credential wildcards, and calls the SDK's <code>CallToolAsync</code>.</span>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <span class="step-num">4</span>
+            <span class="step-code">[McpServerTool]</span>
+            <span class="step-desc">The real C# tool method (e.g. <code>AddFormControlTool</code>), attribute-generated schema, DI-resolves its backend service as a plain parameter.</span>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <span class="step-num">5</span>
+            <span class="step-code">IFormsExtendedService …</span>
+            <span class="step-desc">The real backend service — same one a controller action would call — executes in-process. No HTTP hop for any first-party module.</span>
+          </div>
+        </div>
+
+        <div class="prose">
+          <p>Two details matter for everything in the next section. First, tool <em>schema</em> is always discovered live, at agent-load time, against the running server's own <code>tools/list</code> — the database's <code>AIMCP_McpTools.Schema</code> column is never read to build what the LLM sees; it only works as an optional per-agent name allow-list, letting one agent see a curated subset of a server's tools while another sees all of them. Second, credential resolution already follows this codebase's mandated pattern end to end — a three-tier chain (a Flow Studio satellite override, then the server's own default, then the calling agent's own default) resolves a real, vault-decrypted secret and substitutes it into <code>ConfigJson</code>'s wildcard tokens at connect time. That part of the story was solved before any of this MCP work started; the open problem is a different one — <em>identity</em>, not credentials.</p>
+        </div>
+      </section>
+
+      <!-- 04 -->
+      <section class="chapter" id="auth-story">
+        <div class="chapter-head"><span class="num">04</span><h2>The authentication story</h2></div>
+
+        <div class="prose">
+          <p class="lede">Every write route these tool modules wrap — <code>[AuthorizeTenantAdminAttribute]</code>, <code>[AuthorizeRegularUserAttribute]</code> — is decorated the same way the equivalent REST controller action already is. The question that actually needed answering wasn't "which role is required," it was much more basic: does that check ever run at all on an MCP call?</p>
+        </div>
+
+        <div class="callout callout-danger">
+          <span class="callout-label">The gap that was found</span>
+          <p><code>AuthorizeTenantAdminAttribute</code> and <code>AuthorizeRegularUserAttribute</code> are ordinary ASP.NET Core <code>ActionFilterAttribute</code>s. They only execute when a request is dispatched through <code>MapControllers()</code>'s MVC action-invocation pipeline. But per the call flow above, every MCP tool method calls its domain service (<code>IFormService</code>, <code>ICredentialService</code>, …) directly, as a plain DI parameter — deliberately, to avoid an internal HTTP hop. The consequence: when the first two write-capable modules shipped, their write tools carried <strong>zero authorization check of any kind</strong> — not mis-scoped, structurally unreachable. The only thing touching identity on the <code>/mcp</code> path was a fixed <code>SetBackgroundJobContext(tenantID: 1, …)</code> call, and that call was never doing authorization work — it only decided which tenant's rows got written and stamped. Every MCP-visible write tool could be called by anything reaching the endpoint, landing under Tenant 1, with nothing checking whether the caller was entitled to call it at all.</p>
+        </div>
+
+        <div class="prose">
+          <p>The fix design settles on three trust tiers, because "who is calling" turns out to be three genuinely different shapes of caller, each needing a different answer.</p>
+        </div>
+
+        <div class="tiers">
+          <div class="tier-card tier-a">
+            <div class="tier-head"><span class="tier-letter">Tier A</span><span class="tier-name">Human session</span></div>
+            <div class="tier-row"><span class="k">Who</span><span class="v">A real logged-in user, through an MCP client already carrying their own session.</span></div>
+            <div class="tier-row"><span class="k">Presents</span><span class="v">Their existing JWT, reused as-is — no new mechanism.</span></div>
+            <div class="tier-row"><span class="k">Resolves to</span><span class="v">Whatever role their account already has everywhere else in the product.</span></div>
+            <div class="tier-row"><span class="k">Status</span><span class="v"><span class="chip chip-live">works by construction</span></span></div>
+          </div>
+
+          <div class="tier-card tier-b">
+            <div class="tier-head"><span class="tier-letter">Tier B</span><span class="tier-name">Same-tenant agent</span></div>
+            <div class="tier-row"><span class="k">Who</span><span class="v">An Octopus agent, calling a tool on its own tenant's behalf mid-conversation.</span></div>
+            <div class="tier-row"><span class="k">Presents</span><span class="v">A new <code>X-Mcp-Agent-Id</code> header carrying the invoking <code>AgentID</code>.</span></div>
+            <div class="tier-row"><span class="k">Resolves to</span><span class="v">That agent's own <code>TenantID</code>, minted into a <code>ClaimsPrincipal</code> with a new, narrow <code>McpAgentWriter</code> role.</span></div>
+            <div class="tier-row"><span class="k">Status</span><span class="v"><span class="chip chip-partial">built, not enforced</span></span></div>
+          </div>
+
+          <div class="tier-card tier-c">
+            <div class="tier-head"><span class="tier-letter">Tier C</span><span class="tier-name">Cross-tenant caller</span></div>
+            <div class="tier-row"><span class="k">Who</span><span class="v">A genuinely external caller — a partner's system, another tenant's tooling, a human operator's own client.</span></div>
+            <div class="tier-row"><span class="k">Presents</span><span class="v">A scoped API key, via the same <code>IAM_ApiKeys</code> / <code>AuthorizeApiKeyOrUserAttribute</code> system already live for the Knowledge API.</span></div>
+            <div class="tier-row"><span class="k">Resolves to</span><span class="v">The tenant that <em>owns the key</em> — never an internal <code>AgentID</code>.</span></div>
+            <div class="tier-row"><span class="k">Status</span><span class="v"><span class="chip chip-designed">designed only</span></span></div>
+          </div>
+        </div>
+
+        <div class="prose">
+          <p><strong>Tier B is the one worth reading carefully, because "built" understates it.</strong> The claims-construction half landed and build-verified: <code>McpAgentTenantResolver</code> looks an agent's real <code>TenantID</code> up directly against <code>AIAgent_Agents</code> — bypassing the normal tenant-scoped repository path, which needs a tenant to already be known, exactly what this call is trying to establish — and the <code>/mcp</code> middleware now constructs a real <code>ClaimsPrincipal</code> instead of leaving <code>HttpContext.User</code> untouched. But nothing on the actual tool-call path reads that principal yet. Tool methods still call <code>IFormService</code>/<code>ICredentialService</code> directly, bypassing <code>MapControllers()</code> entirely — so <code>AuthorizeRegularUserAttribute</code> still never executes for a real MCP call today. The fix put a passport in the traveler's pocket before building the checkpoint that reads it. The design for that checkpoint is a single shared guard every <code>[McpServerTool]</code> method passes through — not a re-route through controllers, which would reintroduce the HTTP hop the whole in-process design exists to avoid — but it hasn't been built.</p>
+        </div>
+
+        <div class="callout callout-amber">
+          <span class="callout-label">Reserved for humans, deliberately</span>
+          <p><code>create_mcp_server</code>, <code>create_agent</code>, and <code>create_credential</code> are excluded from both Tier B and Tier C by design, not just by role string. A newly-registered MCP server's stdio command or SSE endpoint becomes something a <em>future</em> agent's own tool-calling can reach — the single highest blast-radius action in the whole catalogue; a new agent can be granted access to any MCP server, and a new credential can be pointed at anything. Tier B's build already made the conservative call — <code>AuthorizeTenantAdminAttribute</code> was deliberately never extended to accept <code>McpAgentWriter</code> — and that conservatism is meant to hold permanently for these three, not as a placeholder pending a future relaxation. Cross-tenant calling sharpens the reasoning rather than changing it: a same-tenant compromised agent is at worst bounded to its own tenant's data; a leaked or over-scoped cross-tenant key is not bounded by tenant at all, which is exactly the shape of failure these three tools cannot be allowed to have.</p>
+        </div>
+
+        <div class="callout callout-note">
+          <span class="callout-label">A tenant is not just a number</span>
+          <p>Tier C's design leans on <code>apiKey.TenantID</code> to say which tenant a cross-tenant caller belongs to — but this codebase has already been burned by treating a bare numeric tenant ID as sufficient identity. The AI-agent-definition cache hit exactly this bug: keyed on the agent ID alone, with no tenant or environment in the key, two tenants sharing the same numeric ID could collide within the cache window. Its fix keys on <strong><code>TenantSlug</code> + <code>Environment</code> + <code>TenantID</code></strong> together, because the same numeric <code>TenantID</code> is not guaranteed unique across environments or slugs — a tenant provisioned twice, once per environment, can legitimately carry the same number in both. The same discipline has to carry into Tier C's enforcement guard: <code>apiKey.TenantID</code> alone is not a safe caller identity to gate a cross-tenant write on unless it's read alongside the same slug-and-environment context, or two different environments' identically-numbered tenants become indistinguishable to the exact check meant to keep them apart.</p>
+        </div>
+
+        <div class="prose">
+          <p><strong>Why extend <code>IAM_ApiKeys</code> instead of building real OAuth 2.1.</strong> The official MCP authorization specification is unambiguous about the shape it expects: an MCP server acts as an OAuth 2.1 Resource Server, Authorization Code plus PKCE for a human-delegated flow, and <code>client_credentials</code>-grant OAuth as its own named answer for a non-interactive, machine-to-machine caller. But the spec is equally explicit that authorization is <em>optional</em> — a server that doesn't implement it isn't out of spec — and it tells STDIO transports specifically to use environment-provided credentials instead, not OAuth.</p>
+          <p>What real production MCP servers actually ship confirms that optionality is exercised, not theoretical. Stripe's own MCP server prefers OAuth but documents a restricted, scoped API key as a fully first-class Bearer-token alternative when a client doesn't support OAuth. GitHub's official MCP server lets a fine-grained Personal Access Token take precedence over OAuth outright. Cloudflare's guidance centers OAuth for user-delegated access but separately documents API tokens as the correct mechanism for CI/CD and automation callers. The pattern across all three is the same: OAuth for interactive, user-delegated access, and a scoped, revocable API key as a permanent, non-deprecated alternative for server-to-server callers — not a stopgap on the way to OAuth-only.</p>
+          <p>This codebase has no OAuth Authorization Server anywhere to extend — building one (dynamic client registration, PKCE verification, token and metadata endpoints, audience binding) is multi-week new infrastructure and a new attack surface, for a caller shape the industry's own real examples already treat API keys as the right tool for. <code>IAM_ApiKeys</code> is real, live, and has already been extended for this exact "external caller, no JWT, tenant-scoped key" shape twice — once for the Knowledge API, once for ChatDesk's anonymous widget. A third extension, scoped to MCP with its own grant strings and its own <code>AIMCP_McpApiKeyServerGroups</code> join table reusing the same tool-visibility mechanism agents already use, is the same pattern a third time — not a new one.</p>
+        </div>
+      </section>
+
+      <!-- 05 -->
+      <section class="chapter" id="why-not-rag">
+        <div class="chapter-head"><span class="num">05</span><h2>Why not RAG for workflow &amp; node config</h2></div>
+        <div class="prose">
+          <p>Atlas Forms leans on retrieval-augmented generation — a vector-searched reference corpus an agent queries at need. Workflow and node configuration, built right after it, deliberately does not. The reason isn't that one module is more sophisticated than the other; it's that RAG is the right tool for one kind of source material and the wrong tool for another.</p>
+        </div>
+
+        <div class="pull">Retrieval earns its cost when the true source is large, unstructured, and scattered — something no single turn can hold, so an agent has to search for the relevant slice. It's the wrong tool when the source is already one structured row you can look up directly by key.</div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Substrate</th><th>Atlas Forms</th><th>Workflow node config</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Source of truth</td>
+                <td>88–115 control types, known only as frontend TypeScript — no backend representation at all</td>
+                <td><code>Process_ProcessElementTypes.ConfigurationSchema</code>, a populated JSON-Schema column, one row per node type</td>
+              </tr>
+              <tr>
+                <td>Why it went this way</td>
+                <td>Nothing structured to look up server-side — had to be authored into a two-tier, vector-searched reference corpus</td>
+                <td>Already structured and DB-resident — a two-tier <em>direct read</em> (overview list, then on-demand full schema) does the same job with no vector store</td>
+              </tr>
+              <tr>
+                <td>Known caveat</td>
+                <td>Compact "always-loaded" tier runs ~4× over its original token budget at full coverage</td>
+                <td>At least one sampled type's seeded schema is confirmed stale against its real settings class — a data-quality problem to audit, not a reason to reach for RAG</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="prose">
+          <p>The same reasoning extended to the smaller, cross-cutting concepts an agent also needs — expressions, guardrails, node policies. All three behave identically regardless of which of the ~107 node types hosts them, and all three together amount to roughly 1,300 lines across eight markdown files: small and structure-agnostic enough to curate into one static reference tier rather than stand up a second retrieval pipeline. A vector-backed fallback tier is reserved, not built, for the rare node type whose configuration proves irreducibly too complex for a single JSON-Schema column to describe.</p>
+        </div>
+      </section>
+
+      <!-- 06 -->
+      <section class="chapter" id="status">
+        <div class="chapter-head"><span class="num">06</span><h2>Status: built vs. designed</h2></div>
+        <div class="prose">
+          <p>Sourced directly from each project's own <code>DevelopmentHistoryLog.md</code>, not inferred from the design documents alone — the two don't always agree, and where they don't, the log wins.</p>
+        </div>
+
+        <div class="table-wrap wide">
+          <table>
+            <thead>
+              <tr><th>Component</th><th>Status</th><th>Evidence</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Atlas Forms MCP module (8 tools)</td>
+                <td><span class="chip chip-live">Live</span></td>
+                <td><code>tools/list</code> verified three separate times against <code>/mcp/sse</code>; <code>tools/call</code> reached the real DB code path (blocked only by a dev-box SQL timeout, not a code defect)</td>
+              </tr>
+              <tr>
+                <td>Credentials MCP module (8 tools)</td>
+                <td><span class="chip chip-partial">Built, DB-registered</span></td>
+                <td>Builds clean, three DB rows applied live via <code>sqlcmd</code>; full <code>tools/list</code>/<code>tools/call</code> round trip not exercised — the host wasn't started, to avoid another memory-pressure incident</td>
+              </tr>
+              <tr>
+                <td>Workflow MCP module (12 tools)</td>
+                <td><span class="chip chip-partial">Built</span></td>
+                <td>Builds clean; DB seed rows written but not yet applied to the live database; no live round trip attempted</td>
+              </tr>
+              <tr>
+                <td><code>/mcp</code> same-tenant claims middleware (Tier B)</td>
+                <td><span class="chip chip-partial">Built, not enforced</span></td>
+                <td><code>McpAgentTenantResolver</code> and <code>ClaimsPrincipal</code> construction are build-verified; no code on the real tool-call path reads <code>HttpContext.User</code> yet</td>
+              </tr>
+              <tr>
+                <td>Cross-tenant API-key auth (Tier C)</td>
+                <td><span class="chip chip-designed">Designed only</span></td>
+                <td>No <code>AIMCP_McpApiKeyServerGroups</code> table, MCP scope strings, or enforcement guard found anywhere in the codebase</td>
+              </tr>
+              <tr>
+                <td>Octopus Agent MCP server (~37 tools, 5 sub-modules)</td>
+                <td><span class="chip chip-designed">Designed only</span></td>
+                <td>No project scaffolding found for <code>OctopusAgents</code>, <code>OctopusMcpAdmin</code>, or <code>OctopusDocuments</code></td>
+              </tr>
+              <tr>
+                <td>Agent Teams MCP module</td>
+                <td><span class="chip chip-designed">Designed</span></td>
+                <td>Backing <code>ITeamService</code> is real, tested, and already live for other callers; no MCP tool project wraps it yet</td>
+              </tr>
+              <tr>
+                <td>GitHub MCP Server (<code>AgentID=20</code>)</td>
+                <td><span class="chip chip-partial">DB-wired, not production-ready</span></td>
+                <td>Full join-table chain is real; <code>ConfigJson</code> still carries a raw placeholder token, never migrated to the credential-vault pattern</td>
+              </tr>
+              <tr>
+                <td>MCP tool-dispatch bug (LLM picks a tool, dispatch can't find it)</td>
+                <td><span class="chip chip-live">Fixed</span></td>
+                <td>Root cause traced and fixed in <code>RoutingService.InvokeFunction.cs</code>/<code>InvokeAgent.cs</code>, build-verified at full solution scope; live HTTP re-test still blocked by unrelated dev-box infrastructure</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="colophon">
+    Compiled from this codebase's own MCP design documents and each affected project's <code>DevelopmentHistoryLog.md</code>, current as of 2026-08-20. This is a snapshot of live, actively-changing work — treat it as a starting point for verification, not a final state.
+  </footer>
+
+</div>
+</body>
+</html>

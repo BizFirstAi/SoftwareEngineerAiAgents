@@ -1,0 +1,193 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "formID": "expense_report",
+    "title": "Expense Report",
+    "description": "Submit an expense report for reimbursement.",
+    "numberOfColumns": 2,
+    "formContentStyle": "input",
+    "formBehavior": "interactive"
+  },
+  "sections": [
+    { "id": "sec_employee", "title": "Employee Information", "order": 1 },
+    { "id": "sec_items", "title": "Expense Line Items", "order": 2 },
+    { "id": "sec_reimbursement", "title": "Reimbursement Method", "order": 3 },
+    { "id": "sec_approval", "title": "Approval", "order": 4 }
+  ],
+  "controls": [
+    {
+      "id": "employee_name",
+      "type": "text",
+      "label": "Employee Name",
+      "order": 1,
+      "sectionId": "sec_employee",
+      "width": "half",
+      "required": true,
+      "validation": { "required": true, "maxLength": 120 }
+    },
+    {
+      "id": "department",
+      "type": "select",
+      "label": "Department",
+      "order": 2,
+      "sectionId": "sec_employee",
+      "width": "half",
+      "required": true,
+      "validation": { "required": true },
+      "config": {
+        "options": [
+          { "value": "eng", "label": "Engineering" },
+          { "value": "sales", "label": "Sales" },
+          { "value": "ops", "label": "Operations" }
+        ]
+      }
+    },
+    {
+      "id": "report_date",
+      "type": "date",
+      "label": "Report Date",
+      "order": 3,
+      "sectionId": "sec_employee",
+      "width": "half",
+      "required": true,
+      "validation": { "required": true }
+    },
+
+    {
+      "id": "line_items",
+      "type": "grid",
+      "label": "Expenses",
+      "order": 1,
+      "sectionId": "sec_items",
+      "required": true,
+      "validation": { "required": true },
+      "config": {
+        "title": "Expenses",
+        "gridType": "table",
+        "idField": "lineId",
+        "emptyMessage": "Add at least one expense line.",
+        "columns": [
+          { "key": "date", "label": "Date", "type": "date", "required": true, "width": 120 },
+          {
+            "key": "category", "label": "Category", "type": "select", "required": true,
+            "options": [
+              { "value": "travel", "label": "Travel" },
+              { "value": "meals", "label": "Meals" },
+              { "value": "lodging", "label": "Lodging" },
+              { "value": "other", "label": "Other" }
+            ]
+          },
+          { "key": "description", "label": "Description", "type": "text" },
+          { "key": "amount", "label": "Amount (USD)", "type": "number", "min": 0, "step": 0.01, "required": true }
+        ],
+        "buttons": [
+          { "label": "Add Expense", "buttonAction": "add", "icon": "plus" },
+          { "label": "Delete Selected", "buttonAction": "deleteSelected", "icon": "trash", "requiresSelection": true }
+        ],
+        "features": { "pagination": false, "exportFormats": ["csv"] },
+        "dataBinding": { "source": "static" }
+      }
+    },
+
+    {
+      "id": "reimbursement_method",
+      "type": "radio",
+      "label": "Reimbursement Method",
+      "order": 1,
+      "sectionId": "sec_reimbursement",
+      "required": true,
+      "validation": { "required": true },
+      "config": {
+        "defaultValue": "direct_deposit",
+        "options": [
+          { "value": "direct_deposit", "label": "Direct Deposit" },
+          { "value": "check", "label": "Mailed Check" }
+        ]
+      }
+    },
+    {
+      "id": "bank_account_last4",
+      "type": "text",
+      "label": "Bank Account (last 4 digits)",
+      "order": 2,
+      "sectionId": "sec_reimbursement",
+      "placeholder": "1234",
+      "validation": { "pattern": "^[0-9]{4}$", "message": "Enter exactly 4 digits" },
+      "visibilityRule": {
+        "type": "expression",
+        "condition": "{{ reimbursement_method === 'direct_deposit' }}"
+      }
+    },
+    {
+      "id": "mailing_address",
+      "type": "textarea",
+      "label": "Mailing Address",
+      "order": 3,
+      "sectionId": "sec_reimbursement",
+      "config": { "rows": 3 },
+      "visibilityRule": {
+        "type": "expression",
+        "condition": "{{ reimbursement_method === 'check' }}"
+      }
+    },
+
+    {
+      "id": "approver",
+      "type": "select",
+      "label": "Approver",
+      "order": 1,
+      "sectionId": "sec_approval",
+      "width": "half",
+      "required": true,
+      "validation": { "required": true },
+      "config": {
+        "options": [
+          { "value": "mgr_alice", "label": "Alice Johnson (Manager)" },
+          { "value": "mgr_bob", "label": "Bob Smith (Manager)" }
+        ]
+      }
+    },
+    {
+      "id": "mark_urgent",
+      "type": "switch",
+      "label": "Mark as Urgent",
+      "order": 2,
+      "sectionId": "sec_approval",
+      "width": "half",
+      "defaultValue": false,
+      "config": { "onLabel": "Urgent", "offLabel": "Normal" }
+    },
+    {
+      "id": "urgent_reason",
+      "type": "textarea",
+      "label": "Reason for Urgency",
+      "order": 3,
+      "sectionId": "sec_approval",
+      "required": true,
+      "validation": { "required": true, "maxLength": 500 },
+      "visibilityRule": {
+        "type": "expression",
+        "condition": "{{ mark_urgent === true }}"
+      }
+    }
+  ],
+  "apiActions": [
+    {
+      "id": "submit_expense_report",
+      "actionKey": "submitExpenseReport",
+      "trigger": "OnSubmit",
+      "payload": {
+        "mappings": [
+          { "fromField": "employee_name", "toField": "employeeName", "required": true },
+          { "fromField": "department", "toField": "department", "required": true },
+          { "fromField": "line_items", "toField": "lineItems", "required": true },
+          { "fromField": "reimbursement_method", "toField": "reimbursementMethod", "required": true },
+          { "fromField": "approver", "toField": "approverId", "required": true }
+        ]
+      },
+      "successActions": [
+        { "type": "message", "config": { "text": "Expense report submitted for approval." } }
+      ]
+    }
+  ]
+}

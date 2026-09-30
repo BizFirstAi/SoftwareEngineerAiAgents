@@ -1,0 +1,26 @@
+ProcessElementID ProcessElementTypeID Name                                                                                                                                                                                                                                                                  
+                                       IsTrigger
+---------------- -------------------- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------- ---------
+            2293                  297 Manual Trigger                                                                                                                                                                                                                                                        
+                                               1
+            2294                  269 Step 1: index-create                                                                                                                                                                                                                                                  
+                                               0
+            2295                  269 Step 2: document-create                                                                                                                                                                                                                                               
+                                               0
+            2296                  269 Step 3: document-get                                                                                                                                                                                                                                                  
+                                               0
+            2297                  269 Step 4: document-search                                                                                                                                                                                                                                               
+                                               0
+            2298                  269 Step 5: document-update                                                                                                                                                                                                                                               
+                                               0
+            2299                  269 Step 6: document-getMany                                                                                                                                                                                                                                              
+                                               0
+            2300                  269 Step 7: index-get                                                                                                                                                                                                                                                     
+                                               0
+            2301                  269 Step 8: index-getMany                                                                                                                                                                                                                                                 
+                                               0
+            2302                  269 Step 9: document-delete                                                                                                                                                                                                                                               
+                                               0
+            2303                  269 Step 10: index-delete                                                                                                                                                                                                                                                 
+                                               0
