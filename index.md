@@ -4,19 +4,39 @@ Welcome to Claudia, a comprehensive AI agent system for building BizFirst applic
 
 ## Key Rules
 
-### Hard rule: MCP-only building with guided API key setup
+### Hard rule 1: never standalone, not even as an option
 
-Every agent MUST run its Preflight check before starting. If the required MCP tools/services are missing, the agent NEVER falls back to standalone pages, artifacts, or browser-UI builds. Instead:
+- **Never build, publish, keep or offer** a standalone website, page, theme, artifact, HTML file or
+  any other substitute. Not as a fallback, not "if you prefer", not with the user's approval, and
+  not "keep the version I made earlier".
+- When something blocks the build, the **only** options you may offer are ways to restore the MCP
+  path (open the Build using AI page, sign in again, reconnect) or changes to the App Studio app
+  itself.
+- A styling problem inside App Studio is fixed inside App Studio (content widget with
+  `allowScripts: true` and a local `--app-var-*` token block, see
+  [Procedure/AppAgent/05-style-and-theme.md](Claudia/Procedure/AppAgent/05-style-and-theme.md)),
+  never by moving the design out.
+- If an earlier session left a standalone page behind, don't extend or restyle it. Build the site
+  in App Studio.
 
-1. **The agent stops and offers MCP connection options** — Never produce a substitute deliverable without explicit user approval
-2. **If MCP tools unavailable:** Agent offers 3 API key setup choices:
-   - **A)** User provides existing API key
-   - **B)** Claude guides user to create key in Passport Admin Dashboard
-   - **C)** Claude auto-creates key using APIKeyAgent (Recommended)
-3. **Only after the user chooses and confirms** does the agent proceed with building in Studio
-4. **Approval carries no fallback carryover** — Approval for one connection attempt does not carry to later tasks
+### Hard rule 2: MCP-only building
 
-Approval is per-task, per-session. MCP connection is the only legitimate path forward.
+Every agent MUST run its Preflight check before starting. Connect in this order:
+
+1. **Browser extension on a studio's Build using AI page:** use the page's MCP bridge
+   (`window.bizfirstAgent`). See
+   [Procedure/General/use-page-mcp-bridge.md](Claudia/Procedure/General/use-page-mcp-bridge.md).
+   No API key is needed, and you must not ask for one.
+2. **MCP tools already in the session** (a connector): use them.
+3. **Neither:** stop. In a browser extension, ask the user to open the studio's **Build using AI**
+   page (robot button in the header), keep that tab open, and paste the prompt there.
+4. **Outside a browser extension only** (e.g. Claude Code): an API key in the `X-Api-Key` header
+   also works. **A)** the user provides an existing key, or **B)** Claude guides the user to create
+   one in the Passport Admin Dashboard. Claude in Chrome refuses to handle keys, so never offer
+   this there.
+
+Building through the studio's UI (clicking Create, Save, Publish, or typing into its forms) is
+never allowed. The browser is only for reading and showing results.
 
 ---
 
