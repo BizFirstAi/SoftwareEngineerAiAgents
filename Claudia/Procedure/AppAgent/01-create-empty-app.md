@@ -15,6 +15,10 @@ The default procedure for AppAgent. Walks user through building an App Studio ap
 
 Before proceeding, confirm that the AppAgent's MCP server tools are available AND set up the API key connection:
 
+0. **Browser extension on the Build using AI page?** Use the page's MCP bridge:
+   `await window.bizfirstAgent.mcp.status()`. If `connected: true`, continue with Step 1 and make
+   every MCP call with `window.bizfirstAgent.mcp.call(...)`. No API key is needed. See
+   [use-page-mcp-bridge.md](../General/use-page-mcp-bridge.md).
 1. **Check MCP tools:** Look for tools whose names start with `BizFirst.Ai.Mcp.Tools.AppStudio` or call the server's list/health tool.
 2. **If tools ARE available:** Continue with Step 1 below.
 3. **If tools are NOT available:** Offer the user this choice:
@@ -30,7 +34,9 @@ Before proceeding, confirm that the AppAgent's MCP server tools are available AN
    - **Choice B:** Follow [Procedure/APIKeyAgent/01-create-api-key.md](../../APIKeyAgent/01-create-api-key.md) → Return with API key → Continue with Step 1
    - **Choice C:** Launch APIKeyAgent to auto-create → Return with API key → Continue with Step 1
 
-5. **Never substitute:** Do not publish an artifact, HTML page, or standalone file. MCP connection is the ONLY path forward.
+5. **Never standalone, not even as an option:** never build, publish, keep or offer an artifact,
+   HTML page, standalone site, theme or file, not even with approval. MCP connection is the ONLY
+   path forward.
 
 ## Knowledge to Load
 
@@ -126,6 +132,11 @@ Call these in order (argument rules: [05-integration-guide.md](../../Knowledge/A
 3. **`create_pages`** (bulk or per-page)
    - For each page from Step 5, call `create_page`
    - Name, slug, `appID`
+
+   - **Then put every page in the menu:** `create_page` leaves `showInMenu: false` and
+     `displayOrder: 0`, so the `page-navigation` widget shows nothing. For each page call
+     `update_page` with `showInMenu: true`, `menuLabel`, `displayOrder` 1, 2, 3… (other fields
+     `null`), and set `isDefault: true` on the home page. Verified live 2026-09-30 (VoltCase, AppID 1123).
 
 4. **`create_section`**
    - Create one section per page-area (header, nav, footer, main-content)

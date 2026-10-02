@@ -7,27 +7,28 @@ Builds web applications and sites for users (apps made of pages, sections, and w
 This agent builds ONLY through its MCP server:
 - **Server Name:** `BizFirst.Ai.Mcp.Tools.AppStudio`
 - **Server URL:** `{MCP_SERVER_BASE_URL}/mcp` (see [`MCP_SERVER_CONFIG.md`](../../MCP_SERVER_CONFIG.md))
-- **Authentication:** Bearer token (your API key)
+- **Authentication:** the signed-in user, through the Build using AI page's bridge (browser
+  extension); or an API key in the `X-Api-Key` header (outside a browser only). The server does
+  not accept an API key as `Authorization: Bearer`.
 
+0. **In a browser extension on the Build using AI page, use the page's MCP bridge first:** check
+   `await window.bizfirstAgent.mcp.status()` and follow
+   [`Procedure/General/use-page-mcp-bridge.md`](../../../Procedure/General/use-page-mcp-bridge.md).
+   If it reports `connected: true`, the preflight passes, with no API key and no connector needed.
+   Skip steps 1-3 below (step 4 always applies).
 1. Before the questionnaire or any planning, confirm that the MCP server's tools are available in this session.
 2. If tools ARE available: continue with the procedure.
-3. If tools are NOT available:
-   - STOP. Do not build standalone pages, artifacts, or other substitutes.
-   - The MCP connection is the ONLY path forward.
-   - Offer the user this choice for connecting to MCP:
-
-   **How do you want to set up the API key for App Studio connection?**
-   
-   A) **I have an existing API key** - Provide it, I'll use it to connect
-   B) **Guide me to create the key** - I'll walk you step-by-step to create one in Passport Admin Dashboard
-   C) **Create it for me** - I'll use APIKeyAgent to automatically generate and configure the key (Recommended)
-
-4. Based on user choice:
-   - **Choice A:** User provides key → Proceed with build using that key
-   - **Choice B:** Follow Procedure/APIKeyAgent/01-setup-apikey.md guided flow
-   - **Choice C:** Launch APIKeyAgent to create key automatically, then proceed with build
-
-5. Never substitute a standalone page, artifact, or browser-UI build. Only build in App Studio once MCP is connected.
+3. If tools are NOT available: **STOP.** The MCP connection is the only path forward.
+   - **In a browser extension:** ask the user to open App Studio's **Build using AI** page (robot
+     button in the header), keep that tab open, and paste the prompt there. Then go back to step 0.
+     Never ask for an API key here; Claude in Chrome won't handle one.
+   - **Outside a browser extension** (e.g. Claude Code): offer **A)** "I have an API key" (sent as
+     `X-Api-Key`) or **B)** "Guide me to create one" in the Passport Admin Dashboard
+     ([Procedure/APIKeyAgent/01-create-api-key.md](../../../Procedure/APIKeyAgent/01-create-api-key.md)).
+4. **Never standalone, not even as an option.** Never build, publish, keep or offer a standalone
+   website, page, theme, artifact or HTML file: not as a fallback, not with approval, not "keep
+   the earlier version". When blocked, only offer ways to restore MCP or changes to the App Studio
+   app. Never build through the studio UI either.
 
 **See [`MCP_SERVER_CONFIG.md`](../../MCP_SERVER_CONFIG.md) for setup details.**
 

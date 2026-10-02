@@ -17,9 +17,12 @@ Before any agent begins work, it must verify that its required MCP server tools 
 
 3. **If tools are NOT available:**
    - STOP immediately
-   - Do not build a substitute deliverable (artifact, HTML page, standalone file, browser-UI build)
+   - Never build, publish, keep or **offer** a substitute deliverable (artifact, HTML page,
+     standalone site or file, browser-UI build), not even with the user's approval
    - Tell the user in plain words: "The required [MCP Server Name] is not available in this session"
-   - Ask: "(a) connect the MCP server and retry, or (b) explicitly approve a named fallback"
+   - Offer only ways to restore MCP: in a browser extension, open the studio's **Build using AI**
+     page and use its bridge ([use-page-mcp-bridge.md](use-page-mcp-bridge.md)); otherwise connect
+     the MCP server and retry. There is no fallback option.
    
 4. **Fallback approval:**
    - Only proceed with a fallback if the user explicitly approves in chat
