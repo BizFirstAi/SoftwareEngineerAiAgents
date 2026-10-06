@@ -4,7 +4,7 @@
 
 This file is the index. For any specific widget type being configured, load its dedicated doc from the `widgets/` folder.
 
-## All 17 Widget Types
+## All 18 Widget Types
 
 ### Interactive & Form
 
@@ -142,7 +142,7 @@ Every widget config is **arbitrary JSON** with an index signature `[key: string]
 
 1. Check this index (02-widget-types.md) to understand the widget's purpose
 2. Load the widget's Tier 1 doc from `widgets/{type}.md` for full config details
-3. Never preemptively load all 17 — load only what's needed for this app
+3. Never preemptively load all 18 — load only what's needed for this app
 
 ---
 

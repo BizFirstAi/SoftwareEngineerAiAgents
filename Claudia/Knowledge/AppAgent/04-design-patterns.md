@@ -121,15 +121,15 @@ If user has their own colors:
 
 ### "App looks unstyled/thin" (Most Common)
 
-**Root cause:** `allowScripts: true` on a `content` widget silently strips the entire `<style>` block.
+**Root cause:** `allowScripts: false` (the default) on a `content` widget with `html`/`markdown` format silently strips the entire `<style>` block.
 
 **Fix:**
 1. Check content widget's `allowScripts` flag
-2. Set to `false` if styles are embedded
-3. OR move `<style>` outside script block
+2. Set it to `true` if the content includes a `<style>` block
+3. OR remove the `<style>` block and style the widget via `update_widget_placement`'s `styleConfiguration` instead (preferred — see "Styling Best Practices" below)
 4. Reload Player (hard F5)
 
-**Why:** Content widgets sanitize HTML for security. The sanitizer's config flags scripts as allowed but then removes their surrounding `<style>` unconditionally.
+**Why:** Content widgets sanitize HTML for security (`ContentSanitizer.ts`, DOMPurify). With `allowScripts` false, the sanitizer uses a restrictive custom tag allowlist that does **not** include `style` — any `<style>` block is removed. `allowScripts: true` switches to DOMPurify's own broader default allowlist, which does include `style`, so the block survives. (The MCP `create_widget` tool now rejects a `content`/`html`|`markdown` widget containing `<style>` without `allowScripts: true` up front, so this should surface as an explicit tool error rather than a silent rendering gap — if you see the error, this is the fix.)
 
 ### Styles not changing after update
 
@@ -152,12 +152,17 @@ If user has their own colors:
 
 ### Layout widgets (nav, branding) don't theme
 
-**Root cause:** `site-branding` and `page-navigation` don't fully participate in `--app-var-*` cascade.
+**Root cause — two genuinely different cases, don't conflate them:**
 
-**Fix:**
-1. Test these explicitly separate from content sections
-2. May need custom CSS overrides
-3. Document which theme vars actually affect these widgets
+1. **The fixed `AppNavMenu` top/side bars** (the legacy menu every app has by default, *not* a placed widget) are hardcoded app chrome with no `WidgetID` — there is no `styleConfiguration` slot for them at all, in the Designer or via any MCP tool. This is a real, structural limitation, not a missing CSS override. Do not attempt to style it; it cannot be done.
+2. **The `page-navigation` widget** is a different thing: a real, placeable `AppWidget` (create it via `create_widget` like any other widget). The moment one is placed anywhere in the app's layout, `AppPlayer` automatically **replaces** the fixed `AppNavMenu` bars with it — it is not additive, and the app does not end up with two menus. Unlike the fixed bars, this widget genuinely IS stylable: it reads `--color-bg-secondary`, `--color-text-secondary`, `--color-bg-tertiary`, `--color-text-primary`, and `--color-border` (not `--app-var-*`) for its colors, and those are regular CSS custom properties — inherited, so they can be overridden.
+
+**Fix for a themed menu:**
+1. `create_widget` with `widgetType: "page-navigation"`, `configuration: {"orientation": "horizontal"}` (or `"vertical"`), placed in the header (or wherever the menu should sit).
+2. `update_widget_placement` on that new placement with `styleConfiguration` = `{"widgetContainer": {"css": "--color-bg-secondary: <theme color>; --color-text-secondary: <theme color>; --color-bg-tertiary: <theme color>; --color-text-primary: <theme color>; --color-border: <theme color>;"}}` — plain custom-property declarations, no selectors or braces needed beyond the JSON structure itself.
+3. Verify in the real App Player (hard reload) — the fixed bars should be gone, replaced by this widget in your theme colors.
+
+If the app must keep the fixed `AppNavMenu` instead (e.g. it relies on the fixed bar's layout), its colors are a known, unfixable-via-tools limitation — tell the user to change it themselves in App Config, don't spend further effort trying tool-based overrides on it.
 
 ## Style Builder Structure (Technical)
 
@@ -224,8 +229,8 @@ Both AppWidget and AppSection support a raw `css` field for custom styles:
 - [ ] App renders without layout breaks at 320px, 768px, 1024px, 1440px
 - [ ] Hard reload (F5) shows fresh styles, not cached old ones
 - [ ] Theme tokens are defined and applied
-- [ ] No "unstyled" sections (check `allowScripts` flags)
-- [ ] Layout widgets tested separately for theming
+- [ ] No "unstyled" sections (any content widget with `<style>` has `allowScripts: true`)
+- [ ] Menu theming checked: the fixed `AppNavMenu` top/side bars cannot be restyled by any tool — if the app needs a themed menu, place a `page-navigation` widget instead (see "Layout widgets (nav, branding) don't theme" above), which replaces the fixed bars automatically and IS stylable
 - [ ] Real Player (not Designer) rendering verified
 
 ---
