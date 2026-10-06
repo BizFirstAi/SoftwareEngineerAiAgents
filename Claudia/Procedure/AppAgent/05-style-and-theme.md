@@ -54,7 +54,7 @@ Apply styling, colors, responsive design, and theming to an app.
    - Preview in App Player (not just Designer — Player injects default theme)
    - Hard reload (F5) to clear any cached styles
    - Test on different devices/widths
-   - Check that `allowScripts` bug doesn't strip styles (see [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md))
+   - Check that any content widget with an embedded `<style>` block has `allowScripts: true` set — otherwise it's silently stripped (see [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md)); `create_widget` now rejects this case up front, so a tool error here means fix the flag, not the content
 
 ## Style Builder System
 
@@ -81,8 +81,8 @@ Apply styling, colors, responsive design, and theming to an app.
 
 ## Know Issues & Workarounds
 
-1. **`allowScripts` bug** — Setting `allowScripts: true` on content widgets silently strips entire `<style>` block. If styles disappear, check this flag.
-2. **Layout widget theming** — `site-branding` and `page-navigation` don't fully participate in `--app-var-*` theme cascade. Test explicitly and override if needed.
+1. **`allowScripts` bug** — Leaving `allowScripts` at its default `false` on a content widget whose content includes a `<style>` block silently strips it. Set `allowScripts: true` to keep it, or better, drop the `<style>` block and use `update_widget_placement`'s `styleConfiguration` instead. `create_widget` now rejects the unsafe combination with an explicit error rather than letting it fail silently.
+2. **Fixed menu can't be themed; the `page-navigation` widget can** — The legacy fixed `AppNavMenu` top/side bars are not a widget (no `WidgetID`), so no tool can style them, period. For a themed menu, `create_widget` a `page-navigation` widget instead — placing one anywhere in the layout automatically replaces the fixed bars, and it reads real, overridable CSS custom properties (`--color-bg-secondary`, `--color-text-secondary`, `--color-bg-tertiary`, `--color-text-primary`, `--color-border` — note: not `--app-var-*`), settable via that widget's own `update_widget_placement` → `styleConfiguration.widgetContainer.css`. `site-branding` genuinely has no theme hook yet — test it explicitly and treat off-theme branding colors as a real, currently-unfixable limitation, not something to keep retrying.
 3. **Player theme injection** — App Player always injects default dark theme. Use explicit prefixed classes (`nh-main`, etc.) to override it.
 4. **Client-side caching** — Hard reload (F5) required after style changes; refresh alone may not clear cached CSS.
 
