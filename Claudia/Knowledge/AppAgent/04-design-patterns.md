@@ -78,6 +78,11 @@ Two placements of the same Widget can have different styles — this is placemen
 
 ## Picking a Palette
 
+**Default to the industry-specific library in [`site-building-lessons.md`](site-building-lessons.md)
+§ 8 (healthcare/wellness, retail, SaaS, portfolio, nonprofit)** when the app's industry/audience is
+known — it's tested and gives primary/secondary/surface/text/accent plus type/spacing defaults in one
+place. The generic presets below are a fallback for when no industry match applies.
+
 ### Preset Palettes
 
 1. **Deep Night** (dark, modern)
@@ -121,17 +126,27 @@ If user has their own colors:
 
 ## Common Style Issues & Solutions
 
+### "Large dark/empty voids above or below content"
+
+**Root cause:** no MCP tool reliably sets a section's background, so the App Player's own default
+dark background shows through anywhere your content doesn't explicitly cover (tracked as platform
+gap P1, see [`platform-requests.md`](platform-requests.md)).
+
+**Fix:** use the "full-page band" pattern — give the section's own content an explicit
+`background`/`backgroundImage` AND either `minHeight` (in `vh`) or generous padding, set through
+`update_widget_placement`'s `styleConfiguration.widgetContainer.style` (camelCase keys), not relying
+on a section-level tool and not relying on the content HTML's own inline styles (mostly stripped). See
+[`site-building-lessons.md`](site-building-lessons.md) §2–§3.
+
 ### "App looks unstyled/thin" (Most Common)
 
-**Root cause:** `allowScripts: false` (the default) on a `content` widget with `html`/`markdown` format silently strips the entire `<style>` block.
+**Root cause:** a `content` widget's `html`/`markdown` content has an embedded `<style>` block. `allowScripts: false` (the default) silently strips it.
 
-**Fix:**
-1. Check content widget's `allowScripts` flag
-2. Set it to `true` if the content includes a `<style>` block
-3. OR remove the `<style>` block and style the widget via `update_widget_placement`'s `styleConfiguration` instead (preferred — see "Styling Best Practices" below)
-4. Reload Player (hard F5)
+**Fix:** remove the `<style>` block from the content and style the widget via `update_widget_placement`'s `styleConfiguration` instead (see "Styling Best Practices" below). Then hard-reload the Player (F5) to confirm.
 
-**Why:** Content widgets sanitize HTML for security (`ContentSanitizer.ts`, DOMPurify). With `allowScripts` false, the sanitizer uses a restrictive custom tag allowlist that does **not** include `style` — any `<style>` block is removed. `allowScripts: true` switches to DOMPurify's own broader default allowlist, which does include `style`, so the block survives. (The MCP `create_widget` tool now rejects a `content`/`html`|`markdown` widget containing `<style>` without `allowScripts: true` up front, so this should surface as an explicit tool error rather than a silent rendering gap — if you see the error, this is the fix.)
+**Do not set `allowScripts: true` to "fix" this.** As of the most recent verified build (AppID 1121, 2026-11-02), `create_widget` rejects a `<style>` block unless `allowScripts: true` is set, and `allowScripts: true` itself is **not permitted via MCP at all** — don't try to work around it. Even inline `style=""` attributes written directly in a content widget's HTML are **mostly stripped** by the Player (backgrounds, grid, sizes, `object-fit` are lost; only basic text color tends to survive) — so a content widget's own HTML cannot reliably carry layout/visual styling either way. The only reliable path is styling the **placement**, not the content: `update_widget_placement`'s `styleConfiguration.widgetContainer.style` object, with **camelCase** keys (`backgroundColor`, not `background-color`) — see [`site-building-lessons.md`](site-building-lessons.md) §2 for the exact list of which style keys the Player actually honors. The separate `styleConfiguration.widgetContainer.css` raw-string field (below) is weaker still — one flat declarations block, no selectors.
+
+**Why DOMPurify strips it in the first place:** Content widgets sanitize HTML for security (`ContentSanitizer.ts`, DOMPurify). The restrictive custom tag allowlist it uses by default does not include `style` — any `<style>` block is removed, silently, not rejected.
 
 ### Styles not changing after update
 
@@ -199,18 +214,55 @@ For agents calling MCP:
 
 ## CSS Escape Hatch
 
-Both AppWidget and AppSection support a raw `css` field for custom styles:
+`styleConfiguration`'s `css` field supports raw custom styles, but it is **far more limited than it
+looks**: it accepts exactly ONE flat declarations block, applied to one element — no selectors, no
+braces, no nested rules, no `@`-rules of any kind.
 
+**Valid:**
+```json
+{
+  "css": "color: red; padding: 8px;"
+}
+```
+
+**Invalid — silently dropped, not partially applied, not an error:**
 ```json
 {
   "css": ".custom-rule { color: red; }"
 }
 ```
+Any literal `{`, `}`, or `@` anywhere in the string causes the **entire** block to be discarded. That
+means no `:hover`, no `::before`, no `@keyframes`, no `@media`/`@container` — responsive behavior only
+comes from the platform's own built-in mobile/tablet/desktop breakpoints, not from anything you write
+here. **Verified** against the sanitizer directly — see
+[`site-building-lessons.md`](site-building-lessons.md) §2 for the full explanation and what this
+means for what's actually achievable.
 
 **Constraints:**
-- Hard sanitizer removes `<script>`, `onclick`, `javascript:` URLs
+- A literal `{`, `}`, or `@` anywhere drops the whole block silently
 - Content Security Policy applies
-- Keeps CSS, removes event handlers
+- Keeps flat CSS declarations, removes event handlers and script URLs
+
+## Tested Section Recipes (verified builds)
+
+**Styled through widget placements, not content-widget HTML** — content widgets cannot reliably carry
+layout styling (see above), so every recipe below styles the *placement* (`update_widget_placement`'s
+`styleConfiguration.widgetContainer.style`, camelCase keys) of ordinary widgets (`image`/`video` as
+cards, `content` for plain-text structure only). Full recipes with exact verified style keys live in
+[`site-building-lessons.md`](site-building-lessons.md) §3 — load that file when you're about to build
+any of these, not just this summary:
+
+- **Header** — a `content` brand widget (plain `h1`/`p` text structure) with a gradient placement
+  background, above a `page-navigation` widget (site-wide via `appPageID: null`)
+- **Hero** — a `content` widget whose placement gets `backgroundImage`, `backgroundSize: cover`, and
+  an explicit `minHeight`, not just padding, or the Player's dark background shows through above/below it
+- **Feature/card row** — native `image`/`video` widgets as cards, each placement styled
+  `display: inline-block` with an explicit `width`/`minWidth`/`margin` percentage, not a hand-built flex
+  `<div>` inside a content widget's HTML (that HTML's own inline styles would mostly be stripped)
+- **Footer** — a `content` widget in the `footer` section, site-wide, same `appPageID: null` rule as the header
+- **Full-page band (general rule)** — any section meant to visually fill the viewport needs its
+  placement's own explicit `background`/`backgroundImage` AND either `minHeight` or generous padding
+  set through `styleConfiguration`, never through the content HTML's own inline styles
 
 ## Responsive Design Testing
 
@@ -231,10 +283,10 @@ Both AppWidget and AppSection support a raw `css` field for custom styles:
 - [ ] App renders without layout breaks at 320px, 768px, 1024px, 1440px
 - [ ] Hard reload (F5) shows fresh styles, not cached old ones
 - [ ] Theme tokens are defined and applied
-- [ ] No "unstyled" sections (any content widget with `<style>` has `allowScripts: true`)
+- [ ] No "unstyled" sections (no content widget has an embedded `<style>` block — styling lives in `styleConfiguration`, never `allowScripts: true`, which this tool rejects anyway)
 - [ ] Menu theming checked: the fixed `AppNavMenu` top/side bars cannot be restyled by any tool — if the app needs a themed menu, place a `page-navigation` widget instead (see "Layout widgets (nav, branding) don't theme" above), which replaces the fixed bars automatically and IS stylable
 - [ ] Real Player (not Designer) rendering verified
 
 ---
 
-**See Also:** [01-app-model.md](01-app-model.md) | [05-integration-guide.md](05-integration-guide.md) | [site-building-lessons.md](site-building-lessons.md) | [Procedure: Style & Theme](../../Procedure/AppAgent/05-style-and-theme.md)
+**See Also:** [site-building-lessons.md](site-building-lessons.md) | [platform-requests.md](platform-requests.md) | [01-app-model.md](01-app-model.md) | [05-integration-guide.md](05-integration-guide.md) | [Procedure: Style & Theme](../../Procedure/AppAgent/05-style-and-theme.md) | [Procedure: Validate App](../../Procedure/AppAgent/06-validate-app.md)

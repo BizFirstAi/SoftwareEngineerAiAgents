@@ -135,7 +135,7 @@ Pages:
   4. Orders — Order history, Status, Tracking
 
 Styling:
-  Colors: Brand colors? [Select or Default]
+  Colors: Retail palette — #1a1a2e/#e8a33d (recommended for your industry) [Use this / Pick another / My own colors]
   Mobile-friendly: Yes
   Responsive breakpoints: Mobile, Tablet, Desktop
 

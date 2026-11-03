@@ -160,8 +160,10 @@ Raw base URL: `https://raw.githubusercontent.com/BizFirstAi/SoftwareEngineerAiAg
 | [`Knowledge/AppAgent/04-design-patterns.md`](https://raw.githubusercontent.com/BizFirstAi/SoftwareEngineerAiAgents/main/Claudia/Knowledge/AppAgent/04-design-patterns.md) | App Studio — Design Patterns, Theming & Style System |
 | [`Knowledge/AppAgent/05-integration-guide.md`](https://raw.githubusercontent.com/BizFirstAi/SoftwareEngineerAiAgents/main/Claudia/Knowledge/AppAgent/05-integration-guide.md) | AppAgent — MCP Integration Guide |
 | [`Knowledge/AppAgent/06-mcp-server-reference.md`](https://raw.githubusercontent.com/BizFirstAi/SoftwareEngineerAiAgents/main/Claudia/Knowledge/AppAgent/06-mcp-server-reference.md) | AppStudio MCP Server Reference |
+| [`Knowledge/AppAgent/site-building-lessons.md`](https://raw.githubusercontent.com/BizFirstAi/SoftwareEngineerAiAgents/main/Claudia/Knowledge/AppAgent/site-building-lessons.md) | AppAgent — Site Building Lessons (verified Player styling, MCP tool reality, recipes, palette library) |
+| [`Knowledge/AppAgent/template-catalogue.md`](https://raw.githubusercontent.com/BizFirstAi/SoftwareEngineerAiAgents/main/Claudia/Knowledge/AppAgent/template-catalogue.md) | Template Catalogue |
+| [`Knowledge/AppAgent/platform-requests.md`](https://raw.githubusercontent.com/BizFirstAi/SoftwareEngineerAiAgents/main/Claudia/Knowledge/AppAgent/platform-requests.md) | Platform Requests — Tracked, Not Agent-Fixable |
 | [`Knowledge/AppAgent/README.md`](https://raw.githubusercontent.com/BizFirstAi/SoftwareEngineerAiAgents/main/Claudia/Knowledge/AppAgent/README.md) | AppAgent Knowledge Base |
-| [`Knowledge/AppAgent/site-building-lessons.md`](https://raw.githubusercontent.com/BizFirstAi/SoftwareEngineerAiAgents/main/Claudia/Knowledge/AppAgent/site-building-lessons.md) | AppAgent — Site Building Lessons (verified Player styling, MCP limits) |
 
 ## Knowledge: Credentials
 

@@ -11,7 +11,7 @@ Apply styling, colors, responsive design, and theming to an app.
 
 ## Key Concepts (Load First)
 
-**Load:** [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md)
+**Load:** [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md), [site-building-lessons.md](../../Knowledge/AppAgent/site-building-lessons.md) (§2 for exactly why styling attempts silently fail, §3 for the copy-ready layout recipe)
 
 - **Theme tokens** (`--app-var-*`) — CSS custom properties for colors, fonts, spacing
 - **Style Builder system** — Structured style slots (component level, section level, app level)
@@ -27,11 +27,17 @@ Apply styling, colors, responsive design, and theming to an app.
    - Define main color, accent colors, background, text color
    - Create CSS class prefix (e.g., `nh-` for "Nila Herbals")
 
-2. **Apply section-level styling (MCP)**
-   - For each page section, call `update_section_style`:
-     - Background color/image
-     - Padding/margin (spacing)
-     - Max-width, alignment
+2. **Apply section-level styling (MCP, if available)**
+   - For each page section, try `update_section_style` for background/padding/max-width/alignment —
+     but **verify it actually changes the rendered output** before relying on it; it is not in the
+     real tool list in at least one verified build (tracked as platform gap P1 in
+     [`platform-requests.md`](../../Knowledge/AppAgent/platform-requests.md)). If it doesn't exist or
+     has no effect, use the "full-page band" pattern instead — give the section's own content an
+     explicit `backgroundImage`/`minHeight` directly through `update_widget_placement`'s
+     `styleConfiguration.widgetContainer.style` (camelCase keys — never inline HTML `style=""`, which
+     is mostly stripped), per
+     [`site-building-lessons.md`](../../Knowledge/AppAgent/site-building-lessons.md) §2–§3. This is
+     what avoids the dark/empty voids that show through the Player's default background otherwise.
      - Use theme tokens with prefix: `background: var(--app-var-primary, #123456)`
 
 3. **Apply widget-level styling (MCP)**
@@ -51,10 +57,12 @@ Apply styling, colors, responsive design, and theming to an app.
    - Adjust responsive breakpoints if needed
 
 6. **Validate theming**
+   - Run the full [Design Quality Gate](06-validate-app.md) — "preview looks fine" is not the bar;
+     the gate's checklist (dark voids, readable text, visual hierarchy, consistent palette) is
    - Preview in App Player (not just Designer — Player injects default theme)
    - Hard reload (F5) to clear any cached styles
    - Test on different devices/widths
-   - Check that any content widget with an embedded `<style>` block has `allowScripts: true` set — otherwise it's silently stripped (see [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md)); `create_widget` now rejects this case up front, so a tool error here means fix the flag, not the content
+   - Check that no content widget has an embedded `<style>` block at all — `allowScripts: true` is not permitted via MCP, so any `<style>` block is a dead end; style the placement instead via `styleConfiguration.widgetContainer.style` (see [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md)). Also remember a content widget's own inline `style=""` attributes are mostly stripped too (backgrounds, grid, sizing lost) — don't rely on them for layout. Full verified details in [site-building-lessons.md](../../Knowledge/AppAgent/site-building-lessons.md) §2
 
 ## Style Builder System
 
@@ -81,7 +89,7 @@ Apply styling, colors, responsive design, and theming to an app.
 
 ## Know Issues & Workarounds
 
-1. **`allowScripts` bug** — Leaving `allowScripts` at its default `false` on a content widget whose content includes a `<style>` block silently strips it. Set `allowScripts: true` to keep it, or better, drop the `<style>` block and use `update_widget_placement`'s `styleConfiguration` instead. `create_widget` now rejects the unsafe combination with an explicit error rather than letting it fail silently.
+1. **Never embed `<style>` in content, and don't rely on inline `style=""` either** — a content widget's `<style>` block requires `allowScripts: true`, which is **not permitted via MCP at all** (verified 2026-11-02) — there is no escape hatch here, don't try. Inline `style=""` attributes written directly in the content HTML are also mostly stripped (backgrounds, grid, sizing lost; only basic text color tends to survive). The only reliable path is `update_widget_placement`'s `styleConfiguration.widgetContainer.style` object with **camelCase** keys — see [site-building-lessons.md](../../Knowledge/AppAgent/site-building-lessons.md) §2 for the exact list of which style keys the Player actually honors.
 2. **Fixed menu can't be themed; the `page-navigation` widget can** — The legacy fixed `AppNavMenu` top/side bars are not a widget (no `WidgetID`), so no tool can style them, period. For a themed menu, `create_widget` a `page-navigation` widget instead — placing one anywhere in the layout automatically replaces the fixed bars, and it reads real, overridable CSS custom properties (`--color-bg-secondary`, `--color-text-secondary`, `--color-bg-tertiary`, `--color-text-primary`, `--color-border` — note: not `--app-var-*`), settable via that widget's own `update_widget_placement` → `styleConfiguration.widgetContainer.css`. `site-branding` genuinely has no theme hook yet — test it explicitly and treat off-theme branding colors as a real, currently-unfixable limitation, not something to keep retrying.
 3. **Player theme injection** — App Player always injects default dark theme. Use explicit prefixed classes (`nh-main`, etc.) to override it.
 4. **Client-side caching** — Hard reload (F5) required after style changes; refresh alone may not clear cached CSS.
@@ -97,9 +105,11 @@ Apply styling, colors, responsive design, and theming to an app.
 
 ## Knowledge
 
+- [site-building-lessons.md](../../Knowledge/AppAgent/site-building-lessons.md) — verified gotchas, why styling silently fails, copy-ready recipes
 - [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md) — Full theming system, tokens, Style Builder, examples
 - [01-app-model.md](../../Knowledge/AppAgent/01-app-model.md) — styleConfiguration field details
 - [02-widget-types.md](../../Knowledge/AppAgent/02-widget-types.md) → specific widget docs for widget-specific style options
+- [platform-requests.md](../../Knowledge/AppAgent/platform-requests.md) — tool limits that aren't agent-fixable
 
 ---
 

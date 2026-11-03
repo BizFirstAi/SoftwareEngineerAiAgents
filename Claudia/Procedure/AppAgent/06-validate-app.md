@@ -8,6 +8,46 @@ Final verification that the app works correctly before publishing.
 - After major changes (pages, widgets, styling, content)
 - When user reports issues rendering or navigating
 
+## Design Quality Gate (mandatory — run after EVERY page, before reporting ANY page or the app as done)
+
+A real build (Clarity Mind Health, AppID 1122) followed every other step in this procedure correctly
+and still produced an unprofessional site — header/menu/footer only on Home, dark navy voids above
+and below content, a stray strip on card rows, text too small to read comfortably — while the agent
+reported it as "clean" and "done." **"Styling rendered without an error" is not a pass.** This gate
+exists so that never happens again.
+
+**Steps, every time, no exceptions:**
+
+1. Hard-reload the real App Player (not the Designer canvas — Designer and Player can render
+   differently; see [`site-building-lessons.md`](../../Knowledge/AppAgent/site-building-lessons.md)).
+2. Take a screenshot at desktop width (~1440px) and at mobile width (~390px).
+3. Review **every page**, not just the one you just changed — a site-wide widget placement mistake
+   (see the `appPageID` gotcha in `site-building-lessons.md` §1) can silently break pages you didn't
+   touch.
+
+**Checklist — every item must pass:**
+
+- [ ] Header, menu, sign-in, and footer appear on **every page**, not just Home
+- [ ] No dark or empty bands where the Player's default background shows through
+- [ ] No stray strips, overlaps, or horizontal scroll at either width
+- [ ] Body text is readable (≥16px effective size)
+- [ ] There is a clear visual hierarchy (headings read as headings, not same-size-as-body text)
+- [ ] Every page has a visible call-to-action
+- [ ] Imagery or another intentional visual element is present — not just text in colored boxes
+- [ ] The color palette is consistent across the whole site
+- [ ] Nothing overlaps anything else
+
+**If any item fails:** fix it using the recipes and gotchas in
+[`site-building-lessons.md`](../../Knowledge/AppAgent/site-building-lessons.md), and re-run the gate.
+If a failure is a known tool limitation (see that file §1–§3, or
+[`platform-requests.md`](../../Knowledge/AppAgent/platform-requests.md)), you may stop trying to
+work around it — but you must **tell the user plainly** what's wrong and why it's a tool limitation,
+not a vague caveat buried in a longer message.
+
+**Never** describe a result that fails this gate as "clean," "professional," or "done." When the gate
+passes, give a short, honest report that also lists any remaining known flaws (even minor ones) —
+not just a success statement.
+
 ## Test Checklist
 
 ### 1. Navigation & Structure
@@ -108,10 +148,12 @@ Before calling `publish_app`:
 
 ## Knowledge
 
+- [site-building-lessons.md](../../Knowledge/AppAgent/site-building-lessons.md) — verified gotchas, recipes, and the full reasoning behind the Design Quality Gate above
 - [01-app-model.md](../../Knowledge/AppAgent/01-app-model.md) — Section scoping, page defaults, primary content
 - [02-widget-types.md](../../Knowledge/AppAgent/02-widget-types.md) → specific widget docs for widget-specific testing
 - [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md) — Style issues, theme testing
 - [05-integration-guide.md](../../Knowledge/AppAgent/05-integration-guide.md) — API patterns
+- [platform-requests.md](../../Knowledge/AppAgent/platform-requests.md) — known tool limitations that are not agent-fixable
 
 ## After Publishing
 

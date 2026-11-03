@@ -2,6 +2,15 @@
 
 **How AppAgent calls MCP to create, configure, and publish apps.**
 
+**Always call `listTools()` (or this server's `tools/list`) first, every session, and trust its
+output over the tables below if they disagree.** The REST-style paths and params in this file and in
+`AGENT.md` are illustrative of the shape of the API, not a guarantee of what's currently deployed —
+some have been verified missing (see
+[`site-building-lessons.md`](site-building-lessons.md) §1 for the dated, verified list, including
+`update_widget_definition` and a `theme` param on `update_app`, both of which this file used to
+describe as available and are not, as of the last live check). Re-verify anything here against your
+own `listTools()` call before depending on it.
+
 ## Authentication & Setup
 
 ### API Endpoint
@@ -96,17 +105,17 @@ Content-Type: application/json
 |------|---------|--------|
 | `list_widget_definitions` | Get all reusable Widgets | (paging) → returns widget array |
 | `create_widget_definition` | Create reusable Widget | `name`, `widgetType`, `configuration` → returns `widgetID` |
-| `update_widget_definition` | Update Widget definition | `widgetID`, `configuration` |
+| `update_widget_definition` | Update Widget definition | `widgetID`, `configuration` — **not present in every deployment; verified missing as of a 2026-09-18 live check (see [site-building-lessons.md](site-building-lessons.md) §1). Confirm via `listTools()` before planning an edit-in-place flow around it — if it's absent, a content/config fix means delete + rebuild, not an edit.** |
 
 ### AppWidgets (Placements)
 
 | Tool | Purpose | Params |
 |------|---------|--------|
-| `create_widget` | Place widget in app/page/section | `appID`, `appPageID?`, `widgetID`, `sectionName`, `displayOrder?`, `configuration?` → returns `appWidgetID` |
-| `update_widget_placement` | Edit placement | `appID`, `appWidgetID`, `appPageID?`, `sectionName?`, `displayOrder?`, `styleConfiguration?` |
-| `list_app_widgets` | Get placements for app | `appID` → returns AppWidget array |
+| `create_widget` | Place widget in app/page/section | `appID`, `appPageID?`, `widgetID`, `sectionName`, `displayOrder?`, `configuration?` → returns `appWidgetID`. **`configuration` must be passed as a JSON STRING (`JSON.stringify(...)`), not an object — passing an object returns a generic "internal error" with no field-level hint. Verified, AppID 1122.** |
+| `update_widget_placement` | Edit placement | `appID`, `appWidgetID`, `appPageID?`, `sectionName?`, `displayOrder?`, `styleConfiguration?`. **`appPageID: null` is what makes a placement site-wide — setting any real `appPageID` on a header/footer region silently scopes it to one page only, even if the tool's own description text suggests otherwise. Verified, AppID 1122.** |
+| `list_app_widgets` | Get placements for app | `appID` → returns AppWidget array. **Does not include the widget's name** — join back through `widgetID`, don't look up by name. |
 | `set_default_widget` | Mark as default | `appID`, `appWidgetID` |
-| `delete_widget` | Remove placement | `appID`, `appWidgetID` |
+| `delete_widget` | Remove placement | `appID`, `appWidgetID` — **not present in every deployment; if missing, hide a placement instead with `styleConfiguration: {"widgetContainer":{"css":"display:none"}}`.** |
 
 ### Templates
 
@@ -149,35 +158,31 @@ Content-Type: application/json
 
 ## Widget Configuration Shapes
 
-**Each widget type has a different `configuration` object.** Examples:
+**Each widget type has a different `configuration` shape — and on `create_widget`, the whole thing
+must be passed as a JSON STRING, not an object** (see the AppWidgets table above). The objects below
+show the shape to stringify, not what to actually send:
 
-**Content Widget:**
+**Content Widget** (stringify this object → `configuration: "{\"content\":\"Hello world\",\"format\":\"html\"}"`):
 ```json
 {
-  "configuration": {
-    "content": "Hello world",
-    "format": "html"
-  }
+  "content": "Hello world",
+  "format": "html"
 }
 ```
 
 **Form Widget:**
 ```json
 {
-  "configuration": {
-    "formId": 123
-  }
+  "formId": 123
 }
 ```
 
 **Image Widget:**
 ```json
 {
-  "configuration": {
-    "imageUrl": "https://example.com/image.jpg",
-    "alt": "Description",
-    "caption": "Optional caption"
-  }
+  "imageUrl": "https://example.com/image.jpg",
+  "alt": "Description",
+  "caption": "Optional caption"
 }
 ```
 
@@ -200,6 +205,10 @@ Content-Type: application/json
 }
 ```
 
+**Remember the `css` escape-hatch field (not shown above) is far more limited than `style`** — it
+accepts exactly one flat declarations block per element, no selectors or braces, and `style` keys must
+be camelCase. See [site-building-lessons.md](site-building-lessons.md) §2.
+
 **Section styling:**
 
 ```json
@@ -211,6 +220,11 @@ Content-Type: application/json
   }
 }
 ```
+
+**Verify this actually changes the rendered page before relying on it** — in some deployments no
+section-background tool has any effect at all (tracked as platform gap P1 in
+[platform-requests.md](platform-requests.md)); if so, use the "full-page band" pattern in
+[site-building-lessons.md](site-building-lessons.md) §2–§3 instead.
 
 ## Testing Connection
 
@@ -255,4 +269,4 @@ If this fails, authentication/endpoint is wrong — stop and fix before proceedi
 
 ---
 
-**See Also:** [01-app-model.md](01-app-model.md) | [06-mcp-server-reference.md](06-mcp-server-reference.md) | [Procedures](../../Procedure/AppAgent/README.md)
+**See Also:** [site-building-lessons.md](site-building-lessons.md) | [platform-requests.md](platform-requests.md) | [01-app-model.md](01-app-model.md) | [06-mcp-server-reference.md](06-mcp-server-reference.md) | [Procedures](../../Procedure/AppAgent/README.md)

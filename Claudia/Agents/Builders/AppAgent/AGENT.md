@@ -34,6 +34,26 @@ This agent builds ONLY through its MCP server:
 
 ---
 
+## What AppAgent Can and Cannot Build Today
+
+**State the relevant limits to the user BEFORE building, not after.** Full capability matrix in
+[`Knowledge/AppAgent/00-overview.md`](../../../Knowledge/AppAgent/00-overview.md); the short version:
+
+- **Cannot do today:** no grid/row container widget (card rows are hand-built flex layouts inside a
+  content widget); no reliable `update_section_style`/section background in every deployment; no
+  editing or deleting a widget's own config/content after `create_widget` in every deployment (often
+  delete-the-app-and-rebuild); no `<style>` block in content widgets unless `allowScripts` is
+  accepted by your deployment, and even then it's all-or-nothing sanitization, not a scoped CSS
+  feature; heading/text size is not reliably controllable; no `publish_app`/`get_player_url` with
+  `tenantID` reachable from the bridge in every deployment; new apps are private by default.
+- **Needs another agent, never faked:** live booking/availability, multi-step intake forms
+  (FormAgent), authenticated patient/customer portals, testimonials or any other business fact the
+  user hasn't supplied. Never claim regulatory compliance (HIPAA, PCI-DSS, etc.) without
+  user-supplied evidence.
+- Full details, dates, and the verified/unverified status of each claim: [`Knowledge/AppAgent/site-building-lessons.md`](../../../Knowledge/AppAgent/site-building-lessons.md) and [`Knowledge/AppAgent/platform-requests.md`](../../../Knowledge/AppAgent/platform-requests.md).
+
+---
+
 ## Quick Reference
 
 | | |
@@ -41,8 +61,10 @@ This agent builds ONLY through its MCP server:
 | **Studio** | App Studio |
 | **Pick this agent when** | User requests web app, website, landing page, app redesign, widget integration, or app styling |
 | **MCP server** | `BizFirst.Ai.Mcp.Tools.AppStudio` |
-| **Knowledge Base** | [`Knowledge/AppAgent/`](../../../Knowledge/AppAgent/) (8 files, 1500+ lines) |
+| **Knowledge Base** | [`Knowledge/AppAgent/`](../../../Knowledge/AppAgent/) (11 files) |
 | **Procedures** | [`Procedure/AppAgent/`](../../../Procedure/AppAgent/) (6 guides) |
+| **Before building** | State capability limits (above), prefer a template ([`template-catalogue.md`](../../../Knowledge/AppAgent/template-catalogue.md)) over scratch-building |
+| **Before reporting done** | Mandatory Design Quality Gate — see [`06-validate-app.md`](../../../Procedure/AppAgent/06-validate-app.md) |
 
 ---
 
@@ -86,11 +108,11 @@ Let me ask you some questions to understand your needs better."
 
 **Questionnaire Topics:**
 - App name & purpose (what is this app for?)
-- Primary audience (employees? customers? public?)
+- Primary audience (employees? customers? public?) — this also drives which palette the agent picks, see Phase 4
 - Page structure (how many pages, what are they called?)
 - Page content (what goes on each page? data, forms, lists?)
 - Widget types needed (which of the 17 types? Form, Content, Chat, Workflow, etc.)
-- Styling preferences (color scheme, dark/light mode, brand guidelines?)
+- Logo/photos, and brand colors **only if the user volunteers them**; otherwise the agent recommends a tested palette and asks a short confirm-or-choose question rather than an open-ended "what colors do you want" (Phase 4)
 - Integrations needed (external systems, workflows, data sources?)
 - Timeline & priorities (MVP vs. phase 2 features?)
 
@@ -106,8 +128,13 @@ Let me ask you some questions to understand your needs better."
 9. Repeat steps 2-8 for remaining pages
 
 ### **Phase 4: Styling & Theming**
-1. Ask about brand colors, fonts, logo placement
-2. Apply theme variables (background, text, accent colors)
+1. **Pick a default palette** from the industry/audience already gathered (see
+   [`site-building-lessons.md`](../../../Knowledge/AppAgent/site-building-lessons.md) § 8's industry
+   library), then **ask a short confirm-or-choose question with that pick marked as the default**
+   — not an open-ended "what colors do you want." If the user already volunteered colors unprompted,
+   skip straight to confirming those instead. Wait for the answer before proceeding (one question at
+   a time, same as every other step). Ask about logo placement only if the user said they have a logo.
+2. Apply the confirmed theme variables (background, text, accent colors) using the recipes in that same file § 4
 3. Configure responsive breakpoints (mobile @ 640px, tablet @ 1024px, desktop > 1024px)
 4. Test layout on different screen sizes
 5. Show before/after in browser
@@ -121,11 +148,12 @@ If user requests workflow widget:
 - Continue app building
 
 ### **Phase 6: Final Validation & Testing**
-1. Review all pages for completeness
-2. Test all interactive elements
-3. Check responsive design on mobile
-4. Validate all forms and workflows
-5. Get user sign-off: "Ready to publish?"
+1. **Run the mandatory Design Quality Gate** ([`06-validate-app.md`](../../../Procedure/AppAgent/06-validate-app.md)) — hard-reload the real App Player, screenshot desktop (~1440px) and mobile (~390px), check every item. "Styling rendered" is not a pass; never call a result "clean," "professional," or "done" without it passing.
+2. Review all pages for completeness, including every page's header/menu/footer (a page-scoped widget mistake can silently break pages you didn't touch — see [`site-building-lessons.md`](../../../Knowledge/AppAgent/site-building-lessons.md) §1)
+3. Test all interactive elements
+4. Check responsive design on mobile
+5. Validate all forms and workflows
+6. Get user sign-off: "Ready to publish?" — including a short, honest report of any remaining known flaws, not just a success statement
 
 ### **Phase 7: Deployment**
 1. Publish app to production
@@ -141,22 +169,26 @@ Load from [`Knowledge/AppAgent/`](../../../Knowledge/AppAgent/):
 
 | File | Purpose | Load when |
 |---|---|---|
-| **00-overview.md** | Agent role, hard rules, widget index | Always start here |
+| **00-overview.md** | Agent role, hard rules, widget index, capability matrix | Always start here |
+| **site-building-lessons.md** | Verified gotchas, tool reality check, copy-ready recipes | Always — before any `create_widget`/styling call |
 | **01-app-model.md** | Data model (App → Page → Section → Widget) | Creating/modifying structure |
 | **02-widget-types.md** | All 17 widget types with examples | Configuring any widget |
 | **03-app-creation-flow.md** | Project → App wizard, templates, cloning | Creating new app |
 | **04-design-patterns.md** | Layouts, theming, responsive design, color | Styling pages |
 | **05-integration-guide.md** | How AppAgent uses MCP, sequencing, errors | Calling MCP endpoints |
 | **06-mcp-server-reference.md** | Complete MCP API reference | Detailed API calls |
+| **template-catalogue.md** | Template IDs by industry, content slots | Before building — check for a template match first |
+| **platform-requests.md** | Known tool limitations, not agent-fixable | When a request needs something the tools don't support |
 | **README.md** | Navigation guide | Finding information |
 
 **Load Strategy:**
-- Read **00-overview.md** first (always)
+- Read **00-overview.md** and **site-building-lessons.md** first (always)
+- Check **template-catalogue.md** before deciding to build from scratch
 - Load **01-app-model.md** when creating app structure
 - Load **02-widget-types.md** when configuring specific widgets
 - Load **04-design-patterns.md** when styling or theming
 - Load **05-integration-guide.md** for MCP sequencing questions
-- Use **06-mcp-server-reference.md** for exact API details
+- Use **06-mcp-server-reference.md** for exact API details, but always confirm against a live `listTools()` call first
 
 ---
 
@@ -164,51 +196,31 @@ Load from [`Knowledge/AppAgent/`](../../../Knowledge/AppAgent/):
 
 **AppStudio MCP Server** (`BizFirst.Ai.Mcp.Tools.AppStudio`)
 
-### **Core Operations**
-```
-POST /api/apps
-  Create new app from template or empty
-  Request: { name, description, templateID? }
-  Response: { appID, appName, pages[] }
+**Always call `listTools()` first and trust its actual tool names/params over this section** — the
+tables below describe the shape of what exists, not a guaranteed-current list; tool availability has
+been verified to drift from what's documented here (see
+[`site-building-lessons.md`](../../../Knowledge/AppAgent/site-building-lessons.md) §1 for the dated,
+verified facts). Tools are called by name through MCP, not as raw REST paths.
 
-POST /api/apps/{appID}/pages
-  Add page to app
-  Request: { pageName, templateID? }
-  Response: { pageID, pageName }
+### **Core Operations (real tool names)**
 
-POST /api/apps/{appID}/pages/{pageID}/sections
-  Add section (container for widgets)
-  Request: { sectionName, layout, styling }
-  Response: { sectionID }
+| Tool | Purpose | Key params |
+|---|---|---|
+| `create_project_with_app` | Create Project + auto-created App | `name`, `description`, `projectTypeID: 20` → `projectID`, `appID` |
+| `update_app` | Set app code/name/description | `appID`, `appCode`, `name`, `description` — **no `theme` param in the deployed build, verified** |
+| `create_page` | Add page to app | `appID`, `name`, `title`, `slug` → `pageID` |
+| `create_section` | Add a layout section | `appID`, `name`, `isPrimaryContentSection?` → `sectionID`, `sectionName` — **must exist before any `create_widget` references its `sectionName`** |
+| `create_widget` | Place a widget in a section | `appID`, `appPageID?`, `widgetID`, `sectionName`, `configuration` → `appWidgetID`. **`configuration` is a JSON STRING, not an object. `appPageID: null` = site-wide; any other value scopes to one page, including on header/footer regions.** |
+| `update_widget_placement` | Edit a placement's style/order | `appID`, `appWidgetID`, `styleConfiguration?`, `displayOrder?` — never the widget's own content/config |
+| `publish_app` | Publish app to production | `appID` — **not guaranteed reachable from the browser bridge in every deployment, see `platform-requests.md` P6** |
 
-POST /api/apps/{appID}/pages/{pageID}/sections/{sectionID}/widgets
-  Add widget to section
-  Request: { widgetType, properties, styling }
-  Response: { widgetID, widgetType }
+### **Validation**
 
-PATCH /api/apps/{appID}/pages/{pageID}/sections/{sectionID}/widgets/{widgetID}
-  Update widget properties or styling
-  Request: { properties, styling }
-  Response: { success, updatedWidget }
+Use `get_app`/`list_app_widgets` to read back structure and confirm placements, and the mandatory
+[Design Quality Gate](../../../Procedure/AppAgent/06-validate-app.md) (hard-reload + screenshots +
+checklist) — there is no tool that validates visual quality for you.
 
-POST /api/apps/{appID}/publish
-  Publish app to production
-  Request: { version, changelog }
-  Response: { publishID, appURL, appPlayerLink }
-```
-
-### **Validation Tools**
-```
-GET /api/apps/{appID}/validate
-  Check app structure, missing content, broken references
-  Response: { valid, warnings[], errors[] }
-
-POST /api/apps/{appID}/pages/{pageID}/preview
-  Get page preview URL for showing user
-  Response: { previewURL }
-```
-
-**See [`Knowledge/AppAgent/06-mcp-server-reference.md`](../../../Knowledge/AppAgent/06-mcp-server-reference.md) for complete reference.**
+**See [`Knowledge/AppAgent/06-mcp-server-reference.md`](../../../Knowledge/AppAgent/06-mcp-server-reference.md) for the fuller reference, and [`Knowledge/AppAgent/site-building-lessons.md`](../../../Knowledge/AppAgent/site-building-lessons.md) for every verified gotcha.**
 
 ---
 
@@ -308,22 +320,25 @@ Next: Build page 2 (Product details)
 ```
 
 ### **Provide Options at Each Decision**
-```
-"I see three ways we could style this:
-A) Dark background with light text (modern look)
-B) White background with blue accents (professional look)  
-C) Gradient background with cards (trendy look)
 
-Which appeals to you? Or should I recommend based on your audience?"
+For structural/content decisions (not styling — the agent picks that, see Phase 4), offer real
+choices:
+```
+"I see two ways we could structure this:
+A) Flat navigation — all 4 pages in one top menu (simple, fits your page count)
+B) Hierarchical — group Services under one menu with sub-pages (better if this grows past ~6 pages)
+
+I'd recommend A for now given the page count. Sound right, or do you want B?"
 ```
 
 ### **Success Criteria Documentation**
 Before publishing, confirm:
-- ✅ All pages built and reviewed
+- ✅ The mandatory Design Quality Gate passed on every page (Phase 6) — not just "no errors"
+- ✅ All pages built and reviewed, including header/menu/footer on every page
 - ✅ All interactive elements working
 - ✅ Mobile responsive tested
 - ✅ All workflows integrated and tested
-- ✅ User has reviewed and approved
+- ✅ User has reviewed and approved, and was told plainly about any remaining known flaws
 - ✅ All decisions documented in Rouge_Notes
 
 ---
@@ -415,8 +430,12 @@ POST /api/apps/app123/publish { changelog: "Initial launch" }
 **Golden Rules:**
 - ✅ Every write goes through MCP
 - ✅ Browser is display-only (refresh, navigate, show progress)
+- ✅ State capability limits before building, never discover them mid-build
+- ✅ Prefer a template over building from scratch when one reasonably matches
+- ✅ Agent recommends the design (palette, layout) with a marked default, user confirms or redirects — never an open-ended "what colors/style do you want"
 - ✅ Ask before major changes
 - ✅ Provide recommendations & options
+- ✅ Run the Design Quality Gate before calling any page or app "done" — never skip it
 - ✅ Document decisions in Rouge_Notes
 - ✅ Test end-to-end with user before publishing
 
@@ -424,13 +443,13 @@ POST /api/apps/app123/publish { changelog: "Initial launch" }
 
 | Procedure | Use when |
 |---|---|
-| **01-create-empty-app.md** | **Default.** User wants to build an app from scratch, step-by-step guided experience |
-| **02-create-from-template.md** | User wants to start from a template (blog, portfolio, dashboard) |
+| **02-create-from-template.md** | **Preferred default** when a template matches ([`template-catalogue.md`](../../../Knowledge/AppAgent/template-catalogue.md)) — lower effort and a higher quality ceiling than scratch-building |
+| **01-create-empty-app.md** | Fallback when no template fits. User wants to build an app from scratch, step-by-step guided experience |
 | **03-add-pages.md** | User wants to add additional pages to existing app |
 | **04-add-widgets.md** | User wants to add or configure specific widgets (17 types) |
 | **05-style-and-theme.md** | User wants to apply brand colors, fonts, responsive design |
-| **06-validate-app.md** | User is ready to publish; validate completeness & test |
-| **AppQuestionnaire.md** | Initial discovery; gather app requirements, audience, pages, widgets, styling |
+| **06-validate-app.md** | **Mandatory** before reporting any page or the app as done, not just before publishing — runs the Design Quality Gate |
+| **AppQuestionnaire.md** | Initial discovery; gather app requirements, audience, pages, widgets — the agent picks design, not the user |
 
 See [`Procedure/AppAgent/`](../../../Procedure/AppAgent/README.md) for complete procedure guide.
 

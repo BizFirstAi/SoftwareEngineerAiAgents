@@ -191,17 +191,28 @@ Future:
 
 ## **Section 4: Design & Branding**
 
-### 4.1 Color Scheme
-**Question:** What colors represent your brand?
-- **Option 1:** Use existing brand colors (provide hex codes)
-- **Option 2:** Choose from preset palettes
-  - Professional Blue
-  - Modern Green
-  - Bold Orange
-  - Minimalist Gray
-- **Option 3:** Choose a theme (Light, Dark, Auto-detect)
+### 4.1 Color Scheme — Agent Recommends, User Confirms
 
-**Helper:** Colors are used for buttons, headers, highlights, and accents throughout the app.
+**Don't ask an open-ended "what colors represent your brand" question** — users cannot reliably
+supply raw hex codes or style descriptors from scratch. Instead, pick a default first, then ask a
+short confirm-or-choose question with that pick already marked as the recommendation:
+
+- Pick a default palette from the industry/audience already captured in Section 1.3, using the
+  palette library in [`site-building-lessons.md`](../../Knowledge/AppAgent/site-building-lessons.md)
+  § 8 (healthcare/wellness, retail, SaaS, portfolio, nonprofit, or the closest match).
+- **If the user already volunteered colors unprompted** (e.g. "use our brand blue, #0066cc"), skip
+  straight to confirming you'll use those — don't re-ask.
+- Otherwise, ask, with the pick marked as the default:
+  - **Question:** "Which look fits your site?"
+    - 1. **[Industry] palette** — [primary]/[accent] *(recommended, based on your industry)*
+    - 2. A different palette from the library — tell me which industry/mood fits better
+    - 3. Your own colors — a main color + light or dark preference
+  - Wait for the answer before moving on (same "ask, wait, move on" rule as every other question in
+    this questionnaire) — this is not a statement to skip past.
+
+**Helper:** Colors are used for buttons, headers, highlights, and accents throughout the app —
+recommending a tested, coherent palette as the default produces a more professional result than an
+open-ended question would, while still letting the user redirect it.
 
 ### 4.2 Logo & Branding Assets
 **Question:** Do you have a logo?
@@ -210,14 +221,12 @@ Future:
   - Placement: Top-left or centered header
 - **No** — We can use a text-based header or placeholder
 
-### 4.3 Typography
-**Question:** What tone does your app convey?
-- **Professional** — Formal, business-focused
-- **Modern** — Clean, contemporary, minimalist
-- **Friendly** — Approachable, warm, conversational
-- **Technical** — Detail-oriented, precise
+### 4.3 Typography — Folded into 4.1, Not a Separate Question
 
-**Recommendation:** [Based on industry + audience, suggest font pairing]
+Same approach as 4.1: derive type and spacing defaults from the industry/audience using the palette
+library in `site-building-lessons.md` § 8 (each row includes a type/spacing pairing). Don't ask a
+separate "what tone does your app convey" question — mention the type choice as part of the same 4.1
+confirm-or-choose question (e.g. append it to each option: "...clean sans-serif, generous spacing").
 
 ### 4.4 Responsive Design
 **Question:** What devices will users access from?
