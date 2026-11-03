@@ -161,6 +161,7 @@ Raw base URL: `https://raw.githubusercontent.com/BizFirstAi/SoftwareEngineerAiAg
 | [`Knowledge/AppAgent/05-integration-guide.md`](https://raw.githubusercontent.com/BizFirstAi/SoftwareEngineerAiAgents/main/Claudia/Knowledge/AppAgent/05-integration-guide.md) | AppAgent — MCP Integration Guide |
 | [`Knowledge/AppAgent/06-mcp-server-reference.md`](https://raw.githubusercontent.com/BizFirstAi/SoftwareEngineerAiAgents/main/Claudia/Knowledge/AppAgent/06-mcp-server-reference.md) | AppStudio MCP Server Reference |
 | [`Knowledge/AppAgent/README.md`](https://raw.githubusercontent.com/BizFirstAi/SoftwareEngineerAiAgents/main/Claudia/Knowledge/AppAgent/README.md) | AppAgent Knowledge Base |
+| [`Knowledge/AppAgent/site-building-lessons.md`](https://raw.githubusercontent.com/BizFirstAi/SoftwareEngineerAiAgents/main/Claudia/Knowledge/AppAgent/site-building-lessons.md) | AppAgent — Site Building Lessons (verified Player styling, MCP limits) |
 
 ## Knowledge: Credentials
 
