@@ -14,12 +14,47 @@
 
 ## Key Concepts (Load Before Building)
 
+- **Site-Building Lessons** (`site-building-lessons.md`) — verified App Player styling rules (which style keys actually work), real MCP tool limits, the professional-page layout recipe, and the industry palette library. Load this alongside this file, always — read before styling or laying out any app.
 - **App Model** (`01-app-model.md`) — Hierarchy: App → Page → Section → AppWidget → Widget. CRITICAL: `AppSection` is a separate, explicitly-created object.
 - **App Creation Flow** (`03-app-creation-flow.md`) — How apps are created: unified Project→App flow, wizard (Empty vs Template), template export/import
 - **Widget Types** (`02-widget-types.md`) — All 17 real widget types: forms, content, media, galleries, chat, workflows, etc.
 - **Design Patterns** (`04-design-patterns.md`) — Theming, styling, layout, responsive design using the Style Builder system
 - **MCP Integration** (`05-integration-guide.md`) — How to call MCP tools, API patterns, error handling
-- **Site Building Lessons** (`site-building-lessons.md`) — Verified App Player styling rules, MCP tool limits and the layout recipe for professional-looking pages. Read before styling or laying out any app.
+
+## What AppAgent Can and Cannot Build Today
+
+**State the relevant limits to the user before building**, not after they see a flawed result. Full,
+dated, verified-or-unverified detail lives in [`site-building-lessons.md`](site-building-lessons.md)
+and [`platform-requests.md`](platform-requests.md) — this is the summary.
+
+**Cannot do today (verified, as of the dates in `site-building-lessons.md` §1):**
+- No grid/row container widget — card rows and multi-column layouts are hand-built flex layouts
+  inside a content widget's own HTML, not a real layout widget.
+- No reliable section/page background or max-width styling tool in every deployment — the Player's
+  default dark background can show through as empty voids unless worked around per-widget.
+- No way to control heading/body text size beyond what each element's own inline style sets —
+  a container's `fontSize` does not cascade into `h1`/`h2`/`h3`/`p`.
+- No scoped, safe `<style>` block for real CSS (hover, `@keyframes`, nested selectors) in every
+  deployment. The flat `styleConfiguration.css` escape hatch accepts exactly one declarations block
+  per element — no selectors or braces at all.
+- No editing or deleting a widget's own config/content after `create_widget` in every deployment —
+  often means delete-the-app-and-rebuild for a content fix, not an edit.
+- No custom app-level theme (`update_app` has no `theme` param in the deployed build) — apps render
+  on the platform's 19 built-in default color tokens.
+- `publish_app`/a published player link may not be reachable from the browser MCP bridge in every
+  deployment.
+- A `form` widget in create/edit mode renders with **no submit button** — no config works around this;
+  use `wa.me`/`tel:`/`mailto:` deep links in a content widget for capture instead.
+- New apps are private by default.
+
+**Needs another agent — never faked, never built standalone:**
+- Workflow widgets → WorkflowAgent
+- Complex/validated forms → FormDeveloper/FormAgent
+- Live booking/availability, authenticated customer/patient portals — flag these as out of scope for
+  AppAgent alone up front; don't attempt a partial fake of them with static content.
+
+**Never claim regulatory compliance** (HIPAA, PCI-DSS, GDPR, SOC 2, etc.) is met without user-supplied
+evidence — a professional-looking page is not compliance.
 
 ## Hard Rules
 
@@ -33,13 +68,15 @@
 
 ## Quick Start
 
-1. Read `00-overview.md` (this file) — always
-2. Load `01-app-model.md` — when creating/modifying structure
-3. Load `02-widget-types.md` (index only) → fetch specific `widgets/{type}.md` when needed
-4. Load `03-app-creation-flow.md` — when creating new app
-5. Load `04-design-patterns.md` — when styling or theming
-6. Load `05-integration-guide.md` — for MCP patterns
-7. Load `06-mcp-server-reference.md` — for specific tool details
+1. Read `00-overview.md` (this file) and `site-building-lessons.md` — always
+2. Check `template-catalogue.md` before deciding to build from scratch
+3. Load `01-app-model.md` — when creating/modifying structure
+4. Load `02-widget-types.md` (index only) → fetch specific `widgets/{type}.md` when needed
+5. Load `03-app-creation-flow.md` — when creating new app
+6. Load `04-design-patterns.md` — when styling or theming
+7. Load `05-integration-guide.md` — for MCP patterns
+8. Load `06-mcp-server-reference.md` — for specific tool details
+9. Run the Design Quality Gate ([`06-validate-app.md`](../../Procedure/AppAgent/06-validate-app.md)) before reporting anything done
 
 ## Widget Type Index (17 Total)
 
@@ -80,6 +117,9 @@
 
 ## Navigation
 
+- [Site-Building Lessons (gotchas, recipes, tool reality)](site-building-lessons.md)
+- [Template Catalogue](template-catalogue.md)
+- [Platform Requests (tracked gaps)](platform-requests.md)
 - [App Model & API](01-app-model.md)
 - [Widget Types Reference](02-widget-types.md)
 - [App Creation Flow](03-app-creation-flow.md)

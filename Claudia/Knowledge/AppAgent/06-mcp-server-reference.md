@@ -25,7 +25,7 @@ Key generated in admin app, scoped to tenant + user.
 
 Signed-in user with valid tenant scope from auth context.
 
-**Some tools behave differently per auth method** (e.g., field visibility, defaults) — see [site-building-lessons.md](../../Knowledge/AppAgent/site-building-lessons.md) for gotchas.
+**Some tools behave differently per auth method** (e.g., field visibility, defaults) — see [site-building-lessons.md](site-building-lessons.md) for gotchas.
 
 ## Endpoint Reference
 
@@ -263,9 +263,12 @@ Request:
   "configuration": { /* widget-specific */ }
 }
 ```
+**Via the MCP tool (`create_widget`), `configuration` must be passed as a JSON STRING, not an object
+— see [site-building-lessons.md](site-building-lessons.md) §1 (verified, AppID 1122).**
 
 #### `PUT /widgets/{id}`
-**Update widget definition**
+**Update widget definition — not present in every deployment.** Verified missing as of a live
+`tools/list` check, 2026-09-18 — see [site-building-lessons.md](site-building-lessons.md) §1.
 
 #### `DELETE /widgets/{id}`
 **Delete widget definition**
@@ -426,4 +429,4 @@ POST /apps/{appID}/publish
 
 ---
 
-**See Also:** [05-integration-guide.md](05-integration-guide.md) | [01-app-model.md](01-app-model.md) | [02-widget-types.md](02-widget-types.md)
+**See Also:** [site-building-lessons.md](site-building-lessons.md) | [platform-requests.md](platform-requests.md) | [05-integration-guide.md](05-integration-guide.md) | [01-app-model.md](01-app-model.md) | [02-widget-types.md](02-widget-types.md)

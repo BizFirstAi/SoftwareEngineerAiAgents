@@ -40,12 +40,22 @@ Before proceeding, confirm that the AppAgent's MCP server tools are available AN
 
 ## Knowledge to Load
 
-- [00-overview.md](../../Knowledge/AppAgent/00-overview.md) (always)
+- [00-overview.md](../../Knowledge/AppAgent/00-overview.md) (always) — includes the capability matrix (what AppAgent can/can't build today); state the relevant limits before building, not after
+- [site-building-lessons.md](../../Knowledge/AppAgent/site-building-lessons.md) (always) — verified gotchas and copy-ready recipes used throughout this procedure
 - [03-app-creation-flow.md](../../Knowledge/AppAgent/03-app-creation-flow.md) (app creation wizard)
 - [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md) (when choosing look/feel)
 - [01-app-model.md](../../Knowledge/AppAgent/01-app-model.md) (when creating structure)
 - [02-widget-types.md](../../Knowledge/AppAgent/02-widget-types.md) (widget index, then specific `widgets/{type}.md`)
 - [05-integration-guide.md](../../Knowledge/AppAgent/05-integration-guide.md) (MCP patterns)
+- [template-catalogue.md](../../Knowledge/AppAgent/template-catalogue.md) — check before Step 1: a matching template beats building from scratch (see [02-create-from-template.md](02-create-from-template.md))
+
+## Step 0.5 — Set Expectations Before Building
+
+Before the questionnaire, briefly state any capability limits relevant to what the user is
+describing (see `00-overview.md`'s capability matrix) — for example, if they want live booking,
+multi-step intake forms, or an authenticated portal, say up front that those need
+FormAgent/WorkflowAgent collaboration or aren't buildable today, rather than discovering it mid-build
+or silently delivering less than asked. Never claim compliance (HIPAA, PCI, etc.) without user-supplied evidence.
 
 ## Step 1 — What Are We Building? (After Preflight Passes)
 
@@ -80,19 +90,40 @@ Then ask for the **site name** (used in Project, App, and header). Never guess i
 
 Do NOT go on until the check passes.
 
-## Step 4 — Look and Feel (Styling)
+## Step 4 — Look and Feel (Agent Recommends, User Confirms)
 
-**Load:** [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md)
+**Load:** [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md), [site-building-lessons.md § 8 palette library](../../Knowledge/AppAgent/site-building-lessons.md)
 
-Ask:
+Users can't reliably supply styling details from scratch (raw hex codes, font pairings), so don't ask
+an open-ended "what colors do you want" question. Instead, pick a palette first, then ask a short
+confirm-or-choose question with that pick as the marked default — same shape as every other question
+in this procedure (numbered options, one marked default, answer required before moving on):
 
-> **Which look fits your site?**
-> 1. **Deep night** — dark, modern *(default for apps)*
-> 2. **Fresh light** — clean, bright *(default for websites)*
-> 3. **Warm earth** — natural, calm
-> 4. Your own colors — tell me a main color and light or dark
+1. Pick a default palette from the industry/audience already captured in Step 2, using the palette
+   library in `site-building-lessons.md` § 8 (healthcare/wellness, retail, SaaS, portfolio, nonprofit
+   — or the closest match if the industry isn't listed).
+2. **If the user already volunteered colors unprompted** (e.g. in Step 2's own-words description),
+   skip straight to confirming you'll use those — don't re-ask.
+3. Otherwise, ask:
 
-Pick a short class prefix from the site name (e.g., `nh-` for "Nila Herbals"). Show the palette in examples. You will put this palette in every widget as a local token block. The `var()` fallbacks alone aren't enough — App Player always injects default dark theme, which beats them. Use the prefix on every class.
+   > **Which look fits your site?**
+   > 1. **[Industry] palette** — [primary]/[accent] on [surface] *(recommended, based on your
+   >    industry)*
+   > 2. A different palette from the library — tell me which industry/mood fits better
+   > 3. Your own colors — tell me a main color and light or dark preference
+
+4. Wait for the answer before proceeding (Hard Rule 2) — don't treat silence or a generic "looks
+   good" elsewhere as consent to skip this question.
+5. There is no working app-level theme mechanism (`update_app` has no `theme` param — see
+   `site-building-lessons.md` §1) and a content widget's own inline styles are mostly stripped (§2), so
+   apply the confirmed palette's hex values **directly, per widget placement**, via
+   `update_widget_placement`'s `styleConfiguration.widgetContainer.style` (camelCase keys — see the
+   recipes in `site-building-lessons.md` § 3). Give every top-level section's placement its own
+   explicit `background`/`backgroundImage` and `minHeight` (§2–§3, the "full-page band" pattern) —
+   otherwise the Player's default dark background shows through as empty voids.
+
+The only content questions for this step are: purpose, audience, pages, copy, logo/photos (already
+covered in earlier steps) — never "what colors do you want."
 
 ## Step 5 — Pages
 
@@ -171,19 +202,28 @@ Never make up field values — ask user for content.
 After each page or section is built:
 
 1. Call `publish_app` (as draft, if supported)
-2. Show user the app in App Player
-3. Scroll, highlight sections, test nav
-4. Ask: "Does this match what you wanted?"
-5. If not, follow [04-add-widgets.md](04-add-widgets.md) or [05-style-and-theme.md](05-style-and-theme.md) to adjust
+2. **Run the Design Quality Gate** ([06-validate-app.md](06-validate-app.md)) — hard reload the real
+   App Player, screenshot desktop and mobile, check every item. Do this before showing the user
+   anything or calling the result done.
+3. Show user the app in App Player
+4. Scroll, highlight sections, test nav
+5. Ask: "Does this match what you wanted?" — and if the gate found flaws you couldn't fix, say so
+   plainly here rather than only asking if it "looks right"
+6. If not, follow [04-add-widgets.md](04-add-widgets.md) or [05-style-and-theme.md](05-style-and-theme.md) to adjust
 
 ## Step 9 — Final Review & Publish
 
-1. Ask user to review the complete app
-2. Test all pages, all widgets, all navigation
-3. Check styling/theme on different page widths (responsive test)
-4. When user says yes: **call `publish_app` via MCP with explicit user confirmation**
+1. **Run the Design Quality Gate** ([06-validate-app.md](06-validate-app.md)) one final time across
+   every page, not just the last one touched
+2. Ask user to review the complete app
+3. Test all pages, all widgets, all navigation
+4. Check styling/theme on different page widths (responsive test)
+5. When user says yes: **call `publish_app` via MCP with explicit user confirmation, if the tool is
+   available** — it is not guaranteed to be in every deployment's tool list (see
+   [`platform-requests.md`](../../Knowledge/AppAgent/platform-requests.md) P6); if it's missing, tell
+   the user plainly and hand off the manual publish step rather than silently failing or claiming success.
 
-5. Show final URL and success message
+6. Show final URL and success message
 
 ## If User Skips Guidance
 
