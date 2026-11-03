@@ -2,6 +2,8 @@
 
 **Reference for building styled, themed apps with the Style Builder system and theme token cascade.**
 
+> **Verified in the real App Player:** which style keys are accepted (camelCase only), what the Player strips, and the hero/card/header layout recipe are in [site-building-lessons.md](site-building-lessons.md). Read it before styling any app.
+
 ## The Three-Level Style System
 
 ```
@@ -235,4 +237,4 @@ Both AppWidget and AppSection support a raw `css` field for custom styles:
 
 ---
 
-**See Also:** [01-app-model.md](01-app-model.md) | [05-integration-guide.md](05-integration-guide.md) | [Procedure: Style & Theme](../../Procedure/AppAgent/05-style-and-theme.md)
+**See Also:** [01-app-model.md](01-app-model.md) | [05-integration-guide.md](05-integration-guide.md) | [site-building-lessons.md](site-building-lessons.md) | [Procedure: Style & Theme](../../Procedure/AppAgent/05-style-and-theme.md)

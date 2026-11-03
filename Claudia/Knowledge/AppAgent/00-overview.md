@@ -19,6 +19,7 @@
 - **Widget Types** (`02-widget-types.md`) — All 17 real widget types: forms, content, media, galleries, chat, workflows, etc.
 - **Design Patterns** (`04-design-patterns.md`) — Theming, styling, layout, responsive design using the Style Builder system
 - **MCP Integration** (`05-integration-guide.md`) — How to call MCP tools, API patterns, error handling
+- **Site Building Lessons** (`site-building-lessons.md`) — Verified App Player styling rules, MCP tool limits and the layout recipe for professional-looking pages. Read before styling or laying out any app.
 
 ## Hard Rules
 
