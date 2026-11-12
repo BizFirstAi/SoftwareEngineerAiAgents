@@ -49,8 +49,11 @@
 ## Quick Links
 
 - [Workflow Architecture](01-workflow-architecture.md)
-- [Node Types Reference](02-node-types.md)
+- [Node Types Reference](02-node-types.md) → deeper docs in [nodes/](nodes/)
 - [Execution Flow & Error Handling](03-execution-flow.md)
 - [Integration Patterns](04-integration-patterns.md)
 - [Testing Guide](05-testing-guide.md)
 - [MCP Server Reference](06-mcp-server-reference.md)
+- [Node Config-Form Resolution](node-forms/agent.md) — a distinct topic from node execution: how the designer resolves a node's config FORM
+- [MCP Design/Architecture Series](mcp-design/) — cross-tenant auth, write-tool authorization, agent-teams design
+- [Node Certification Agent](../../Agents/Testers/WorkflowTester/nodetype-test/nodetypetestagent.md) — automated per-category node certification (unproven as of 2026-11-09, first dry run stalled — see its own §6b)

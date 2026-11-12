@@ -172,15 +172,22 @@ Follow in order:
 - **Knowledge/WorkflowAgent/** — Complete reference docs
   - [00-overview.md](../../Knowledge/WorkflowAgent/00-overview.md) — Concepts
   - [01-workflow-architecture.md](../../Knowledge/WorkflowAgent/01-workflow-architecture.md) — Data flow
-  - [02-node-types.md](../../Knowledge/WorkflowAgent/02-node-types.md) — Node reference
+  - [02-node-types.md](../../Knowledge/WorkflowAgent/02-node-types.md) — Node reference, → [nodes/](../../Knowledge/WorkflowAgent/nodes/) for depth
   - [03-execution-flow.md](../../Knowledge/WorkflowAgent/03-execution-flow.md) — Debugging
   - [04-integration-patterns.md](../../Knowledge/WorkflowAgent/04-integration-patterns.md) — Integration examples
   - [05-testing-guide.md](../../Knowledge/WorkflowAgent/05-testing-guide.md) — Testing reference
   - [06-mcp-server-reference.md](../../Knowledge/WorkflowAgent/06-mcp-server-reference.md) — MCP API
+  - [node-forms/](../../Knowledge/WorkflowAgent/node-forms/) — node config-FORM resolution (distinct from node execution)
+  - [mcp-design/](../../Knowledge/WorkflowAgent/mcp-design/) — MCP architecture/design docs
 
 - **Knowledge/Credentials/** — Credential management
 - **Knowledge/Servers/** — Execution infrastructure
-- **Agents/Testers/WorkflowTester/** — Automated testing
+- **Agents/Testers/WorkflowTester/** — Automated testing, including the [Node Certification Agent](../../Agents/Testers/WorkflowTester/nodetype-test/nodetypetestagent.md)
+
+## Platform-Engineering Procedures (not app-building)
+
+- [add-new-node-type.md](add-new-node-type.md) — extending the node-type registry itself
+- [build-and-verify-workflow-via-mcp.md](build-and-verify-workflow-via-mcp.md) — build a workflow through MCP and verify it at the MCP, database and UI levels
 
 ## Tools Reference
 
