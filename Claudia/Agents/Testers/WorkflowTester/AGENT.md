@@ -10,12 +10,12 @@ AI Agent nodes.
 | **MCP server** | `BizFirst.Ai.Mcp.Tools.Workflow` |
 
 This file is an index only. It uses the same knowledge as the
-[Workflow Developer](../../Builders/WorkflowDeveloper/AGENT.md). Start with
+[Workflow Agent](../../Builders/WorkflowAgent/AGENT.md). Start with
 [`testing/nodes-testing-README.md`](testing/nodes-testing-README.md).
 
 ## Procedure
 
-[`Procedure/Workflow/build-and-verify-workflow-via-mcp.md`](../../../Procedure/Workflow/build-and-verify-workflow-via-mcp.md):
+[`Procedure/WorkflowAgent/build-and-verify-workflow-via-mcp.md`](../../../Procedure/WorkflowAgent/build-and-verify-workflow-via-mcp.md):
 build a workflow through MCP and verify it at the MCP, database and UI levels.
 
 ## Test material in this folder
@@ -30,3 +30,4 @@ build a workflow through MCP and verify it at the MCP, database and UI levels.
 | [`testing/elasticsearch/`](testing/elasticsearch/README.md) | Elasticsearch node: test plan, test rounds, workflow build, lessons |
 | [`testing/odoo/`](testing/odoo/README.md) | Odoo node: test plan, credential model, lessons |
 | [`test-results/sample-workflow-mcp-test/`](test-results/sample-workflow-mcp-test/) | First end-to-end Workflow MCP write-path test |
+| [`nodetype-test/nodetypetestagent.md`](nodetype-test/nodetypetestagent.md) | Node Certification Agent (ported 2026-11-12) — given a node category, builds one isolated workflow per node and certifies PASSED/FAILED/BLOCKED/TIMEOUT/SKIPPED. **Unproven**: its first dry run (category "Notification", 2026-11-07/08) stalled at Step 2 — see its own §6b before trusting a "certified" claim |

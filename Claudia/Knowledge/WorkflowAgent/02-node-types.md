@@ -190,9 +190,19 @@ Each node operation has a data template (JSON schema) defining:
 
 Request specific node docs to see complete templates and examples.
 
+## Deeper Per-Node Docs
+
+Every node summarized above has its own file under [`nodes/`](nodes/) with more detail than this
+table (full config field lists, edge cases). `ai-agent` and `flow-ai-agent` each have a 6-file
+sub-folder: [`nodes/ai-agent/`](nodes/ai-agent/00-index.md) (conversation-scope, hil-features,
+invocation-and-agent-resolution, prompt-overrides, tool-servers-and-llm) and
+[`nodes/flow-ai-agent/`](nodes/flow-ai-agent/00-index.md) (llm-and-prompt, loop-and-memory,
+sql-agent, streaming-agent, tools).
+
 ## See Also
 
 - [Workflow Architecture](01-workflow-architecture.md) — Data flow, variables, execution model
 - [Execution Flow & Error Handling](03-execution-flow.md) — How nodes execute, error recovery
 - [Integration Patterns](04-integration-patterns.md) — External system connectors
 - [Testing Guide](05-testing-guide.md) — Validate workflow execution
+- [Node Config-Form Resolution](node-forms/rag/form-resolution-pipeline.md) — how a node's config FORM is resolved (separate from execution, above)

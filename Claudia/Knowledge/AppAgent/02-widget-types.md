@@ -64,7 +64,7 @@ This file is the index. For any specific widget type being configured, load its 
 10. **`content`** — Content Widget
     - **Purpose:** Static HTML, Markdown, or plain-text content
     - **Config:** Yes (`content` + `format`)
-    - **Read:** [widgets/content.md](widgets/content.md)
+    - **Read:** [widgets/content.md](widgets/content.md), plus [widgets/content-widget-templates.md](widgets/content-widget-templates.md) for ready-to-drop templates
 
 ### Media - Single Files
 

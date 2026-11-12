@@ -10,6 +10,7 @@ Complete procedures for AppAgent to build apps using MCP.
 4. [Add Widgets](04-add-widgets.md) — Add and configure widgets
 5. [Style & Theme](05-style-and-theme.md) — Apply styling, theming, responsive design
 6. [Validate App](06-validate-app.md) — **Mandatory Design Quality Gate** — run after every page, not just before publishing
+7. [Add a New Widget Type](add-new-widget-type.md) — extending the widget registry itself (platform engineering, not app-building)
 
 ## Hard Rules (All Procedures)
 

@@ -26,9 +26,12 @@ Complete reference for building, testing, and maintaining Flow Studio workflows.
 
 **Configure a specific node type**
 1. Check [02-node-types.md](02-node-types.md) for available nodes
-2. Look up node-specific docs in `nodes/` (coming soon for undocumented types)
+2. Look up the deeper per-node docs in [`nodes/`](nodes/) for the 18 documented types (full depth for `ai-agent`, `flow-ai-agent` — 6 sub-docs each)
 3. Use [06-mcp-server-reference.md](06-mcp-server-reference.md) `configure_node` tool
 4. See [Procedure/WorkflowAgent/02-add-execution-nodes.md](../../Procedure/WorkflowAgent/02-add-execution-nodes.md)
+
+**Resolve a node's config FORM** (distinct from node execution — the designer-side `Atlas_Forms.PrimaryUsage`/Profile-tier resolution pipeline)
+1. See [`node-forms/`](node-forms/) — `rag/form-resolution-pipeline.md`, `rag/profilename-to-form-contract.md`, `debug-runbook.md`, `fix-playbook.md`
 
 **Handle errors and retries**
 1. Read [03-execution-flow.md](03-execution-flow.md) — "Error Handling" section
@@ -86,6 +89,20 @@ Complete reference for building, testing, and maintaining Flow Studio workflows.
 ### Integration & Real-World Usage
 - [04-integration-patterns.md](04-integration-patterns.md) — HTTP, email, chat, database, ERP, AI patterns
 - [06-mcp-server-reference.md](06-mcp-server-reference.md) — Complete API reference
+
+### Per-Node Deep Reference (ported 2026-11-12)
+- [nodes/](nodes/) — one file per node type beyond the `02-node-types.md` summary table, plus `nodes/ai-agent/` (conversation-scope, HIL features, invocation/agent resolution, prompt overrides, tool servers/LLM) and `nodes/flow-ai-agent/` (LLM/prompt, loop-and-memory, sql-agent, streaming-agent, tools) sub-docs
+- [nodes/00-looping-patterns.md](nodes/00-looping-patterns.md) — cross-node looping patterns
+- [Procedure/WorkflowAgent/add-new-node-type.md](../../Procedure/WorkflowAgent/add-new-node-type.md) · [build-and-verify-workflow-via-mcp.md](../../Procedure/WorkflowAgent/build-and-verify-workflow-via-mcp.md)
+
+### Node Config-Form Resolution (distinct topic from node execution above)
+- [node-forms/](node-forms/) — the `Atlas_Forms.PrimaryUsage`/Profile-tier/`Template_DataTemplates` resolution pipeline, `debug-runbook.md`, `fix-playbook.md`, `audit/`, `lessons/`
+
+### MCP Design/Architecture Series (distinct from the 06 reference doc)
+- [mcp-design/](mcp-design/) — cross-tenant auth, write-tool authorization, agent-teams, Octopus MCP integration, servers-mcp design docs
+
+### Standalone Reference
+- [flow-webhooks-rag.md](flow-webhooks-rag.md) · [known-servers.md](known-servers.md) · [workflow-creation-rag-design.md](workflow-creation-rag-design.md) · [workflow-nodes-ingestion.md](workflow-nodes-ingestion.md)
 
 ### Procedures
 - [Procedure/WorkflowAgent/](../../Procedure/WorkflowAgent/) — Step-by-step guides for all common tasks

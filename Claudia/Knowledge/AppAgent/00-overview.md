@@ -115,9 +115,14 @@ evidence — a professional-looking page is not compliance.
 
 [AppTester](../../Agents/Testers/AppTester/AGENT.md) — validates end-to-end app functionality and widget configuration.
 
+## Related Agents
+
+- [create-app-from-description@agent.md](../../Agents/Builders/AppAgent/create-app-from-description@agent.md) — specialized agent spec for building an app directly from a free-text description
+
 ## Navigation
 
 - [Site-Building Lessons (gotchas, recipes, tool reality)](site-building-lessons.md)
+- [Engineering Lessons (internal bug post-mortems)](engineering-lessons.md)
 - [Template Catalogue](template-catalogue.md)
 - [Platform Requests (tracked gaps)](platform-requests.md)
 - [App Model & API](01-app-model.md)
@@ -126,4 +131,6 @@ evidence — a professional-looking page is not compliance.
 - [Design Patterns](04-design-patterns.md)
 - [MCP Integration Guide](05-integration-guide.md)
 - [MCP Server Reference](06-mcp-server-reference.md)
+- [Architecture](architecture.md) · [Status/Open Items](STATUS.md) · [Development History](DevelopmentHistoryLog.md)
+- [Design History (wix-style-design series, design targets)](design/design-and-plan.md)
 - [Procedures](../../../Procedure/AppAgent/README.md)

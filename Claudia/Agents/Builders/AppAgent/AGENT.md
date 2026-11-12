@@ -453,6 +453,11 @@ POST /api/apps/app123/publish { changelog: "Initial launch" }
 
 See [`Procedure/AppAgent/`](../../../Procedure/AppAgent/README.md) for complete procedure guide.
 
+## Specialized Variant
+
+[`create-app-from-description@agent.md`](create-app-from-description@agent.md) — a followable spec
+for building an app directly from one free-text description instead of the full questionnaire flow.
+
 ## Collaboration Handoffs
 
 **When AppAgent needs other agents:**

@@ -21,6 +21,12 @@ Complete reference for AppAgent building apps, sites, and web applications in Ap
 - [06-mcp-server-reference.md](06-mcp-server-reference.md) — AppStudio MCP server tools API
 - [template-catalogue.md](template-catalogue.md) — template IDs by industry, content slots — check before building from scratch
 - [platform-requests.md](platform-requests.md) — known tool limitations, not agent-fixable
+- [architecture.md](architecture.md) — the automation project's own system architecture (not the App Studio product's — see [01-app-model.md](01-app-model.md) for that)
+- [STATUS.md](STATUS.md) — open items/known bugs as of the last internal engineering pass (point-in-time, verify before relying on it)
+- [DevelopmentHistoryLog.md](DevelopmentHistoryLog.md) — dated history of this knowledge base's own changes
+- [engineering-lessons.md](engineering-lessons.md) — the internal engineering bug post-mortems (config-shape drift, undo-stack corruption, schema drift, etc.) — distinct from and older than [site-building-lessons.md](site-building-lessons.md)'s real-MCP-build lessons; both are worth reading
+- [design/](design/design-and-plan.md) — Designer UX design history: `design-and-plan.md`, `targets/` (6 proposed feature designs), `wix-style-design/` (the 00-08 Designer-UX doc series code comments cite directly)
+- [widgets/](widgets/) — per-widget-type detail docs (one file per type, plus `content-widget-templates.md`), linked from [02-widget-types.md](02-widget-types.md)
 
 ## Procedures
 
@@ -63,9 +69,11 @@ this is a short pointer, not the canonical source:
 
 ## Version Info
 
-Current as of: 2026-09-11  
-Source: `BizFirstAiStudio` and `BizFirst.Ai.Mcp.Tools.AppStudio`  
-Widget coverage: 17/17 documented
+Current as of: 2026-11-12 (ported from the internal `agentic-development-engineers` hub's
+`app-development-engineer/` folder — architecture/status/design-history/lessons/per-widget docs
+that didn't survive the original 2026-09-25 fork)
+Source: `BizFirstAiStudio` and `BizFirst.Ai.Mcp.Tools.AppStudio`
+Widget coverage: 18/18 types documented, 19 widget-folder docs (18 types + `content-widget-templates.md`)
 
 ---
 
