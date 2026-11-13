@@ -79,7 +79,7 @@ Content-Type: application/json
 | `list_apps` | List all apps | (paging) → returns app array |
 | `get_app` | Get one app details | `appID` → returns full app object |
 | `publish_app` | Publish app (live) | `appID` → returns publish status |
-| `delete_app` | Soft-delete app | `appID` |
+| `delete_app` | Soft-delete app | `appID` — **HumanOnly as of 2026-11-12: this tool cannot be invoked by an agent (McpAgentWriter) or an API key at all anymore, only a real signed-in TenantAdmin/Admin session. Calling it from an agent returns a denial, not a result — don't retry, tell the human.** |
 
 ### Pages
 
@@ -98,6 +98,7 @@ Content-Type: application/json
 |------|---------|--------|
 | `create_section` | Create layout section | `appID`, `name?`, `isPrimaryContentSection?`, `style?` → returns `sectionID`, `sectionName` |
 | `update_section_style` | Update section styling | `appID`, `sectionID`, `style` (CSS props) |
+| `delete_section` | Remove a section | `appID`, `sectionName` — **available as of 2026-11-12.** Removes the section from the app's layout AND cascade soft-deletes every widget placed in it (reports `deletedWidgetIDs`/`failedWidgetIDs`). Re-deleting an already-removed or unknown section name reports not-found, not an error — safe to call speculatively. |
 
 ### Widgets (Definitions)
 
@@ -115,7 +116,7 @@ Content-Type: application/json
 | `update_widget_placement` | Edit placement | `appID`, `appWidgetID`, `appPageID?`, `sectionName?`, `displayOrder?`, `styleConfiguration?`. **`appPageID: null` is what makes a placement site-wide — setting any real `appPageID` on a header/footer region silently scopes it to one page only, even if the tool's own description text suggests otherwise. Verified, AppID 1122.** |
 | `list_app_widgets` | Get placements for app | `appID` → returns AppWidget array. **Does not include the widget's name** — join back through `widgetID`, don't look up by name. |
 | `set_default_widget` | Mark as default | `appID`, `appWidgetID` |
-| `delete_widget` | Remove placement | `appID`, `appWidgetID` — **not present in every deployment; if missing, hide a placement instead with `styleConfiguration: {"widgetContainer":{"css":"display:none"}}`.** |
+| `delete_widget` | Remove placement | `appID`, `widgetPlacementID` — **available as of 2026-11-12** (soft delete, `Deleted` flag — the row isn't gone, just hidden from every list/render path). Idempotent: re-deleting an already-removed or unknown placement reports not-found, not an error. Before this date it did not exist at all and the only workaround was hiding a placement with `styleConfiguration: {"widgetContainer":{"css":"display:none"}}` — don't use that workaround anymore, delete it properly. |
 
 ### Templates
 

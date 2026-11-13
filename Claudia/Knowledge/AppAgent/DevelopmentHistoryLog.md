@@ -1,5 +1,23 @@
 # App Studio RAG — Development History Log
 
+## 2026-11-13 — `delete_widget`/`delete_section` shipped; `delete_app`/`delete_server` now HumanOnly; per-agent scope check added
+
+Backend sync (`BizFirstPayrollV3`, MCP authorization hardening, 2026-11-12): `delete_widget` and
+`delete_section` are real tools now (soft delete; the section variant cascades to every widget in
+it), including through the Build-with-AI bridge (its blocklist had a bug matching them by the same
+`^delete_` regex used for `delete_app`/`delete_page`/`delete_server`, fixed with an explicit
+carve-out). `delete_app`/`delete_server` were reclassified `HumanOnly` — unreachable from any agent
+or API key, same tier as `create_credential`. The McpAgentWriter fast path also gained a per-agent
+module-scope check (`mcp:{module}:read|write`), staged via `ScopeMode` (`Off`/`Warn`/`Enforce`,
+default `Warn` — logs but doesn't yet deny). `delete_workflow_node`/`delete_connection` were
+deliberately left unchanged at Write tier.
+
+Updated: `05-integration-guide.md` (Apps/Sections/AppWidgets tool tables), `06-mcp-server-reference.md`
+(Apps/Sections/AppWidgets endpoints, Known Gaps), `site-building-lessons.md` §1 and §10 (the
+`delete_widget` "not available" claim was wrong as of this date; added the HumanOnly and scope-check
+notes), `platform-requests.md` (closed the `delete_widget`/`delete_section` half of P5, kept
+`update_widget` open).
+
 ## 2026-09-26 — Public access + MCP review sync (`app-model.md`, `app-creation-flow.md`, agent doc)
 
 `app-model.md` gained "`ResID` and public access" (ResID on the entity responses; apps/widgets are
