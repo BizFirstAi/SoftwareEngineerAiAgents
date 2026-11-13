@@ -105,7 +105,8 @@ Request:
 ```
 
 #### `DELETE /apps/{id}`
-**Delete app** (soft delete)
+**Delete app** (soft delete). **HumanOnly as of 2026-11-12** — `delete_app` can no longer be called
+by an agent or API key, only a real signed-in TenantAdmin/Admin session.
 
 #### `POST /apps/{id}/publish`
 **Publish app** (make live)
@@ -242,6 +243,19 @@ Request:
 }
 ```
 
+#### `DELETE /apps/{appID}/sections/{id}`
+**Delete section (`delete_section`)** — **available as of 2026-11-12.** Removes the section from the
+app's layout and cascade soft-deletes every widget placed in it or any nested descendant section.
+Request:
+```json
+{
+  "appID": "...",
+  "sectionName": "..."
+}
+```
+Returns `deletedWidgetIDs`/`failedWidgetIDs`. Re-deleting an already-removed or unknown section name
+reports not-found, not an error.
+
 ### Widgets (Definitions)
 
 #### `GET /widgets`
@@ -313,7 +327,10 @@ Request:
 ```
 
 #### `DELETE /apps/{appID}/widgets/{id}`
-**Delete placement**
+**Delete placement (`delete_widget`)** — **available as of 2026-11-12** (soft delete). Params:
+`appID`, `widgetPlacementID` (the `appWidgetID` from `list_widgets_in_app`). Idempotent: re-deleting
+an already-removed or unknown placement reports not-found, not an error. Before this date this tool
+did not exist at all — if you see an older note elsewhere saying it's missing, this supersedes it.
 
 #### `POST /apps/{appID}/widgets/{id}/set-default`
 **Mark placement as default**
@@ -357,7 +374,10 @@ Each widget type has a `WidgetTypeCatalog` entry that validates configuration sh
 
 **Known gaps** (as of last documented build):
 
-1. **No `delete_app_completely`** — only soft delete (`Deleted` flag)
+1. **No `delete_app_completely`** — only soft delete (`Deleted` flag), and as of 2026-11-12 `delete_app`
+   is also HumanOnly (not callable by an agent/API key at all, see Apps section above). `delete_widget`
+   and `delete_section` are NOT in this category anymore — both ship as real agent-callable tools
+   (soft delete) as of the same date.
 2. **No bulk operations** — create/update one at a time
 3. **No drag-drop simulation** — must use tool calls (can't automate Designer's canvas DnD)
 4. **No style validation** — CSS is accepted as-is; bad CSS renders silently
@@ -365,7 +385,8 @@ Each widget type has a `WidgetTypeCatalog` entry that validates configuration sh
 **Workarounds:**
 - Use Designer UI for structural operations when MCP tools are insufficient (rare)
 - Test CSS in browser DevTools before applying via MCP
-- For full deletes, contact DB team (out of scope for MCP)
+- For a full (non-soft) app delete, contact DB team (out of scope for MCP, and now also out of scope
+  for every agent/API-key caller — human-only by design)
 
 ## Rate Limits
 

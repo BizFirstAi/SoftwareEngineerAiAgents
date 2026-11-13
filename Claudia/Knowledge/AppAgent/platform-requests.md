@@ -12,13 +12,18 @@ Every item below was independently confirmed by two separate real builds — Cla
 either build referencing the other. Treat that as a strong signal these are genuine platform gaps, not
 one agent's misunderstanding of the tools.
 
+**Resolved 2026-11-12:** `delete_widget` and `delete_section` shipped (both soft-delete, the latter
+cascading to every widget in the section), including through the Build-with-AI bridge. This used to
+be part of P5 below — see `site-building-lessons.md` §1 for the current call shape. Not an agent
+workaround; a real platform change.
+
 | # | Request | User-visible symptom it fixes | Priority |
 |---|---|---|---|
 | P1 | Section/page `background` and `max-width` styling tool (`update_section_style` that actually has effect, or a real field on `AppSection`) | Large dark/empty bands above and below content where the App Player's default dark background shows through | High |
 | P2 | A grid or row container widget type, with `gap`/`alignment` config | Card rows and multi-column layouts currently have to be hand-built as one big content-widget `<div>` with inline flex styles — no real layout widget exists | High |
 | P3 | Heading/text size control, plus a sanitized *scoped* `<style>` subset (selectors, `:hover`, `@keyframes` — safely sandboxed, not the current all-or-nothing `allowScripts`) | Text stays small regardless of container font-size; no real hover/animation/gradient effects are reachable through any sanctioned tool path | High |
 | P4 | Theme tokens that can actually override the App Player's default dark theme (a real `theme` param on `update_app`, or an equivalent) | Every MCP-built app renders on the same 19 built-in default color tokens; there is no way to give an app its own brand palette at the app level | High |
-| P5 | `update_widget` (edit an existing widget's `configuration`/content) and `delete` for agent-created widgets | Any content fix today requires deleting the whole app and rebuilding from scratch — there is no incremental edit path | Medium |
+| P5 | `update_widget` (edit an existing widget's `configuration`/content) for agent-created widgets | Any content fix today requires create-new-and-hide-old, not a true in-place edit — see `site-building-lessons.md` §1 | Medium |
 | P6 | `publish_app` and `get_player_url` with `tenantID`, reachable from the MCP bridge | AppAgent cannot currently hand the user a working published link without a manual step outside MCP | Medium |
 | P7 | A real `logo`/asset field on `site-branding` (currently only a URL string, no upload/picker reachable from MCP) | Users with a logo file (not already hosted somewhere) have no way to get it into the header through MCP | Low |
 | P8 | `page-navigation` widget alignment/layout config (currently fixed orientation only) | Can't match a specific site design's nav placement (e.g. right-aligned, centered, with dropdowns) | Low |

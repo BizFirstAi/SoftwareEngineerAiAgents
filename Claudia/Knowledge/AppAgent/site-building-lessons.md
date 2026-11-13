@@ -30,12 +30,33 @@ in these docs (see §1).
   error" with no field-level hint. **Verified** 2026-10-xx, AppID 1122. Not confirmed one way or the
   other on the AppID 1121 build; check your own tool's error behavior if `create_widget` fails
   immediately with no useful message.
-- Not available from the bridge / not in the tool list, as of the 2026-11-02 check: `delete_widget`
-  (blocked as destructive), `publish_app`, `update_section_style`, any tool that edits an existing
-  widget's configuration (content text, image URL). To change content you must create a new widget
-  and hide the old one (`display: none` via `update_widget_placement`). Plan content before creating
-  widgets. (A separate, earlier `tools/list` check, 2026-09-18, also found no `update_widget_definition`
-  and no `theme` param on `update_app` — consistent with the above.)
+- **Update 2026-11-12: `delete_widget` and `delete_section` are now real tools, including through the
+  Build-with-AI bridge** (both soft-delete; `delete_section` cascades to every widget in the section).
+  The browser bridge's own blocklist used to match `delete_widget`/`delete_section` by the same
+  `^delete_` regex that blocks `delete_app`/`delete_page`/`delete_server` — that was a bug (the
+  backend already supported them, the bridge just never let an agent call them), fixed with an
+  explicit carve-out for exactly these two names. Call `delete_widget(appID, widgetPlacementID)` or
+  `delete_section(appID, sectionName)` directly; don't use the old `display:none` hide-workaround
+  below anymore, and don't tell a user a widget/section "can't be deleted."
+- Still not available from the bridge / not in the tool list, as of the 2026-11-02 check (re-verify
+  with `listTools()` before relying on this): `publish_app`, `update_section_style`, any tool that
+  edits an existing widget's configuration (content text, image URL). To change content you must
+  create a new widget and hide the old one (`display: none` via `update_widget_placement`) — this
+  hide-workaround is still the right move for a content EDIT, just not for a delete anymore. Plan
+  content before creating widgets. (A separate, earlier `tools/list` check, 2026-09-18, also found no
+  `update_widget_definition` and no `theme` param on `update_app` — consistent with the above.)
+- **`delete_app` and `delete_server` are now HumanOnly (2026-11-12)** — reclassified from the ordinary
+  Write tier to a tier that is structurally unreachable from an agent or API key, same tier
+  `create_credential` already used. Calling either from an agent will be denied; this is intentional,
+  not a bug to work around.
+- **New: per-agent module-scope check on the agent (McpAgentWriter) identity path (2026-11-12)** —
+  previously an authenticated agent identity satisfied any non-HumanOnly tool regardless of what it
+  was actually granted. Rolling out staged (`Mcp:AgentAuth:ScopeMode`: `Off`/`Warn`/`Enforce`, default
+  `Warn` — logs a missing-scope call but still allows it). Once an environment flips this to
+  `Enforce`, an agent without the right `mcp:{module}:write`/`read` scope granted will start getting
+  denied on tools it could previously call — if a previously-working tool call suddenly denies with
+  "does not carry the required MCP scope", that's this, not a regression; the fix is granting the
+  scope (`PUT api/v1/ai-agent/agents/{agentID}/mcp-scopes`), not retrying.
 - `list_widgets_in_app`/`list_app_widgets` returns **no widget name**, only `appWidgetID`/`widgetID`/
   `sectionName`/`appPageID`/`displayOrder`. Join back through the `widgetID` `create_widget` returned
   — a name-keyed lookup silently matches nothing.
@@ -55,8 +76,9 @@ in these docs (see §1).
   progress in `window.__log`, and poll it. Keep each tool-call script reasonably small.
 
 **Never promise or report a feature this section says is missing** (editing a widget's content after
-creation, a custom app-level theme, deleting a widget, `publish_app` from the bridge) — say what
-actually happened instead.
+creation, a custom app-level theme, `publish_app` from the bridge) — say what actually happened
+instead. Deleting a widget or section is no longer missing (2026-11-12) — use `delete_widget`/
+`delete_section` directly, don't claim it can't be done.
 
 ## 2. What the Player does with styling
 
@@ -198,10 +220,11 @@ already documented here as not working.
 
 Tracked with priorities and user-visible symptoms in
 [`platform-requests.md`](platform-requests.md) — independently arrived at the same list from two
-separate builds (AppID 1121 and AppID 1122): no `update_widget`/`delete_widget` for agent-created
-widgets, no `update_section_style`, no `publish_app`/`get_player_url` with tenantID from the bridge,
-no grid/row container widget, no safe scoped `<style>` subset or heading-size control, no logo/asset
-field or theme hook on `site-branding`, and `page-navigation` ignoring `justifyContent`/alignment.
+separate builds (AppID 1121 and AppID 1122): no `update_widget` for agent-created widgets (content
+edits still require create-new-and-hide-old; **`delete_widget` was resolved 2026-11-12**, see §1), no
+`update_section_style`, no `publish_app`/`get_player_url` with tenantID from the bridge, no grid/row
+container widget, no safe scoped `<style>` subset or heading-size control, no logo/asset field or
+theme hook on `site-branding`, and `page-navigation` ignoring `justifyContent`/alignment.
 
 ---
 
