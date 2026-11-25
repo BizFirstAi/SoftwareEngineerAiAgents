@@ -38,7 +38,7 @@ Apply styling, colors, responsive design, and theming to an app.
      is mostly stripped), per
      [`site-building-lessons.md`](../../Knowledge/AppAgent/site-building-lessons.md) §2–§3. This is
      what avoids the dark/empty voids that show through the Player's default background otherwise.
-     - Use theme tokens with prefix: `background: var(--app-var-primary, #123456)`
+     - Use theme tokens with prefix: `background: var(--app-var-color-primary, #123456)` — see the real 19-token list in [04-design-patterns.md](../../Knowledge/AppAgent/04-design-patterns.md), not an invented name
 
 3. **Apply widget-level styling (MCP)**
    - For each widget, call `update_widget_placement` with `styleConfiguration`:
@@ -78,7 +78,7 @@ Apply styling, colors, responsive design, and theming to an app.
 
 | Field | Values | Example |
 |-------|--------|---------|
-| `background` | Color, gradient, image URL | `"#ffffff"` or `"var(--app-var-primary)"` |
+| `background` | Color, gradient, image URL | `"#ffffff"` or `"var(--app-var-color-primary)"` |
 | `color` | Text color | `"#333333"` |
 | `padding` | CSS spacing | `"16px"` or `"16px 8px"` |
 | `margin` | CSS spacing | `"0"` |

@@ -135,7 +135,7 @@ Let me ask you some questions to understand your needs better."
    skip straight to confirming those instead. Wait for the answer before proceeding (one question at
    a time, same as every other step). Ask about logo placement only if the user said they have a logo.
 2. Apply the confirmed theme variables (background, text, accent colors) using the recipes in that same file § 4
-3. Configure responsive breakpoints (mobile @ 640px, tablet @ 1024px, desktop > 1024px)
+3. Configure responsive breakpoints (mobile @ 320px+, tablet @ 768px+, desktop @ 1024px+ — see [`04-design-patterns.md`](../../../Knowledge/AppAgent/04-design-patterns.md) for the exact values; this is the authoritative source, not this file)
 4. Test layout on different screen sizes
 5. Show before/after in browser
 
@@ -278,7 +278,7 @@ AppAgent → AppTester:
 | **MCP timeout** | Network/API latency | Retry with exponential backoff (1s, 2s, 4s) |
 | **Style not applied** | Invalid CSS or theme variable | Check theme docs, use pre-built styles from section recipes |
 | **Workflow widget invalid** | Workflow deleted or ID wrong | Recreate workflow or re-select correct workflow |
-| **Responsive layout broken** | Conflicting breakpoints | Review breakpoint logic, use standard sizes (640, 1024) |
+| **Responsive layout broken** | Conflicting breakpoints | Review breakpoint logic, use standard sizes (320, 768, 1024) |
 
 ### **User-Facing Error Messages**
 - ❌ "API error 500" → ✅ "Let me retry that step. One moment..."
@@ -477,6 +477,6 @@ See section 5 (Multi-Agent Orchestration) above for detailed handoff procedures.
 - ✅ All widgets functional and styled
 - ✅ Workflows execute correctly
 - ✅ Forms validate and submit
-- ✅ Mobile responsive (640px, 1024px breakpoints)
+- ✅ Mobile responsive (320px, 768px, 1024px breakpoints)
 - ✅ No broken links or missing images
 - ✅ Accessibility (WCAG 2.1 AA)
