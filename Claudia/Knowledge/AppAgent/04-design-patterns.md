@@ -20,19 +20,33 @@ Each level inherits from the one above; specificity increases downward.
 
 **Theme tokens** (`--app-var-*` CSS custom properties) define the app's color, typography, and spacing foundation.
 
-| Token | Purpose | Example |
-|-------|---------|---------|
-| `--app-var-primary` | Primary color | `#0066cc` |
-| `--app-var-secondary` | Secondary accent | `#ff6600` |
-| `--app-var-success` | Success/positive | `#00aa00` |
-| `--app-var-danger` | Error/warning | `#cc0000` |
-| `--app-var-background` | Page background | `#ffffff` |
-| `--app-var-text` | Primary text color | `#333333` |
-| `--app-var-text-light` | Secondary text | `#666666` |
-| `--app-var-border` | Border color | `#dddddd` |
-| `--app-var-shadow` | Shadow color | `rgba(0,0,0,0.1)` |
+**CORRECTED 2026-11-25 — the table below previously had wrong names for 5 of 9 tokens (verified against the real single source of truth, `app-handlers-core/src/types/ThemeTokens.ts`'s `APP_THEME_TOKENS`, which both the default-theme injector and the theme system consume — a new token only ever needs to be added there). Using the old wrong names (`--app-var-primary`, `--app-var-secondary`, `--app-var-danger`, `--app-var-background`, `--app-var-text-light`) sets a CSS custom property that doesn't exist — it silently falls through to nothing, the exact "looks done but isn't" failure this knowledge base otherwise warns against.** The real list is 19 tokens:
 
-All widgets reference these tokens for consistency.
+| Token | Purpose | Built-in default |
+|-------|---------|---------|
+| `--app-var-color-primary` | Primary color | `#4a90d9` |
+| `--app-var-color-primary-hover` | Primary color, hover state | `#5da0e8` |
+| `--app-var-color-secondary` | Secondary accent | `#e8a33d` |
+| `--app-var-link` | Link color (independent of primary) | `#4a90d9` |
+| `--app-var-success` | Success/positive | `#3ecf7e` |
+| `--app-var-error` | Error/warning (NOT `danger`) | `#e5484d` |
+| `--app-var-bg` | Page background (NOT `background`) | `#1a1a2e` |
+| `--app-var-bg-panel` | Panel/card background | `#242438` |
+| `--app-var-text` | Primary text color | `#f0f0f5` |
+| `--app-var-text-muted` | Secondary text (NOT `text-light`) | `#9a9ab0` |
+| `--app-var-text-inverse` | Text on a colored/dark button or accent | `#ffffff` |
+| `--app-var-border` | Border color | `#33334d` |
+| `--app-var-shadow` | Shadow | `0 2px 8px rgba(0,0,0,0.24)` |
+| `--app-var-radius` | Corner radius | `8px` |
+| `--app-var-space-unit` | Spacing unit | `8px` |
+| `--app-var-font-family` | Body font | `system-ui, -apple-system, "Segoe UI", sans-serif` |
+| `--app-var-font-heading` | Heading font | `system-ui, -apple-system, "Segoe UI", sans-serif` |
+| `--app-var-button-bg` | Button background | `#4a90d9` |
+| `--app-var-button-text` | Button text | `#ffffff` |
+
+Defaults above are this runtime's actual built-in values (a coherent dark theme) — an app that never customizes its theme still looks exactly as it already does today, it does not repaint to some unrelated default palette. Each token is independently overridable per app/page/tenant scope; overriding `color-primary` alone does NOT move `button-bg` or `link` even though they share its default value.
+
+All widgets reference these tokens for consistency — **except** the `page-navigation` widget, which uses a completely separate, non-`--app-var-*` token family (`--color-bg-secondary`, `--color-text-secondary`, `--color-bg-tertiary`, `--color-text-primary`, `--color-border`) — see "Layout widgets (nav, branding) don't theme" below before assuming any widget is themeable with this table.
 
 ### Section Level — Layout & Spacing
 
@@ -40,7 +54,7 @@ All widgets reference these tokens for consistency.
 
 ```json
 {
-  "background": "var(--app-var-background)",
+  "background": "var(--app-var-bg)",
   "padding": "32px 16px",
   "margin": "0",
   "max-width": "1200px",
@@ -63,7 +77,7 @@ Common section types:
   "widgetContainer": {
     "style": {
       "padding": "16px",
-      "background": "var(--app-var-secondary)",
+      "background": "var(--app-var-color-secondary)",
       "border-radius": "8px"
     }
   },
@@ -117,10 +131,10 @@ If user has their own colors:
 
 ```css
 .nh-main {
-  --app-var-primary: #8b4513;
-  --app-var-secondary: #d4a574;
+  --app-var-color-primary: #8b4513;
+  --app-var-color-secondary: #d4a574;
   --app-var-text: #333333;
-  --app-var-background: #f5f1ed;
+  --app-var-bg: #f5f1ed;
 }
 ```
 

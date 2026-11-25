@@ -102,17 +102,17 @@ Content-Type: application/json
 
 ### Widgets (Definitions)
 
+**CORRECTED 2026-11-25 — `list_widget_definitions` and `create_widget_definition` as separate tools do NOT exist in the real deployed MCP server; this table previously described an aspirational/future (V2) split-tool design, not the current one.** The real, single tool for creating a Widget is `create_widget` below — its own doc comment in the C# source states it composes "two real writes: create the shared Widget catalogue row, then place it in the app via AppWidget" in one call. There is no standalone way to create a Widget definition without also placing it. Always confirm the live tool list with `listTools()` rather than trusting a definitions/placements split.
+
 | Tool | Purpose | Params |
 |------|---------|--------|
-| `list_widget_definitions` | Get all reusable Widgets | (paging) → returns widget array |
-| `create_widget_definition` | Create reusable Widget | `name`, `widgetType`, `configuration` → returns `widgetID` |
-| `update_widget_definition` | Update Widget definition | `widgetID`, `configuration` — **not present in every deployment; verified missing as of a 2026-09-18 live check (see [site-building-lessons.md](site-building-lessons.md) §1). Confirm via `listTools()` before planning an edit-in-place flow around it — if it's absent, a content/config fix means delete + rebuild, not an edit.** |
+| `update_widget_definition` | Update Widget definition (content/config) in place | `widgetID`, `configuration` — **does not exist at all today; the real source (`UpdateWidgetPlacementTool.cs`, `McpInputRules.cs`) explicitly calls this "deferred to V2"/"deferred to a later pass," consistent with the 2026-09-18 live-check finding below. A content/config fix means delete + rebuild, not an edit.** |
 
 ### AppWidgets (Placements)
 
 | Tool | Purpose | Params |
 |------|---------|--------|
-| `create_widget` | Place widget in app/page/section | `appID`, `appPageID?`, `widgetID`, `sectionName`, `displayOrder?`, `configuration?` → returns `appWidgetID`. **`configuration` must be passed as a JSON STRING (`JSON.stringify(...)`), not an object — passing an object returns a generic "internal error" with no field-level hint. Verified, AppID 1122.** |
+| `create_widget` | Create the shared Widget catalogue row AND place it in app/page/section, in one call | `appID`, `appPageID?`, `widgetID`, `sectionName`, `displayOrder?`, `configuration?` → returns `appWidgetID`. **`configuration` must be passed as a JSON STRING (`JSON.stringify(...)`), not an object — passing an object returns a generic "internal error" with no field-level hint. Verified, AppID 1122.** |
 | `update_widget_placement` | Edit placement | `appID`, `appWidgetID`, `appPageID?`, `sectionName?`, `displayOrder?`, `styleConfiguration?`. **`appPageID: null` is what makes a placement site-wide — setting any real `appPageID` on a header/footer region silently scopes it to one page only, even if the tool's own description text suggests otherwise. Verified, AppID 1122.** |
 | `list_app_widgets` | Get placements for app | `appID` → returns AppWidget array. **Does not include the widget's name** — join back through `widgetID`, don't look up by name. |
 | `set_default_widget` | Mark as default | `appID`, `appWidgetID` |
@@ -199,7 +199,7 @@ show the shape to stringify, not what to actually send:
     "widgetContainer": {
       "style": {
         "padding": "16px",
-        "background": "var(--app-var-primary)"
+        "background": "var(--app-var-color-primary)"
       }
     }
   }
@@ -215,7 +215,7 @@ be camelCase. See [site-building-lessons.md](site-building-lessons.md) §2.
 ```json
 {
   "style": {
-    "background": "var(--app-var-background)",
+    "background": "var(--app-var-bg)",
     "padding": "32px 16px",
     "max-width": "1200px"
   }

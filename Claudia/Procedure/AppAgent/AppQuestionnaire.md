@@ -1,6 +1,6 @@
 # App Creation Questionnaire
 
-Welcome! This questionnaire will guide you through creating a web application with AppDeveloper. Answer each section, and we'll build your app step-by-step. You can always go back and revise your answers.
+Welcome! This questionnaire will guide you through creating a web application with AppAgent. Answer each section, and we'll build your app step-by-step. You can always go back and revise your answers.
 
 ---
 
@@ -354,7 +354,7 @@ confirm-or-choose question (e.g. append it to each option: "...clean sans-serif,
 ### 7.3 Confirmation
 **Final confirmation:**
 "You're about to create a [App Type] app with [# pages] pages. Ready to build?"
-- **Yes, let's build!** → Start app creation with AppDeveloper
+- **Yes, let's build!** → Start app creation with AppAgent
 - **Save for later** → Save questionnaire, come back later
 - **Cancel** → Return to main menu
 
@@ -384,7 +384,7 @@ confirm-or-choose question (e.g. append it to each option: "...clean sans-serif,
 
 Once questionnaire is complete:
 1. **Review Summary** — Confirm all choices
-2. **AppDeveloper Creates Project** → Initializes project and app
+2. **AppAgent Creates Project** → Initializes project and app
 3. **Page Creation** → Adds pages in specified order
 4. **Widget Configuration** → Adds widgets to each page with settings
 5. **Design Application** → Applies colors, theme, responsive breakpoints
@@ -394,7 +394,7 @@ Once questionnaire is complete:
 
 ---
 
-## **Notes for AppDeveloper Agent**
+## **Notes for AppAgent**
 
 - **Progress Tracking:** After each major step, refresh the browser and show user the result
 - **Feedback Loop:** After pages are created, ask: "Does this match your vision? Any changes?"

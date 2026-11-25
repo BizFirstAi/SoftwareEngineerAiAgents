@@ -9,9 +9,9 @@ Player.
 | **Pick this agent when** | the user asks to test an app, a widget or the App Studio MCP tools |
 | **MCP server** | `BizFirst.Ai.Mcp.Tools.AppStudio` |
 
-This file is an index only. It uses the same knowledge as the
-[App Developer](../../Builders/AppDeveloper/AGENT.md). Start with
-[`Knowledge/AppAgent/00-overview.md`](../../../Knowledge/AppAgent/00-overview.md).
+This file is an index only. It uses the same knowledge as
+[AppAgent](../../Builders/AppAgent/AGENT.md) (renamed from "AppDeveloper" — this link was stale).
+Start with [`Knowledge/AppAgent/00-overview.md`](../../../Knowledge/AppAgent/00-overview.md).
 
 ## Test material in this folder
 

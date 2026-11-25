@@ -34,7 +34,17 @@ editable widget across multiple placements in the same app — e.g., a logo widg
 sections that should all update together). Templates need the opposite property: every placement
 independent.
 
-## The 4 real templates seeded live (2026-09-12), `TenantID=1`, all `WidgetType='content'`, `IsTemplate=1`
+## Template count — CORRECTED 2026-11-25: this is NOT a complete or small list anymore
+
+**This doc previously said "the 4 real templates" and stopped there — that was stale even at the time
+some readers relied on it.** The 4 below (792-795, seeded 2026-09-12) are real and still present, but
+many more templates have been added since under the same `IsTemplate=1` convention (a 2026-11
+cross-check against the live seed data found dozens more, covering Hero/CTA/Stats/Team/FAQ/Testimonial-
+grid/Pricing-single/Case-Study/and other common landing-page sections). **Do not state a specific
+template count from this doc or any other knowledge file — always run the query below first** and use
+its actual row count and names for whatever you're about to tell a user or pick from.
+
+The original 4, for illustration only (not the full set):
 
 | WidgetID | Name | Wrapper class | What it is |
 |---|---|---|---|
@@ -43,8 +53,8 @@ independent.
 | 794 | Template: Pricing Table | `.tpl-price-*` | 3-tier pricing cards, one visually featured, each with a CTA button |
 | 795 | Template: Feature Grid | `.tpl-feat-*` | 3-card icon+title+description grid |
 
-Query them directly to see the real, current `Configuration` JSON (don't trust this doc's own
-copy-paste of the HTML to stay byte-identical forever — a future agent may have edited them):
+**Always query live for the current, complete list** (don't trust this doc's own copy-paste of the
+HTML to stay byte-identical forever either — a future agent may have edited them):
 
 ```sql
 SELECT WidgetID, Name, Configuration FROM AIExt_Widgets WHERE IsTemplate = 1 AND WidgetType = 'content';
@@ -74,10 +84,11 @@ default equal to `color-primary` but aren't the same token.
 
 ## When generating a new page for a user, prefer cloning one of these over hand-authoring equivalent content
 
-If a user asks for a page that plausibly matches one of the 4 shapes above (a company history /
-roadmap → Timeline; social proof → Testimonial; a pricing page → Pricing Table; a "why us" /
-benefits section → Feature Grid), clone the matching template (via the Toolbox's "Content Widget
-Template" gallery, or the same clone-on-add mechanism programmatically) and edit its copy, rather
-than writing a new `<style>` block from scratch. This is faster, guaranteed theme-correct, and
+If a user asks for a page that plausibly matches one of the shapes in the live template gallery (a
+company history / roadmap → Timeline; social proof → Testimonial; a pricing page → Pricing Table; a
+"why us" / benefits section → Feature Grid; and many more now — query live, don't assume the gallery
+is still just these 4), clone the matching template (via the Toolbox's "Content Widget Template"
+gallery, or the same clone-on-add mechanism programmatically) and edit its copy, rather than writing a
+new `<style>` block from scratch. This is faster, guaranteed theme-correct, and
 avoids re-introducing bugs (browser-vendor CSS quirks, missing wrapper-class scoping, etc.) that the
 existing templates have already had shaken out of them.
