@@ -144,8 +144,17 @@ Widgets in a section stack vertically and there is no grid or wrapper widget. Fa
 
 `page-navigation` with `configuration {"orientation":"horizontal"}` replaces the fixed bars and reads
 `--color-bg-secondary`, `--color-text-secondary`, `--color-bg-tertiary`, `--color-text-primary`,
-`--color-border`. Set them through `widgetContainer.css`. Remember `create_page` leaves `showInMenu`
-false unless passed; set `showInMenu: true` and `displayOrder` per page via `update_page`.
+`--color-border`. Set them through `widgetContainer.css`.
+
+**`showInMenu`'s default is unresolved between two sources — always pass it explicitly, never rely on
+either claimed default.** `create_page`'s own doc comment at one point said it defaults `showInMenu` to
+`false` (an invisible-nav bug, since a new page then never shows up in `page-navigation` with no error
+anywhere); a fix was written 2026-10-29 flipping the default to `true`. But a later real-build check
+(2026-11-09) still observed the old `false` behavior and documented "new pages need `showInMenu: true`
+set to actually appear in it" as current reality — meaning the fix may not have reached every
+deployment. **Don't trust either claim — always pass `showInMenu` explicitly on every `create_page`
+call** (`true` for anything that should be in the nav, which is most pages), and set `displayOrder` per
+page via `update_page` too, same as every other ordering-sensitive field in this doc.
 
 The fixed `AppNavMenu` top/side bars themselves (the legacy default menu, *not* a placed widget) have
 no `WidgetID` and no `styleConfiguration` slot anywhere — not in the Designer, not via any MCP tool.
@@ -158,6 +167,20 @@ ends up with two menus).
 - Raw GitHub URLs (`https://raw.githubusercontent.com/<org>/<repo>/main/<path>`) load in the Player.
   URL-encode spaces in file names (`%20`). Very large videos (20 MB+) can show an empty player while buffering.
 - Do not use `github.com/.../blob/...` URLs for media; use raw.
+- **Before using ANY external image/video/audio URL (stock photo, sample file, a URL the user gave you),
+  verify it actually resolves with a quick request first.** A broken/placeholder test-data URL is the
+  single most common "broken widget" false alarm across real builds — it looks exactly like a platform
+  bug (broken-image icon) but is actually just a bad URL. Check before building, not after a failed
+  Design Quality Gate.
+- **Gallery widgets (`image-gallery`/`video-gallery`/`audio-gallery`) have been found broken in at least
+  one real environment** (correctly list real public assets by name, but every thumbnail/playback fails
+  to load — traced to a backend asset-host config value, a deploy-state issue, not a widget bug or
+  something fixable by reconfiguring the widget). `pdf-gallery` in its default "link" display mode
+  doesn't visibly show the same symptom, but shares the same root cause — don't treat it as proof
+  galleries are fine. **Before relying on any gallery widget in a build, verify live** (open the real
+  Player, hard reload, confirm a thumbnail actually renders) — if it's broken, tell the user plainly
+  this is a known platform-environment issue, not something you can fix with different config, and offer
+  individual `image`/`video`/`audio` widgets (verified working, §1 Appendix) as the fallback.
 
 ## 6. Process lessons
 
@@ -188,6 +211,26 @@ ends up with two menus).
   drops them and sends the visitor to an error page. Use a `page-navigation` widget for page-to-page
   links, a fragment-only `href="#thing"` for in-page anchors, or an absolute external URL
   (`https://...`, `tel:`, `mailto:`).
+- **`chat-panel` may never visibly reply, with no error shown anywhere.** Sending a message reliably
+  starts a real backend execution (confirmed via the widget's own "Developer Info" panel, which shows
+  the real `ExecutionID`), but a reply does not reliably arrive — the widget just stays on "Thinking…"
+  indefinitely, with zero diagnostic signal in the UI. Traced to backend execution-reporting bugs
+  (a failed node's reason isn't captured anywhere; an execution's overall status can incorrectly report
+  "Success" even when a node inside it failed) — not something fixable from the widget's own
+  configuration, and not specific to AI/LLM-calling workflows (reproduces on a zero-AI workflow too).
+  **If a chat-panel you built goes silent, don't assume your `processID`/config is wrong** — check the
+  Developer Info panel for a real `ExecutionID` first; if one exists, the panel confirms the widget
+  itself is working and the silence is this known backend issue, not your build.
+- **A border declared through a widget's Style-panel Custom CSS field has been found to silently not
+  render** (accepted, saved, but never visible) in at least one real build, while the equivalent
+  `border`/`borderTop`/`borderBottom`/`borderRadius` keys set through `update_widget_placement`'s
+  `styleConfiguration.widgetContainer.style` JSON object (§2 above) were separately verified working.
+  These are two different mechanisms (a free-text CSS field vs. structured style keys) — this doc's own
+  "verified working" list in §2 is for the structured-keys path, which is what every recipe here already
+  uses, so this shouldn't bite you if you stick to those recipes. Flagging the discrepancy rather than
+  silently dropping it: if a border you set through the structured `style` keys doesn't show up, don't
+  assume it's definitely working just because §2 says so — a hard-reload Player check (the Design
+  Quality Gate) is what actually confirms it, not this doc.
 
 ## 8. Palette library (per industry)
 
