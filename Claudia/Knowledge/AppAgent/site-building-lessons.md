@@ -146,15 +146,23 @@ Widgets in a section stack vertically and there is no grid or wrapper widget. Fa
 `--color-bg-secondary`, `--color-text-secondary`, `--color-bg-tertiary`, `--color-text-primary`,
 `--color-border`. Set them through `widgetContainer.css`.
 
-**`showInMenu`'s default is unresolved between two sources — always pass it explicitly, never rely on
-either claimed default.** `create_page`'s own doc comment at one point said it defaults `showInMenu` to
-`false` (an invisible-nav bug, since a new page then never shows up in `page-navigation` with no error
-anywhere); a fix was written 2026-10-29 flipping the default to `true`. But a later real-build check
-(2026-11-09) still observed the old `false` behavior and documented "new pages need `showInMenu: true`
-set to actually appear in it" as current reality — meaning the fix may not have reached every
-deployment. **Don't trust either claim — always pass `showInMenu` explicitly on every `create_page`
-call** (`true` for anything that should be in the nav, which is most pages), and set `displayOrder` per
-page via `update_page` too, same as every other ordering-sensitive field in this doc.
+**CORRECTED and FULLY LIVE-VERIFIED 2026-11-26: `create_page` has NO `showInMenu` parameter at all —
+confirmed both in source (`CreatePageTool.cs`) and by a live `listTools()` call** (its real schema has
+exactly `appID`/`name`/`title`/`slug`/`parentPageID`, no menu field). **Confirmed by an actual live
+call**: created a real page with no `showInMenu` param → `list_pages` showed it with `"showInMenu":
+false`. There is no way to make a page appear in `page-navigation` at creation time. **Every single
+`create_page` call must be followed by a separate `update_page(appID, pageID, showInMenu: true)`
+call** (confirmed live and working) — treat this as a mandatory two-call sequence for every page meant
+to be in the nav, not an optional nicety. Set `displayOrder` per page via the same `update_page` call too.
+
+**New, live-confirmed gotcha (2026-11-26): a `create_page` call can THROW a misleading error even when
+you're not missing a required argument.** Calling `create_page` with a `slug` that already exists on the
+app throws `"Access denied: Tool 'create_page' failed due to an internal error"` — the exact same
+generic, misleading text already documented for a missing-argument failure (see P9 in
+[`platform-requests.md`](platform-requests.md)), not a clear "slug already in use" message. **If
+`create_page` throws anything, call `list_pages` before concluding it failed or retrying** — in one
+live test here, an earlier call that reported this exact error had, in fact, already created the page.
+Don't tell the user a page creation failed, and don't retry with the same slug, without checking first.
 
 The fixed `AppNavMenu` top/side bars themselves (the legacy default menu, *not* a placed widget) have
 no `WidgetID` and no `styleConfiguration` slot anywhere — not in the Designer, not via any MCP tool.
